@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Kuro";
+  src: url("../assets/fonts/Kuro-Regular.otf");
+}
+/* Apply Kuro font globally */
+body {
+  font-family: "Kuro";
+}
