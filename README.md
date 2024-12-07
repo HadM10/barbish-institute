@@ -34,7 +34,8 @@ Run the following commands in a single bash script (git bash here on desktop):
 
 ```bash
 # Clone the repository
-git clone https://github.com/HadM10/barbish-institute.git
+git clone --branch staging https://github.com/HadM10/barbish-institute.git
+
 
 ```
 
