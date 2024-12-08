@@ -1,8 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
-const Course = require('./Course');
-const User = require('./User');
 
+// Define Session Model
 const Session = sequelize.define('Session', {
   id: {
     type: DataTypes.INTEGER,
@@ -11,10 +10,6 @@ const Session = sequelize.define('Session', {
   },
   courseId: {
     type: DataTypes.INTEGER,
-    references: {
-      model: Course,
-      key: 'id',
-    },
     allowNull: false,
   },
   title: {
@@ -22,29 +17,24 @@ const Session = sequelize.define('Session', {
     allowNull: false,
   },
   description: {
+    type: DataTypes.STRING,
+  },
+  content: {
     type: DataTypes.TEXT,
-    allowNull: true,
   },
   duration: {
     type: DataTypes.INTEGER, // Duration in minutes
-    allowNull: true,
   },
-  createdAt: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
+  videoUrl: {
+    type: DataTypes.STRING,
   },
-  updatedAt: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
+  isActive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
   },
-});
+}, { timestamps: true });
 
-// Define relationships
-Course.hasMany(Session, { foreignKey: 'courseId' });
+// Relations
 Session.belongsTo(Course, { foreignKey: 'courseId' });
-
-// Optional: Many-to-Many for Session access
-Session.belongsToMany(User, { through: 'SessionAccess', foreignKey: 'sessionId' });
-User.belongsToMany(Session, { through: 'SessionAccess', foreignKey: 'userId' });
 
 module.exports = Session;

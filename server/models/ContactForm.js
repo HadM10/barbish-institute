@@ -1,7 +1,8 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-const ContactForm = sequelize.define('ContactForm', {
+// Define ContactUs Model
+const ContactUs = sequelize.define('ContactUs', {
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
@@ -19,15 +20,13 @@ const ContactForm = sequelize.define('ContactForm', {
     type: DataTypes.TEXT,
     allowNull: false,
   },
-  createdAt: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
+  isResponded: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
   },
-  updatedAt: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
-  },
-});
+}, { timestamps: true });
 
-module.exports = ContactForm;
+// Relations (Optional)
+ContactUs.belongsTo(User, { foreignKey: 'userId' });
 
+module.exports = ContactUs;

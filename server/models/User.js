@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
-const Subscription = require('./Subscription');
+const Subscription = require('./Subscription'); // Correct relation with Subscription
+const Course = require('./Course'); // Correct relation with Course
 
 const User = sequelize.define('User', {
   id: {
@@ -36,8 +37,18 @@ const User = sequelize.define('User', {
   },
 });
 
-User.belongsToMany(require('./Course'), {
+// Establish relationships
+
+// Many-to-many relationship between User and Course through Subscription
+User.belongsToMany(Course, {
   through: Subscription,
   foreignKey: 'userId',
+  otherKey: 'courseId',
 });
+Course.belongsToMany(User, {
+  through: Subscription,
+  foreignKey: 'courseId',
+  otherKey: 'userId',
+});
+
 module.exports = User;

@@ -1,7 +1,9 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
+const Session = require('./Session');
 const Subscription = require('./Subscription');
 
+// Define Course Model
 const Course = sequelize.define('Course', {
   id: {
     type: DataTypes.INTEGER,
@@ -12,26 +14,30 @@ const Course = sequelize.define('Course', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  image: {
+    type: DataTypes.STRING,
+  },
+  description: {
+    type: DataTypes.STRING, // Short description
+    allowNull: false,
+  },
   content: {
-    type: DataTypes.TEXT,
-    allowNull: true,
+    type: DataTypes.TEXT, // Full description
   },
   price: {
     type: DataTypes.FLOAT,
     allowNull: false,
   },
-  createdAt: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
+  duration: {
+    type: DataTypes.INTEGER, // Duration in hours
   },
-  updatedAt: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
-  },
-});
+}, { timestamps: true });
 
-Course.belongsToMany(require('./User'), {
-  through: Subscription,
-  foreignKey: 'courseId',
-});
+// Relations
+Course.hasMany(Session, { foreignKey: 'courseId' });
+Session.belongsTo(Course, { foreignKey: 'courseId' });
+
+Course.hasMany(Subscription, { foreignKey: 'courseId' });
+Subscription.belongsTo(Course, { foreignKey: 'courseId' });
+
 module.exports = Course;

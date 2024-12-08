@@ -1,7 +1,8 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-const BonusCard = sequelize.define('BonusCard', {
+// Define BonCard Model
+const BonCard = sequelize.define('BonCard', {
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
@@ -13,28 +14,17 @@ const BonusCard = sequelize.define('BonusCard', {
   },
   description: {
     type: DataTypes.TEXT,
-    allowNull: true,
   },
   image: {
     type: DataTypes.STRING,
-    allowNull: true,
   },
-  price: {
-    type: DataTypes.FLOAT,
+  expirationDate: {
+    type: DataTypes.DATE,
     allowNull: false,
   },
-  expiredDate: {
-    type: DataTypes.DATEONLY,
-    allowNull: false,
-  },
-  createdAt: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
-  },
-  updatedAt: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
-  },
-});
+}, { timestamps: true });
 
-module.exports = BonusCard;
+// Relations
+BonCard.belongsTo(User, { foreignKey: 'userId' });
+
+module.exports = BonCard;
