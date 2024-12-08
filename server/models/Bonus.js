@@ -1,7 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-// Define BonCard Model
 const BonCard = sequelize.define('BonCard', {
   id: {
     type: DataTypes.INTEGER,
@@ -13,18 +12,29 @@ const BonCard = sequelize.define('BonCard', {
     allowNull: false,
   },
   description: {
-    type: DataTypes.TEXT,
-  },
-  image: {
     type: DataTypes.STRING,
-  },
-  expirationDate: {
-    type: DataTypes.DATE,
     allowNull: false,
   },
-}, { timestamps: true });
-
-// Relations
-BonCard.belongsTo(User, { foreignKey: 'userId' });
+  image: {
+    type: DataTypes.STRING,  // Assuming image URL or path will be stored.
+    allowNull: true,         // Image is optional.
+  },
+  price: {
+    type: DataTypes.FLOAT,
+    allowNull: false,
+  },
+  expiredDate: {
+    type: DataTypes.DATE,
+    allowNull: true,   // The expiration date is optional but can be set if available.
+  },
+  createdAt: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW,
+  },
+  updatedAt: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW,
+  },
+});
 
 module.exports = BonCard;
