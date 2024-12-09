@@ -1,10 +1,10 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
-const Subscription = require('./Subscription'); // Relation with Subscription
-const Course = require('./Course'); // Relation with Course
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/db");
+const Subscription = require("./Subscription"); // Relation with Subscription
+const Course = require("./Course"); // Relation with Course
 
 const User = sequelize.define(
-  'User',
+  "User",
   {
     id: {
       type: DataTypes.INTEGER,
@@ -44,15 +44,13 @@ const User = sequelize.define(
 // Many-to-many relationship between User and Course through Subscription
 User.belongsToMany(Course, {
   through: Subscription,
-  foreignKey: 'userId',
-  otherKey: 'courseId',
-  onDelete: 'CASCADE', // Cascades deletions through the junction table
+  foreignKey: "userId",
+  otherKey: "courseId",
 });
 Course.belongsToMany(User, {
   through: Subscription,
-  foreignKey: 'courseId',
-  otherKey: 'userId',
-  onDelete: 'CASCADE',
+  foreignKey: "courseId",
+  otherKey: "userId",
 });
 
 module.exports = User;

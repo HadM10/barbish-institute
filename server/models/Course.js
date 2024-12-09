@@ -1,8 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
-
-const Session = sequelize.models.Session;
-
+const Session = require('./Session');
 const Subscription = require('./Subscription');
 
 // Define Course Model
@@ -37,16 +35,19 @@ const Course = sequelize.define('Course', {
 }, { timestamps: true });
 
 // Relations
-Course.hasMany(Session, {
-  foreignKey: 'courseId',
-  onDelete: 'CASCADE', // Automatically deletes sessions when a course is deleted
-});
+Course.hasMany(Session, { foreignKey: 'courseId', onDelete: 'CASCADE' });
 Session.belongsTo(Course, { foreignKey: 'courseId' });
 
-Course.hasMany(Subscription, {
+Course.belongsToMany(User, {
+  through: Subscription,
   foreignKey: 'courseId',
-  onDelete: 'CASCADE', // Automatically deletes subscriptions when a course is deleted
+  otherKey: 'userId',
 });
-Subscription.belongsTo(Course, { foreignKey: 'courseId' });
+
+User.belongsToMany(Course, {
+  through: Subscription,
+  foreignKey: 'userId',
+  otherKey: 'courseId',
+});
 
 module.exports = Course;

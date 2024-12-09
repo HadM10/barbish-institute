@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
-const Course = sequelize.models.Course; // Importing the Course model
+const Course = require('./Course');
 
 // Define Session Model
 const Session = sequelize.define('Session', {
@@ -40,8 +40,8 @@ const Session = sequelize.define('Session', {
 }, { timestamps: true });
 
 // Define relationship
-Session.belongsTo(Course, { foreignKey: 'courseId', onDelete: 'CASCADE' });
-Course.hasMany(Session, { foreignKey: 'courseId' }); // Ensures bidirectional association
+Session.belongsTo(Course, { foreignKey: 'courseId'});
+Course.hasMany(Session, { foreignKey: 'courseId', onDelete: 'CASCADE'}); // Ensures bidirectional association
 
 // Export the model
 module.exports = Session;

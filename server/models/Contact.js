@@ -20,7 +20,7 @@ const ContactUs = sequelize.define('ContactUs', {
     type: DataTypes.TEXT,
     allowNull: false,
   },
-  isResponded: {
+  status: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },

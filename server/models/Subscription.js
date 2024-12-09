@@ -33,8 +33,8 @@ const Subscription = sequelize.define('Subscription', {
 }, { timestamps: true });
 
 // Define relationships
-Subscription.belongsTo(User, { foreignKey: 'userId', onDelete: 'CASCADE' });
-Subscription.belongsTo(Course, { foreignKey: 'courseId', onDelete: 'CASCADE' });
+Subscription.belongsTo(User, { foreignKey: 'userId'});
+Subscription.belongsTo(Course, { foreignKey: 'courseId'});
 
 // Export the model
 module.exports = Subscription;
