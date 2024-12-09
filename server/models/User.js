@@ -39,18 +39,4 @@ const User = sequelize.define(
   }
 );
 
-// Establish relationships
-
-// Many-to-many relationship between User and Course through Subscription
-User.belongsToMany(Course, {
-  through: Subscription,
-  foreignKey: "userId",
-  otherKey: "courseId",
-});
-Course.belongsToMany(User, {
-  through: Subscription,
-  foreignKey: "courseId",
-  otherKey: "userId",
-});
-
 module.exports = User;
