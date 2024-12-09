@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
+const Course = sequelize.models.Course; // Importing the Course model
 
 // Define Session Model
 const Session = sequelize.define('Session', {
@@ -11,6 +12,10 @@ const Session = sequelize.define('Session', {
   courseId: {
     type: DataTypes.INTEGER,
     allowNull: false,
+    references: {
+      model: Course, // Refers to Course model
+      key: 'id',
+    },
   },
   title: {
     type: DataTypes.STRING,
@@ -26,7 +31,7 @@ const Session = sequelize.define('Session', {
     type: DataTypes.INTEGER, // Duration in minutes
   },
   videoUrl: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING, // URL or path for the session video
   },
   isActive: {
     type: DataTypes.BOOLEAN,
@@ -34,7 +39,9 @@ const Session = sequelize.define('Session', {
   },
 }, { timestamps: true });
 
-// Relations
-Session.belongsTo(Course, { foreignKey: 'courseId' });
+// Define relationship
+Session.belongsTo(Course, { foreignKey: 'courseId', onDelete: 'CASCADE' });
+Course.hasMany(Session, { foreignKey: 'courseId' }); // Ensures bidirectional association
 
+// Export the model
 module.exports = Session;

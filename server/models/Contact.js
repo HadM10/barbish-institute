@@ -26,7 +26,4 @@ const ContactUs = sequelize.define('ContactUs', {
   },
 }, { timestamps: true });
 
-// Relations (Optional)
-ContactUs.belongsTo(User, { foreignKey: 'userId' });
-
 module.exports = ContactUs;

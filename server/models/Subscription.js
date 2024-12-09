@@ -1,5 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
+const User = require('./User'); // Correctly importing User model
+const Course = require('./Course'); // Correctly importing Course model
 
 // Define Subscription Model
 const Subscription = sequelize.define('Subscription', {
@@ -30,8 +32,9 @@ const Subscription = sequelize.define('Subscription', {
   },
 }, { timestamps: true });
 
-// Relations
-Subscription.belongsTo(User, { foreignKey: 'userId' });
-Subscription.belongsTo(Course, { foreignKey: 'courseId' });
+// Define relationships
+Subscription.belongsTo(User, { foreignKey: 'userId', onDelete: 'CASCADE' });
+Subscription.belongsTo(Course, { foreignKey: 'courseId', onDelete: 'CASCADE' });
 
+// Export the model
 module.exports = Subscription;

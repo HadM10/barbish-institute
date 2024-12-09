@@ -1,39 +1,42 @@
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const dotenv = require('dotenv');
-const sequelize = require('./config/db');
+const sequelize = require('../config/db');
+const { DataTypes } = require('sequelize');
 
 
-dotenv.config();
+// Import models
+const User = require('./User')(sequelize, DataTypes);
+const Course = require('./Course')(sequelize, DataTypes);
+const Session = require('./Session')(sequelize, DataTypes);
+const Subscription = require('./Subscription')(sequelize, DataTypes);
+const ContactUs = require('./Contact')(sequelize, DataTypes);
+const BonCard = require('./Bonus')(sequelize, DataTypes);
 
-const app = express();
-
-// Middleware
-app.use(cors());
-app.use(bodyParser.json());
-
-
-// Health Check
-app.get('/', (req, res) => {
-  res.send('API is running...');
-});
-
-// Error Handling Middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Something broke!');
-});
-
-// Sync Database and Start Server
-sequelize
-  .sync()
-  .then(() => {
-    console.log('Database synced');
-    app.listen(process.env.PORT || 5000, () => {
-      console.log(`Server is running on port ${process.env.PORT || 5000}`);
-    });
-  })
-  .catch((err) => {
-    console.error('Unable to sync the database:', err);
+// Define relationships
+User.associate = (models) => {
+  User.belongsToMany(models.Course, {
+    through: models.Subscription,
+    foreignKey: 'userId',
   });
+};
+
+Course.associate = (models) => {
+  Course.hasMany(models.Session, { foreignKey: 'courseId' });
+  Course.hasMany(models.Subscription, { foreignKey: 'courseId' });
+};
+
+Session.associate = (models) => {
+  Session.belongsTo(models.Course, { foreignKey: 'courseId' });
+};
+
+Subscription.associate = (models) => {
+  Subscription.belongsTo(models.User, { foreignKey: 'userId' });
+  Subscription.belongsTo(models.Course, { foreignKey: 'courseId' });
+};
+
+// Export models and sequelize instance
+const models = { User, Course, Session, Subscription, ContactUs, BonCard };
+Object.values(models).forEach((model) => {
+  if (model.associate) {
+    model.associate(models);
+  }
+});
+module.exports = { sequelize, ...models };

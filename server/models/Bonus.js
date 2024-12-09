@@ -27,14 +27,8 @@ const BonCard = sequelize.define('BonCard', {
     type: DataTypes.DATE,
     allowNull: true,   // The expiration date is optional but can be set if available.
   },
-  createdAt: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
-  },
-  updatedAt: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
-  },
+}, { 
+  timestamps: true, // Automatically manage `createdAt` and `updatedAt`
 });
 
 module.exports = BonCard;
