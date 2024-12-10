@@ -20,13 +20,10 @@ const ContactUs = sequelize.define('ContactUs', {
     type: DataTypes.TEXT,
     allowNull: false,
   },
-  isResponded: {
+  status: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
 }, { timestamps: true });
-
-// Relations (Optional)
-ContactUs.belongsTo(User, { foreignKey: 'userId' });
 
 module.exports = ContactUs;
