@@ -3,7 +3,16 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const sequelize = require("./config/db");
 
-require("./models/Relations");
+// Import route files
+const contactRoutes = require("./routes/contactRoutes");
+const bonCardRoutes = require("./routes/bonCardRoutes");
+const userRoutes = require("./routes/userRoutes");
+const courseRoutes = require("./routes/courseRoutes");
+const subscriptionRoutes = require("./routes/subscriptionRoutes");
+const sessionRoutes = require("./routes/sessionRoutes");
+const categoryRoutes = require("./routes/categoryRoutes"); // Assuming you have a category route
+
+require("./models/Relations"); // Ensure relationships are loaded
 
 const app = express();
 
@@ -11,12 +20,19 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// Routes
-
 // Health Check
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
+
+// Routes
+app.use("/api/contact", contactRoutes);
+app.use("/api/bonCard", bonCardRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/course", courseRoutes);
+app.use("/api/subscription", subscriptionRoutes);
+app.use("/api/session", sessionRoutes);
+app.use("/api/categories", categoryRoutes); // Added category routes
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
