@@ -4,12 +4,12 @@ const bodyParser = require("body-parser");
 const sequelize = require("./config/db");
 
 // Import route files
-// const contactRoutes = require("./routes/contactRoutes");
-// const bonCardRoutes = require("./routes/bonCardRoutes");
-// const userRoutes = require("./routes/userRoutes");
-// const courseRoutes = require("./routes/courseRoutes");
-// const subscriptionRoutes = require("./routes/subscriptionRoutes");
-// const sessionRoutes = require("./routes/sessionRoutes");
+const contactRoutes = require("./routes/contactRoutes");
+const bonCardRoutes = require("./routes/bonCardRoutes");
+userRoutes = require("./routes/userRoutes");
+const courseRoutes = require("./routes/courseRoutes");
+const subscriptionRoutes = require("./routes/subscriptionRoutes");
+const sessionRoutes = require("./routes/sessionRoutes");
 const categoryRoutes = require("./routes/categoryRoutes"); // Assuming you have a category route
 
 require("./models/Relations"); // Ensure relationships are loaded
@@ -26,12 +26,12 @@ app.get("/", (req, res) => {
 });
 
 // Routes
-// app.use("/api/contact", contactRoutes);
-// app.use("/api/bonCard", bonCardRoutes);
-// app.use("/api/user", userRoutes);
-// app.use("/api/course", courseRoutes);
-// app.use("/api/subscription", subscriptionRoutes);
-// app.use("/api/session", sessionRoutes);
+app.use("/api/contact", contactRoutes);
+app.use("/api/boncards", bonCardRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/course", courseRoutes);
+app.use("/api/subscription", subscriptionRoutes);
+app.use("/api/session", sessionRoutes);
 app.use("/api/categories", categoryRoutes); // Added category routes
 
 // Error Handling Middleware

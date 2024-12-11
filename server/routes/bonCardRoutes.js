@@ -1,20 +1,21 @@
 const express = require("express");
-const router = express.Router();
 const bonCardController = require("../controllers/bonCardController");
 
-// Create a new BonCard
-router.post("/boncards", bonCardController.createBonCard);
+const router = express.Router();
 
-// Get all BonCards
-router.get("/boncards", bonCardController.getAllBonCards);
+// GET /api/boncards - Get all BonCards
+router.get("/", bonCardController.getAllBonCards);
 
-// Get a single BonCard by ID
-router.get("/boncards/:id", bonCardController.getBonCardById);
+// GET /api/boncards/:id - Get a BonCard by ID
+router.get("/:id", bonCardController.getBonCardById);
 
-// Update a BonCard
-router.put("/boncards/:id", bonCardController.updateBonCard);
+// POST /api/boncards - Create a new BonCard
+router.post("/", bonCardController.createBonCard);
 
-// Delete a BonCard
-router.delete("/boncards/:id", bonCardController.deleteBonCard);
+// PUT /api/boncards/:id - Update a BonCard
+router.put("/:id", bonCardController.updateBonCard);
+
+// DELETE /api/boncards/:id - Delete a BonCard
+router.delete("/:id", bonCardController.deleteBonCard);
 
 module.exports = router;

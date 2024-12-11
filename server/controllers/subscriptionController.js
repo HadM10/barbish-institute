@@ -1,97 +1,99 @@
-
-const Subscription=require("../models/Subscription");
-const User=require("../models/User");
-const Course=require("../models/Course");
+const Subscription = require("../models/Subscription");
+const User = require("../models/User");
+const Course = require("../models/Course");
 
 // Get all subscriptions 
-exports.getAllSubscriptions=async(req,res)=>{
-   try{
-        const subscriptions=await Subscription.findAll({
-            include:[User ,Course], // Include related User and Course models 
-        })
-        restatus200.send(subscriptions)
-   }catch(error){
-        restatus500.send({
-            erro:"Error fetching subscriptions",
-            details:error.message 
-        })
-   }
-}
+exports.getAllSubscriptions = async (req, res) => {
+  try {
+    const subscriptions = await Subscription.findAll({
+      include: [User, Course], // Include related User and Course models 
+    });
+    res.status(200).send(subscriptions);
+  } catch (error) {
+    res.status(500).send({
+      error: "Error fetching subscriptions",
+      details: error.message,
+    });
+  }
+};
 
-// Get asubscriptionbyID 
-exports.getSubscriptionById=async(req,res)=>{
-   try{
-        const subscription=await Subscription.findByPk(req.params.id,{
-            include:[User ,Course], // Include related User and Course models 
-        })
-        if(!subscription)returnres.staus404.send({
-            erro:"Subscription not found"
-        })
+// Get a subscription by ID 
+exports.getSubscriptionById = async (req, res) => {
+  try {
+    const subscription = await Subscription.findByPk(req.params.id, {
+      include: [User, Course], // Include related User and Course models 
+    });
+    if (!subscription)
+      return res.status(404).send({
+        error: "Subscription not found",
+      });
 
-        restatus200.send(subscription)
-   }catch(error){
-        restatus500.send({
-            erro:"Error fetching subscription",
-            details:error.message 
-        })
-   }
-}
+    res.status(200).send(subscription);
+  } catch (error) {
+    res.status(500).send({
+      error: "Error fetching subscription",
+      details: error.message,
+    });
+  }
+};
 
-// Create anew subscription 
-exports.createSubscription=async(req,res)=>{
-   try{
-        const {userId ,courseId ,startDate ,endDate}=req.body;
+// Create a new subscription 
+exports.createSubscription = async (req, res) => {
+  try {
+    const { userId, courseId, startDate, endDate } = req.body;
 
-        const newSubscription=await Subscription.create({
-            userId ,
-            courseId ,
-            startDate ,
-            endDate ,
-        })
-        
-        restatus201.send(newSubscription)
-   }catch(error){
-        restatus500.send ({
-            erro:"Error creating subscription",
-            details:error.message  
-         })
-     }
- }
+    const newSubscription = await Subscription.create({
+      userId,
+      courseId,
+      startDate,
+      endDate,
+    });
 
-// Update asubscriptionbyID  
- exports.updateSubscription=async(req,res)=>{
-     try{
-         const subscription=await Subscription.findByPk(req.params.id)
-         if(!subscription)returnres.staus404.send ({
-             erro:"Subscription not found"
-         })
+    res.status(201).send(newSubscription);
+  } catch (error) {
+    res.status(500).send({
+      error: "Error creating subscription",
+      details: error.message,
+    });
+  }
+};
 
-         const updatedSubscription=await subscription.update(req.body)
-         restatus200.send(updatedSubscription);   
-     }catch(error){
-         restatus500.send ({
-             erro:"Error updating subscription",
-             details:error.message  
-         })
-     }
- }
+// Update a subscription by ID  
+exports.updateSubscription = async (req, res) => {
+  try {
+    const subscription = await Subscription.findByPk(req.params.id);
+    if (!subscription)
+      return res.status(404).send({
+        error: "Subscription not found",
+      });
 
-// Delete asubscriptionbyID  
- exports.deleteSubscription=async(req,res)=>{
-     try{
-         const subscription=await Subscription.findByPk(req.params.id)
-         if(!subscription)returnres.staus404.send ({
-             erro:"Subscription not found"
-         })
+    const updatedSubscription = await subscription.update(req.body);
+    res.status(200).send(updatedSubscription);
+  } catch (error) {
+    res.status(500).send({
+      error: "Error updating subscription",
+      details: error.message,
+    });
+  }
+};
 
-         await subscription.destroy()
-         restatus200.send ({
-             message:"Subscription deleted successfully"
-         })
-     }catch(error){
-         restatus500.send ({
-             erro:"Error deleting subscription",
-             details:error.message  
-         })
-     }
- }
+// Delete a subscription by ID  
+exports.deleteSubscription = async (req, res) => {
+  try {
+    const subscription = await Subscription.findByPk(req.params.id);
+    if (!subscription)
+      return res.status(404).send({
+        error: "Subscription not found",
+      });
+
+    await subscription.destroy();
+    res.status(200).send({
+      message: "Subscription deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).send({
+      error: "Error deleting subscription",
+      details: error.message,
+    });
+  }
+};

@@ -1,27 +1,27 @@
-    const express = require("express");
-    const {
-    getAllSessions,
-    getSessionById,
-    createSession,
-    updateSession,
-    deleteSession,
-    } = require("../controllers/sessionController");
+const express = require("express");
+const {
+  getAllSessions,
+  getSessionById,
+  createSession,
+  updateSession,
+  deleteSession,
+} = require("../controllers/sessionController");
 
-    const router = express.Router();
+const router = express.Router();
 
-    // GET /api/sessions - Get all sessions
-    router.get("/sessions", getAllSessions);
+// GET /sessions - Get all sessions
+router.get("/", getAllSessions);
 
-    // GET /api/sessions/:id - Get a session by ID
-    router.get("/sessions/:id", getSessionById);
+// GET /sessions/:id - Get a session by ID
+router.get("/:id", getSessionById);
 
-    // POST /api/sessions - Create a new session
-    router.post("/sessions", createSession);
+// POST /sessions - Create a new session
+router.post("/", createSession);
 
-    // PUT /api/sessions/:id - Update a session by ID
-    router.put("/sessions/:id", updateSession);
+// PUT /sessions/:id - Update a session by ID
+router.put("/:id", updateSession);
 
-    // DELETE /api/sessions/:id - Delete a session by ID
-    router.delete("/sessions/:id", deleteSession);
+// DELETE /sessions/:id - Delete a session by ID
+router.delete("/:id", deleteSession);
 
-    module.exports = router;
+module.exports = router;
