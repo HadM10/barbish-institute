@@ -1,71 +1,38 @@
-const BonCard = require("../models/Bonus");
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/db");
 
-// Create a new BonCard
-exports.createBonCard = async (req, res) => {
-  try {
-    const { title, description, image, price, expiredDate } = req.body;
-    const newBonCard = await BonCard.create({ title, description, image, price, expiredDate });
-    res.status(201).json({
-      success: true,
-      message: "BonCard created successfully.",
-      data: newBonCard,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Failed to create BonCard.", error: error.message });
+const BonCard = sequelize.define(
+  "BonCard",
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    title: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    description: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    image: {
+      type: DataTypes.STRING, // Assuming image URL or path will be stored.
+      allowNull: true, // Image is optional.
+    },
+    price: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+    },
+    expiredDate: {
+      type: DataTypes.DATE,
+      allowNull: true, // The expiration date is optional but can be set if available.
+    },
+  },
+  {
+    timestamps: true, // Automatically manage `createdAt` and `updatedAt`
   }
-};
+);
 
-// Get all BonCards
-exports.getAllBonCards = async (req, res) => {
-  try {
-    const bonCards = await BonCard.findAll();
-    res.status(200).json({ success: true, data: bonCards });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Failed to fetch BonCards.", error: error.message });
-  }
-};
-
-// Get a single BonCard by ID
-exports.getBonCardById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const bonCard = await BonCard.findByPk(id);
-    if (!bonCard) return res.status(404).json({ success: false, message: "BonCard not found." });
-    res.status(200).json({ success: true, data: bonCard });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Failed to fetch BonCard.", error: error.message });
-  }
-};
-
-// Update a BonCard
-exports.updateBonCard = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { title, description, image, price, expiredDate } = req.body;
-    const bonCard = await BonCard.findByPk(id);
-    if (!bonCard) return res.status(404).json({ success: false, message: "BonCard not found." });
-
-    await bonCard.update({ title, description, image, price, expiredDate });
-    res.status(200).json({
-      success: true,
-      message: "BonCard updated successfully.",
-      data: bonCard,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Failed to update BonCard.", error: error.message });
-  }
-};
-
-// Delete a BonCard
-exports.deleteBonCard = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const bonCard = await BonCard.findByPk(id);
-    if (!bonCard) return res.status(404).json({ success: false, message: "BonCard not found." });
-
-    await bonCard.destroy();
-    res.status(200).json({ success: true, message: "BonCard deleted successfully." });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Failed to delete BonCard.", error: error.message });
-  }
-};
+module.exports = BonCard;
