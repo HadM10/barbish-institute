@@ -1,13 +1,12 @@
-import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
-import AppRoutes from './routes'; // Import AppRoutes
+import React from "react";
+import AppRoutes from "./routes";
+import "./css/tailwind.css";
 
 const App = () => {
   return (
-    <Router>
-      {/* Render AppRoutes for managing all routes */}
-      <AppRoutes />
-    </Router>
+    <div>
+      <AppRoutes /> {/* Ensure this uses the Routes component */}
+    </div>
   );
 };
 
