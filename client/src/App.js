@@ -1,21 +1,14 @@
 import React from 'react';
-import Navbar from './components/User/Home/Navbar.js';
-import './css/tailwind.css';
-import RoutesComponent from './routes';
+import { BrowserRouter as Router } from 'react-router-dom';
+import AppRoutes from './routes'; // Import AppRoutes
 
 const App = () => {
   return (
-    <div>
-      <Navbar />
-      <RoutesComponent />
-    </div>
+    <Router>
+      {/* Render AppRoutes for managing all routes */}
+      <AppRoutes />
+    </Router>
   );
-};
-module.exports = {
-  plugins: {
-    tailwindcss: {},
-    autoprefixer: {},
-  },
 };
 
 export default App;

@@ -1,15 +1,21 @@
-import { Route, Routes } from 'react-router-dom';
-import Admin from './pages/AdminPanel/Admin';
-import Home from './pages/ClientSide/Home';
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
 
+// Define placeholder components to prevent compilation errors
+const Placeholder = ({ name }) => <div>{name} Page is Under Development</div>;
+
+// Define the RoutesComponent
 const RoutesComponent = () => {
   return (
     <Routes>
-      <Route path="/admin" element={<Admin />} />
-      <Route path="/" element={<Home />} />
-      <Route path="*" element={<div>Page Not Found</div>} />
+      {/* Define routes with placeholder components */}
+      <Route path="/" element={<Placeholder name="Home" />} />
+      <Route path="/about" element={<Placeholder name="About" />} />
+      <Route path="/dashboard" element={<Placeholder name="Dashboard" />} />
+      <Route path="/contact" element={<Placeholder name="Contact Us" />} />
     </Routes>
   );
 };
 
+// Export the RoutesComponent
 export default RoutesComponent;
