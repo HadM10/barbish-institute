@@ -1,11 +1,12 @@
-import React from 'react';
-// import AppRoutes from './routes'; // Ensure this imports the correct component
-import './css/tailwind.css';
+import React from "react";
+import Navbar from "./components/User/HomePage/NavBar.js"; 
+import "./css/tailwind.css";
 
 const App = () => {
   return (
     <div>
-   {  /*  <AppRoutes /> */}  {  /*   Ensure this uses the Routes component */}
+      <Navbar />
+      {/* <AppRoutes /> */}
     </div>
   );
 };
