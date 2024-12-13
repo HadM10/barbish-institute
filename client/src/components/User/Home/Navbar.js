@@ -1,5 +1,5 @@
 import React, { useState } from "react";
- // Update with the actual path to your logo file
+import logo from "../../../assets/images/logo.png"; // Update with the actual path to your logo file
 
 const Navbar = () => {
   const [language, setLanguage] = useState("English"); // Default language is English
