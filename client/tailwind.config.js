@@ -1,16 +1,17 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ['./src/**/*.{js,jsx,ts,tsx}'],
+  content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        primary: '#201A4B', // indigo
-        secondary: '#3F368A', // Light Purple
-        accent: '#F97316', // Orange
-        'accent-dark': '#E85D04', // Darker Orange (adjust as needed)
-        background: '#F9FAFB', // Light Gray
-        text: '#111827', // Almost Black
-        border: '#D1D5DB', // Light Gray
+        primary: "#1c1a4b", // Dark Indigo
+        secondary: "#3F368A", // Light Purple
+        highlight: "#f16146", // Red-Orange
+        accent: "#216082", // Deep Blue
+        sky: "#409cd6", // Sky Blue
+        background: "#f0f8ff", // Light Azure
+        text: "#111827", // Dark Charcoal
+        border: "#D1D5DB", // Light Silver
       },
     },
   },

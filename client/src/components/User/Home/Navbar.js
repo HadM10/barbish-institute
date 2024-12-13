@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import logo from "C:/barbish-institute/client/src/assets/fonts/Barbish_institute_logo.png"; // Update the path to your actual logo file
+import logo from "../../../assets/images/logo.png"; // Update the path to your actual logo file
 
 const Navbar = () => {
   const [language, setLanguage] = useState("English"); // Default language is English
