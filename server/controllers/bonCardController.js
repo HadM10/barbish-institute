@@ -1,4 +1,4 @@
-const BonCard = require("../models/Bonus");
+const BonCard = require("../models/BonCard");
 
 // Create a new BonCard
 exports.createBonCard = async (req, res) => {

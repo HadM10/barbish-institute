@@ -3,7 +3,7 @@ const Course = require("./Course");
 const Session = require("./Session");
 const User = require("./User");
 const Subscription = require("./Subscription");
-const Bonus = require("./Bonus");
+const Bonus = require("./BonCard");
 const Contact = require("./Contact");
 const UserSession = require("../models/UserSession");
 
