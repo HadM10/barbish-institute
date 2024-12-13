@@ -1,13 +1,13 @@
-import React from "react";
-import Navbar from "./components/User/Home/Navbar.js"; 
-import "./css/tailwind.css";
+import React from 'react';
+import { BrowserRouter as Router } from 'react-router-dom';
+import AppRoutes from './routes'; // Import AppRoutes
 
 const App = () => {
   return (
-    <div>
-      <Navbar />
-      {/* <AppRoutes /> */}
-    </div>
+    <Router>
+      {/* Render AppRoutes for managing all routes */}
+      <AppRoutes />
+    </Router>
   );
 };
 

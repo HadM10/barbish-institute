@@ -17,3 +17,4 @@ module.exports = {
   },
   plugins: [],
 };
+//C:/barbish-institute/client/src/assets/fonts/Barbish_institute_logo.png
