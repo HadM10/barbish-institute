@@ -10,9 +10,9 @@ userRoutes = require("./routes/userRoutes");
 const courseRoutes = require("./routes/courseRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const sessionRoutes = require("./routes/sessionRoutes");
-const categoryRoutes = require("./routes/categoryRoutes"); // Assuming you have a category route
+const categoryRoutes = require("./routes/categoryRoutes");
 
-require("./models/Relations"); // Ensure relationships are loaded
+require("./models/Relations");
 
 const app = express();
 
@@ -32,7 +32,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/course", courseRoutes);
 app.use("/api/subscription", subscriptionRoutes);
 app.use("/api/session", sessionRoutes);
-app.use("/api/categories", categoryRoutes); // Added category routes
+app.use("/api/categories", categoryRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
@@ -42,9 +42,9 @@ app.use((err, req, res, next) => {
 
 // Sync Database and Start Server
 sequelize
-  .sync()
+  .sync({ alter: true }) // Changed from sync() to sync({ alter: true })
   .then(() => {
-    console.log("Database synced");
+    console.log("Database synced and altered");
     app.listen(process.env.PORT || 5000, () => {
       console.log(`Server is running on port ${process.env.PORT || 5000}`);
     });

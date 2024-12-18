@@ -10,7 +10,7 @@ exports.getAllCategories = async (req, res) => {
   }
 };
 
-// Get a category by ID
+// Get a category by ID 
 exports.getCategoryById = async (req, res) => {
   try {
     const category = await Category.findByPk(req.params.id);
@@ -25,8 +25,11 @@ exports.getCategoryById = async (req, res) => {
 // Create a new category
 exports.createCategory = async (req, res) => {
   try {
-    const { name } = req.body;
-    const newCategory = await Category.create({ name });
+    const { name, description } = req.body;
+    const newCategory = await Category.create({ 
+      name,
+      description 
+    });
     res.status(201).send({ success: true, data: newCategory });
   } catch (error) {
     res.status(500).send({ success: false, message: "Error creating category", details: error.message });
@@ -39,7 +42,11 @@ exports.updateCategory = async (req, res) => {
     const category = await Category.findByPk(req.params.id);
     if (!category) return res.status(404).send({ success: false, message: "Category not found" });
 
-    const updatedCategory = await category.update(req.body);
+    const { name, description } = req.body;
+    const updatedCategory = await category.update({
+      name,
+      description
+    });
     res.status(200).send({ success: true, data: updatedCategory });
   } catch (error) {
     res.status(500).send({ success: false, message: "Error updating category", details: error.message });

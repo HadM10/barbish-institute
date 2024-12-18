@@ -1,37 +1,59 @@
 // Category.js
 import React, { useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
+import { motion } from 'framer-motion';
+import { 
+  PlusIcon,
+  PencilSquareIcon,
+  TrashIcon,
+  BookOpenIcon,
+  RectangleStackIcon,
+  AcademicCapIcon
+} from '@heroicons/react/24/outline';
 import 'react-toastify/dist/ReactToastify.css';
 
 const Category = () => {
   const [categories, setCategories] = useState([
-    { id: 1, name: 'Programming', courses: 15, students: 234 },
-    { id: 2, name: 'Design', courses: 8, students: 156 },
-    { id: 3, name: 'Marketing', courses: 12, students: 189 },
+    { 
+      id: 1, 
+      name: 'Programming', 
+      courses: 15, 
+      description: 'Learn coding and software development'
+    },
+    { 
+      id: 2, 
+      name: 'Design', 
+      courses: 8, 
+      description: 'Master graphic and UI/UX design'
+    },
+    { 
+      id: 3, 
+      name: 'Marketing', 
+      courses: 12, 
+      description: 'Digital marketing strategies'
+    }
   ]);
 
-  const [modalData, setModalData] = useState({ name: '' });
+  const [modalData, setModalData] = useState({ name: '', description: '' });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (modalData.name.trim()) {
+    if (modalData.name.trim() && modalData.description.trim()) {
       if (isEditing) {
-        // Update existing category
         setCategories(categories.map(cat => 
           cat.id === modalData.id 
-            ? { ...cat, name: modalData.name }
+            ? { ...cat, name: modalData.name, description: modalData.description }
             : cat
         ));
         toast.success('Category updated successfully!');
       } else {
-        // Add new category
         const newCategory = {
-          id: categories.length + 1,
+          id: Date.now(),
           name: modalData.name,
-          courses: 0,
-          students: 0
+          description: modalData.description,
+          courses: 0
         };
         setCategories([...categories, newCategory]);
         toast.success('Category added successfully!');
@@ -47,150 +69,216 @@ const Category = () => {
   };
 
   const handleCloseModal = () => {
-    setModalData({ name: '' });
+    setModalData({ name: '', description: '' });
     setIsEditing(false);
     setIsModalOpen(false);
   };
 
-  const handleAddNew = () => {
-    setModalData({ name: '' });
-    setIsEditing(false);
-    setIsModalOpen(true);
+  const handleDelete = (id) => {
+    setCategories(categories.filter(c => c.id !== id));
+    toast.error('Category deleted successfully!');
   };
 
+  const getTotalCourses = () => categories.reduce((acc, cat) => acc + cat.courses, 0);
+  const getAverageCourses = () => Math.round(getTotalCourses() / (categories.length || 1));
+
   return (
-    <div className="p-6">
-      {/* Header Section */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-indigo-900">Categories</h1>
-          <p className="text-gray-600 mt-1">Manage your course categories</p>
-        </div>
-        <button
-          onClick={handleAddNew}
-          className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-500 
-                     text-white rounded-xl shadow-lg shadow-indigo-500/30 
-                     hover:shadow-indigo-500/40 transition-all duration-200
-                     flex items-center space-x-2"
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-50 p-8">
+      <div className="max-w-7xl mx-auto">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-2xl p-8 shadow-lg mb-8"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          <span>Add Category</span>
-        </button>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700 bg-clip-text text-transparent">
+                Course Categories
+              </h1>
+              <p className="text-gray-600 mt-2">Manage your course categories</p>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setIsModalOpen(true)}
+              className="px-6 py-3 bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700 
+                       text-white rounded-xl shadow-lg hover:shadow-xl 
+                       transition-all duration-200 flex items-center gap-2"
+            >
+              <PlusIcon className="w-5 h-5" />
+              <span>Add Category</span>
+            </motion.button>
+          </div>
+        </motion.div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 rounded-2xl p-6 shadow-lg"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 font-medium">Total Categories</p>
+                <h3 className="text-3xl font-bold text-white mt-1">{categories.length}</h3>
+              </div>
+              <div className="bg-white/20 p-3 rounded-xl text-white">
+                <RectangleStackIcon className="w-6 h-6" />
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-br from-indigo-700 via-purple-600 to-purple-700 rounded-2xl p-6 shadow-lg"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-indigo-100 font-medium">Total Courses</p>
+                <h3 className="text-3xl font-bold text-white mt-1">{getTotalCourses()}</h3>
+              </div>
+              <div className="bg-white/20 p-3 rounded-xl text-white">
+                <BookOpenIcon className="w-6 h-6" />
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-br from-orange-600 via-orange-500 to-amber-600 rounded-2xl p-6 shadow-lg"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-100 font-medium">Average Courses</p>
+                <h3 className="text-3xl font-bold text-white mt-1">{getAverageCourses()}</h3>
+              </div>
+              <div className="bg-white/20 p-3 rounded-xl text-white">
+                <AcademicCapIcon className="w-6 h-6" />
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Categories Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  {categories.map((category, index) => (
+    <motion.div
+      key={category.id}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1 }}
+      className="bg-gradient-to-br from-slate-400 via-gray-500 to-neutral-500 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-200"
+    >
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h3 className="text-xl font-bold text-white">{category.name}</h3>
+          <p className="text-white/90 text-sm mt-1">{category.description}</p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleEdit(category)}
+            className="p-2 text-white bg-white/20 rounded-lg transition-colors hover:bg-white/30"
+          >
+            <PencilSquareIcon className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => handleDelete(category.id)}
+            className="p-2 text-white bg-white/20 rounded-lg transition-colors hover:bg-white/30"
+          >
+            <TrashIcon className="w-5 h-5" />
+          </button>
+        </div>
       </div>
-{/* Stats Cards */}
-<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-  {/* Total Categories Card */}
-  <div className="bg-gradient-to-br from-sky-500 to-sky-400 p-6 rounded-2xl shadow-lg shadow-sky-500/30">
-    <div className="text-gray-800 text-sm font-medium mb-2">Total Categories</div>
-    <div className="text-3xl font-bold text-gray-900">{categories.length}</div>
-  </div>
-
-  {/* Total Courses Card */}
-  <div className="bg-gradient-to-br from-indigo-500 to-indigo-400 p-6 rounded-2xl shadow-lg shadow-indigo-500/30">
-    <div className="text-gray-800 text-sm font-medium mb-2">Total Courses</div>
-    <div className="text-3xl font-bold text-gray-900">
-      {categories.reduce((acc, cat) => acc + cat.courses, 0)}
-    </div>
-  </div>
-
-  {/* Total Students Card */}
-  <div className="bg-gradient-to-br from-orange-500 to-orange-400 p-6 rounded-2xl shadow-lg shadow-orange-500/30">
-    <div className="text-gray-800 text-sm font-medium mb-2">Total Students</div>
-    <div className="text-3xl font-bold text-gray-900">
-      {categories.reduce((acc, cat) => acc + cat.students, 0)}
-    </div>
-  </div>
-</div>
-      {/* Categories Table */}
-      <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gradient-to-r from-indigo-900 to-indigo-800 text-white">
-              <tr>
-                <th className="px-6 py-4 text-left">Name</th>
-                <th className="px-6 py-4 text-left">Courses</th>
-                <th className="px-6 py-4 text-left">Students</th>
-                <th className="px-6 py-4 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {categories.map((category) => (
-                <tr key={category.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="font-medium text-gray-900">{category.name}</div>
-                  </td>
-                  <td className="px-6 py-4 text-gray-600">{category.courses}</td>
-                  <td className="px-6 py-4 text-gray-600">{category.students}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex space-x-3">
-                      <button
-                        onClick={() => handleEdit(category)}
-                        className="text-sky-500 hover:text-sky-600"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => {
-                          setCategories(categories.filter(c => c.id !== category.id));
-                          toast.success('Category deleted successfully!');
-                        }}
-                        className="text-red-500 hover:text-red-600"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="flex items-center gap-2">
+        <BookOpenIcon className="w-5 h-5 text-white/90" />
+        <span className="text-white/90">{category.courses} Courses</span>
+      </div>
+            </motion.div>
+          ))}
         </div>
       </div>
 
-      {/* Add/Edit Modal */}
+      {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
-            <h2 className="text-2xl font-bold text-indigo-900 mb-4">
-              {isEditing ? 'Edit Category' : 'Add New Category'}
-            </h2>
-            <form onSubmit={handleSubmit}>
-              <input
-                type="text"
-                value={modalData.name}
-                onChange={(e) => setModalData({ ...modalData, name: e.target.value })}
-                placeholder="Category name"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-              />
-              <div className="flex justify-end space-x-3 mt-6">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="px-6 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-500/30"
-                >
-                  {isEditing ? 'Update Category' : 'Add Category'}
-                </button>
-              </div>
-            </form>
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50">
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6"
+            >
+              <h3 className="text-2xl font-bold text-gray-800 mb-6">
+                {isEditing ? 'Edit Category' : 'Add New Category'}
+              </h3>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Category Name
+                  </label>
+                  <input
+                    type="text"
+                    value={modalData.name}
+                    onChange={(e) => setModalData({ ...modalData, name: e.target.value })}
+                    className="w-full px-4 py-2 rounded-lg border border-gray-300 
+                             focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    value={modalData.description}
+                    onChange={(e) => setModalData({ ...modalData, description: e.target.value })}
+                    className="w-full px-4 py-2 rounded-lg border border-gray-300 
+                             focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                    rows="3"
+                    required
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={handleCloseModal}
+                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg
+                             hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700 
+                             text-white rounded-lg shadow-lg hover:shadow-xl 
+                             transition-all duration-200"
+                  >
+                    {isEditing ? 'Update' : 'Add'} Category
+                  </button>
+                </div>
+              </form>
+            </motion.div>
           </div>
         </div>
       )}
 
-      <ToastContainer position="bottom-right" />
+      <ToastContainer 
+        position="bottom-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
     </div>
   );
 };
