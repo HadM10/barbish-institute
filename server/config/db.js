@@ -1,4 +1,3 @@
-// server/config/db.js
 const { Sequelize } = require("sequelize");
 const dotenv = require("dotenv");
 
@@ -15,5 +14,15 @@ const sequelize = new Sequelize(
   }
 );
 
-// Remove the sync code from here - we'll handle it in server.js
+
+// Sync all models with the database
+sequelize
+  .sync({ alter: true })
+  .then(() => {
+    console.log("Database & tables updated");
+  })
+  .catch((err) => {
+    console.error("Error updating database:", err);
+  });
+
 module.exports = sequelize;

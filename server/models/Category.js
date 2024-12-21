@@ -1,4 +1,3 @@
-// models/Category.js
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
 
@@ -16,10 +15,6 @@ const Category = sequelize.define(
       allowNull: false,
       unique: true,
     },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    }
   },
   { timestamps: true }
 );

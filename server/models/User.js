@@ -1,5 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
+const Subscription = require("./Subscription"); // Relation with Subscription
+const Course = require("./Course"); // Relation with Course
 
 const User = sequelize.define(
   "User",
@@ -19,49 +21,21 @@ const User = sequelize.define(
       allowNull: false,
       unique: true,
       validate: {
-        isEmail: true,
+        isEmail: true, // Ensures valid email format
       },
     },
     password: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    role: {
-      type: DataTypes.ENUM('admin', 'user'),
-      defaultValue: 'user',
-      allowNull: false,
-    },
     isActive: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
     },
-    profileImage: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    lastLogin: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
-    status: {
-      type: DataTypes.ENUM('active', 'inactive'),
-      defaultValue: 'active',
-      allowNull: false,
-    },
   },
   {
-    timestamps: true,
-    paranoid: true,
-    indexes: [
-      {
-        unique: true,
-        fields: ['email']
-      },
-      {
-        unique: true,
-        fields: ['username']
-      }
-    ]
+    timestamps: true, // Automatically manages `createdAt` and `updatedAt`
+    paranoid: true, // Enables `deletedAt` column for soft deletes
   }
 );
 
