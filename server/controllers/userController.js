@@ -25,8 +25,8 @@ exports.getUserById = async (req, res) => {
 // Create a new user
 exports.createUser = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
-    const newUser = await User.create({ username, email, password });
+    const { username, email, password, status } = req.body;
+    const newUser = await User.create({ username, email, password, status });
     res.status(201).json(newUser);
   } catch (error) {
     res.status(500).json({ error: "Error creating user", details: error.message });

@@ -1,7 +1,7 @@
+// server/models/Contact.js
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-// Define ContactUs Model
 const ContactUs = sequelize.define('ContactUs', {
   id: {
     type: DataTypes.INTEGER,
@@ -16,14 +16,32 @@ const ContactUs = sequelize.define('ContactUs', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  phone: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  subject: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   message: {
     type: DataTypes.TEXT,
     allowNull: false,
   },
   status: {
+    type: DataTypes.ENUM('unread', 'read'),
+    defaultValue: 'unread',
+  },
+  replied: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
-}, { timestamps: true });
+  replyMessage: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  }
+}, { 
+  timestamps: true 
+});
 
 module.exports = ContactUs;
