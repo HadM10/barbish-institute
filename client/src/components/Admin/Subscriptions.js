@@ -1,5 +1,5 @@
 // src/components/Admin/Subscriptions.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   UserGroupIcon,
@@ -16,18 +16,17 @@ import {
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+// 1. Import your subscription API
+import {
+  getAllSubscriptions,
+  createSubscription,
+  updateSubscription as updateSubscriptionAPI,
+  deleteSubscription as deleteSubscriptionAPI
+} from '../../api/subscriptionAPI';
 const Subscriptions = () => {
   const [subscriptions, setSubscriptions] = useState([
-    {
-      id: 1,
-      userName: "John Doe",
-      courseName: "Advanced React Development",
-      planType: "Premium",
-      startDate: "2023-12-01",
-      endDate: "2024-12-01",
-      status: "active",
-      amount: 299,
-    }
+    // We'll fetch real data from the DB in useEffect, 
+    // but let's keep this as an empty array or dummy data initially
   ]);
 
   const courses = [
@@ -48,6 +47,129 @@ const Subscriptions = () => {
     status: 'active'
   });
 
+  // 2. Fetch from the DB on mount
+  useEffect(() => {
+    fetchSubscriptions();
+  }, []);
+
+  const fetchSubscriptions = async () => {
+    try {
+      const res = await getAllSubscriptions();
+      if (res.success) {
+        // res.data is an array of subscriptions, 
+        // each sub might look like: 
+        // { id, userId, courseId, startDate, endDate, isActive, User: {...}, Course: {...} }
+        // We adapt them to our local front-end shape:
+        const adapted = res.data.map((sub) => {
+          return {
+            id: sub.id,
+            // We'll combine "User" and "Course" to get userName + courseName
+            userName: sub.User?.username || 'Unknown User',
+            courseName: sub.Course?.title || 'Unknown Course',
+            startDate: sub.startDate?.split('T')[0] || '',
+            endDate: sub.endDate?.split('T')[0] || '',
+            // Convert boolean isActive -> 'active'/'inactive'
+            status: sub.isActive ? 'active' : 'inactive',
+            // We don't store "amount" in DB, so let's default to 0 or something
+            amount: 0,
+            // If you want to store "planType" or other front-end only fields, you can default them here
+            planType: 'Premium'
+          };
+        });
+        setSubscriptions(adapted);
+      } else {
+        toast.error('Failed to fetch subscriptions: ' + res.message);
+      }
+    } catch (error) {
+      toast.error('Error fetching subscriptions: ' + error.message);
+    }
+  };
+
+  // 3. Handle create/edit in the DB
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!formData.userName || !formData.courseName || !formData.startDate || !formData.endDate) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    // We must convert userName -> userId, courseName -> courseId
+    // For now, let's assume userName = "John Doe" → userId=1 in real DB. 
+    // If you had a user list, you'd do a real lookup. 
+    // We'll just do a dummy approach here:
+    let userId = 1; // Hardcode for the sake of example
+    if (formData.userName.toLowerCase().includes('john')) userId = 1; 
+    else if (formData.userName.toLowerCase().includes('sarah')) userId = 2; 
+    else userId = 999; // fallback
+
+    // Convert courseName -> courseId by searching "courses" array:
+    const selectedCourse = courses.find((c) => c.name === formData.courseName);
+    const courseId = selectedCourse ? selectedCourse.id : 9999;
+
+    // Convert status 'active'/'inactive' -> isActive boolean
+    const isActive = formData.status === 'active';
+
+    const dbPayload = {
+      userId,
+      courseId,
+      startDate: formData.startDate,
+      endDate: formData.endDate,
+      isActive
+    };
+
+    if (isEditing) {
+      // UPDATE existing
+      try {
+        const res = await updateSubscriptionAPI(editId, dbPayload);
+        if (res.success) {
+          // Also update local state
+          setSubscriptions((prev) => 
+            prev.map((sub) =>
+              sub.id === editId
+                ? { ...sub, ...formData } 
+                : sub
+            )
+          );
+          toast.success('Subscription updated successfully!');
+        } else {
+          toast.error('Failed to update subscription: ' + (res.message || 'Unknown error'));
+        }
+      } catch (error) {
+        toast.error('Error updating subscription: ' + error.message);
+      }
+    } else {
+      // CREATE new
+      try {
+        const res = await createSubscription(dbPayload);
+        if (res.success) {
+          // res.data => newly created subscription in DB
+          // We'll adapt it to front-end shape
+          const newSub = res.data; 
+          const adapted = {
+            id: newSub.id,
+            userName: formData.userName,
+            courseName: formData.courseName,
+            startDate: newSub.startDate.split('T')[0],
+            endDate: newSub.endDate.split('T')[0],
+            status: newSub.isActive ? 'active' : 'inactive',
+            amount: formData.amount || 0,
+            planType: 'Premium'
+          };
+          setSubscriptions((prev) => [...prev, adapted]);
+          toast.success('Subscription created successfully!');
+        } else {
+          toast.error('Failed to create subscription: ' + (res.message || 'Unknown error'));
+        }
+      } catch (error) {
+        toast.error('Error creating subscription: ' + error.message);
+      }
+    }
+
+    resetForm();
+  };
+
+  // 4. Handle local edit
   const handleEdit = (subscription) => {
     setIsEditing(true);
     setEditId(subscription.id);
@@ -62,13 +184,38 @@ const Subscriptions = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (id) => {
+  // 5. Delete from DB
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this subscription?')) {
-      setSubscriptions(prev => prev.filter(sub => sub.id !== id));
-      toast.success('Subscription deleted successfully!');
+      try {
+        const res = await deleteSubscriptionAPI(id);
+        if (res.success) {
+          setSubscriptions(prev => prev.filter(sub => sub.id !== id));
+          toast.success('Subscription deleted successfully!');
+        } else {
+          toast.error('Failed to delete subscription: ' + (res.message || 'Unknown error'));
+        }
+      } catch (error) {
+        toast.error('Error deleting subscription: ' + error.message);
+      }
     }
   };
 
+  // Toggle local status
+  const handleStatusToggle = (id) => {
+    setSubscriptions(prev => 
+      prev.map(sub => {
+        if (sub.id === id) {
+          const newStatus = sub.status === 'active' ? 'inactive' : 'active';
+          toast.success(`Subscription status changed to ${newStatus}`);
+          return { ...sub, status: newStatus };
+        }
+        return sub;
+      })
+    );
+  };
+
+  // Form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -76,26 +223,13 @@ const Subscriptions = () => {
       [name]: value
     }));
 
+    // If the user picks a courseName, set the "amount" from the local courses array
     if (name === 'courseName') {
       const selectedCourse = courses.find(course => course.name === value);
       if (selectedCourse) {
-        setFormData(prev => ({
-          ...prev,
-          amount: selectedCourse.price
-        }));
+        setFormData(prev => ({ ...prev, amount: selectedCourse.price }));
       }
     }
-  };
-
-  const handleStatusToggle = (id) => {
-    setSubscriptions(prev => prev.map(sub => {
-      if (sub.id === id) {
-        const newStatus = sub.status === 'active' ? 'inactive' : 'active';
-        toast.success(`Subscription status changed to ${newStatus}`);
-        return { ...sub, status: newStatus };
-      }
-      return sub;
-    }));
   };
 
   const resetForm = () => {
@@ -112,34 +246,9 @@ const Subscriptions = () => {
     setShowModal(false);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    if (!formData.userName || !formData.courseName || !formData.startDate || !formData.endDate) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
-    if (isEditing) {
-      setSubscriptions(prev => prev.map(sub => 
-        sub.id === editId ? { ...sub, ...formData } : sub
-      ));
-      toast.success('Subscription updated successfully!');
-    } else {
-      const newSubscription = {
-        id: Date.now(),
-        ...formData
-      };
-      setSubscriptions(prev => [...prev, newSubscription]);
-      toast.success('Subscription added successfully!');
-    }
-
-    resetForm();
-  };
-
   // Stats data
   const activeSubscriptions = subscriptions.filter(s => s.status === 'active').length;
-  const totalRevenue = subscriptions.reduce((acc, curr) => acc + curr.amount, 0);
+  const totalRevenue = subscriptions.reduce((acc, curr) => acc + (curr.amount || 0), 0);
   const averageRevenue = totalRevenue / (subscriptions.length || 1);
 
   return (
@@ -155,8 +264,8 @@ const Subscriptions = () => {
           <p className="text-purple-100">Manage and monitor all subscription activities</p>
         </motion.div>
 
-              {/* Stats Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatsCard
             title="Total Subscriptions"
             value={subscriptions.length}
@@ -252,7 +361,7 @@ const Subscriptions = () => {
               <tbody className="divide-y divide-gray-100">
                 {subscriptions.map((sub) => (
                   <motion.tr 
-                    key={sub.id} 
+                    key={sub.id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className="hover:bg-gray-50 transition-colors duration-150"
@@ -476,5 +585,4 @@ const StatsCard = ({ title, value, icon, trend, color }) => (
     </div>
   </motion.div>
 );
-
 export default Subscriptions;

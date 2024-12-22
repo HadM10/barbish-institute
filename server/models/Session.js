@@ -1,3 +1,4 @@
+// models/Session.js
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
 const Course = require("./Course");
@@ -34,6 +35,10 @@ const Session = sequelize.define(
   },
   { timestamps: true }
 );
+
+// Define association with Course
+Session.belongsTo(Course, { foreignKey: 'courseId' });
+Course.hasMany(Session, { foreignKey: 'courseId' });
 
 // Export the model
 module.exports = Session;

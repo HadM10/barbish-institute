@@ -1,5 +1,5 @@
 // src/components/Admin/ContactMessages.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   EnvelopeIcon, 
   PhoneIcon, 
@@ -10,76 +10,96 @@ import {
   PaperAirplaneIcon
 } from '@heroicons/react/24/outline';
 import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+// 1. Import API methods from EXACT file name "contactAPI.js"
+import {
+  getAllContacts,
+  updateContactStatus,
+} from '../../api/contactsAPI';
+
 
 const ContactMessages = () => {
-  // Sample messages data (will be replaced with API data later)
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      name: "John Doe",
-      email: "john@example.com",
-      phone: "+1 234 567 8900",
-      subject: "Course Inquiry",
-      message: "I'm interested in the Advanced React Development course. Could you provide more details about the curriculum?",
-      status: "unread",
-      createdAt: "2024-01-20T10:30:00",
-      replied: false
-    },
-    {
-      id: 2,
-      name: "Sarah Smith",
-      email: "sarah@example.com",
-      phone: "+1 987 654 3210",
-      subject: "Technical Support",
-      message: "Having trouble accessing the course materials. Need assistance.",
-      status: "read",
-      createdAt: "2024-01-19T15:45:00",
-      replied: true
-    }
-  ]);
+  // "messages" now comes from the DB in useEffect
+  const [messages, setMessages] = useState([]);
 
   const [expandedMessage, setExpandedMessage] = useState(null);
   const [replyText, setReplyText] = useState('');
   const [showReplyForm, setShowReplyForm] = useState(null);
   const [filter, setFilter] = useState('all'); // all, unread, read
 
-  // Handle message deletion
-  const handleDelete = (messageId) => {
-    if (window.confirm('Are you sure you want to delete this message?')) {
-      setMessages(prev => prev.filter(msg => msg.id !== messageId));
-      toast.success('Message deleted successfully');
+  // 2. On component mount, fetch from the API
+  useEffect(() => {
+    fetchContacts();
+  }, []);
+
+  const fetchContacts = async () => {
+    try {
+      const res = await getAllContacts();
+      if (res.success) {
+        // "res.data" is an array of objects { id, name, email, message, status, createdAt, ... }
+        // Convert them to your front-end shape: add placeholders for phone, subject, replied, etc.
+        const adapted = res.data.map((c) => ({
+          id: c.id,
+          name: c.name,
+          email: c.email,
+          phone: '',            // not in DB
+          subject: '',          // not in DB
+          message: c.message,
+          status: c.status ? 'read' : 'unread',  // boolean -> 'read'/'unread'
+          createdAt: c.createdAt,
+          replied: false        // not in DB
+        }));
+        setMessages(adapted);
+      } else {
+        toast.error('Failed to fetch contacts: ' + (res.message || 'Unknown error'));
+      }
+    } catch (error) {
+      toast.error('Error fetching contacts: ' + error.message);
     }
   };
 
-  // Handle sending reply
+  // 3. Delete is not in the controller, so we remove locally only
+  const handleDelete = (messageId) => {
+    if (window.confirm('Are you sure you want to delete this message?')) {
+      setMessages(prev => prev.filter(msg => msg.id !== messageId));
+      toast.success('Message deleted locally (no real API delete).');
+    }
+  };
+
+  // 4. Send a reply (purely local, no real email sending)
   const handleReply = (messageId) => {
     if (!replyText.trim()) {
       toast.error('Please enter a reply message');
       return;
     }
-
-    // Here you would typically make an API call to send the email
-    console.log(`Sending reply to message ${messageId}:`, replyText);
-    
-    // Update message status
+    // Just set replied = true locally
     setMessages(prev => prev.map(msg => 
       msg.id === messageId ? { ...msg, replied: true } : msg
     ));
-
-    // Reset form
+    toast.success('Reply sent successfully (simulated)');
     setReplyText('');
     setShowReplyForm(null);
-    toast.success('Reply sent successfully');
   };
 
-  // Mark message as read
-  const handleMarkAsRead = (messageId) => {
-    setMessages(prev => prev.map(msg => 
-      msg.id === messageId ? { ...msg, status: 'read' } : msg
-    ));
+  // 5. Mark message as read => DB status = true
+  const handleMarkAsRead = async (messageId) => {
+    try {
+      const res = await updateContactStatus(messageId, true);
+      if (res.success) {
+        // Update local state
+        setMessages(prev => prev.map(msg => 
+          msg.id === messageId ? { ...msg, status: 'read' } : msg
+        ));
+      } else {
+        toast.error('Failed to mark as read: ' + (res.message || 'Unknown error'));
+      }
+    } catch (error) {
+      toast.error('Error marking as read: ' + error.message);
+    }
   };
 
-  // Filter messages
+  // 6. Filter messages by 'all', 'unread', or 'read'
   const filteredMessages = messages.filter(msg => {
     if (filter === 'unread') return msg.status === 'unread';
     if (filter === 'read') return msg.status === 'read';
@@ -109,7 +129,7 @@ const ContactMessages = () => {
 
       {/* Messages List */}
       <div className="space-y-4">
-        {filteredMessages.map(message => (
+        {filteredMessages.map((message) => (
           <div 
             key={message.id}
             className={`bg-white rounded-lg shadow-md overflow-hidden
@@ -129,7 +149,7 @@ const ContactMessages = () => {
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-800">
-                    {message.subject}
+                    {message.subject || 'No Subject'} 
                   </h3>
                   <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
                     <div className="flex items-center">
@@ -142,7 +162,7 @@ const ContactMessages = () => {
                     </div>
                     <div className="flex items-center">
                       <PhoneIcon className="w-4 h-4 mr-1" />
-                      {message.phone}
+                      {message.phone || 'N/A'}
                     </div>
                   </div>
                 </div>

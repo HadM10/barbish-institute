@@ -1,3 +1,4 @@
+// controllers/sessionController.js
 const Session = require("../models/Session");
 const Course = require("../models/Course");
 
@@ -29,7 +30,7 @@ exports.getSessionById = async (req, res) => {
   } catch (error) {
     res.status(500).send({ error: "Error fetching session", details: error.message });
   }
-}
+};
 
 // Create a new session 
 exports.createSession = async (req, res) => {
@@ -49,7 +50,7 @@ exports.createSession = async (req, res) => {
   } catch (error) {
     res.status(500).send({ error: "Error creating session", details: error.message });
   }
-}
+};
 
 // Update a session by ID 
 exports.updateSession = async (req, res) => {
@@ -66,7 +67,7 @@ exports.updateSession = async (req, res) => {
   } catch (error) {
     res.status(500).send({ error: "Error updating session", details: error.message });
   }
-}
+};
 
 // Delete a session by ID 
 exports.deleteSession = async (req, res) => {
@@ -83,4 +84,4 @@ exports.deleteSession = async (req, res) => {
   } catch (error) {
     res.status(500).send({ error: "Error deleting session", details: error.message });
   }
-}
+};

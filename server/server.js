@@ -1,3 +1,4 @@
+// server.js
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
@@ -6,7 +7,7 @@ const sequelize = require("./config/db");
 // Import route files
 const contactRoutes = require("./routes/contactRoutes");
 const bonCardRoutes = require("./routes/bonCardRoutes");
-userRoutes = require("./routes/userRoutes");
+const userRoutes = require("./routes/userRoutes");
 const courseRoutes = require("./routes/courseRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const sessionRoutes = require("./routes/sessionRoutes");
@@ -28,9 +29,12 @@ app.get("/", (req, res) => {
 // Routes
 app.use("/api/contact", contactRoutes);
 app.use("/api/boncards", bonCardRoutes);
-app.use("/api/user", userRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/course", courseRoutes);
-app.use("/api/subscription", subscriptionRoutes);
+
+// **Updated to plural**
+app.use("/api/subscriptions", subscriptionRoutes);
+
 app.use("/api/session", sessionRoutes);
 app.use("/api/categories", categoryRoutes); // Added category routes
 

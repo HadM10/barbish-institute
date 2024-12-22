@@ -1,5 +1,5 @@
-// src/components/Admin/BonusCards.js
-import React, { useState } from 'react';
+// src/components/Admin/BonusCard.js
+import React, { useState, useEffect } from 'react';
 import { 
   PlusIcon, 
   TrashIcon, 
@@ -12,27 +12,24 @@ import {
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const BonusCard = () => {
-  const [offers, setOffers] = useState([
-    {
-      id: 1,
-      title: "Premium Gym Membership",
-      organization: "FitLife Gym",
-      description: "Get 30% off on annual membership. Access to all facilities including pool and spa.",
-      originalPrice: 999,
-      discountedPrice: 699,
-      image: "https://via.placeholder.com/400x300",
-      contactType: "website",
-      contactLink: "https://fitlifegym.com",
-      validUntil: "2024-12-31",
-      isActive: true
-    }
-  ]);
+// 1. IMPORT your new API functions
+import {
+  getAllBonCards,
+  createBonCard,
+  updateBonCard,
+  deleteBonCard
+} from '../../api/BonCardAPI';
 
+const BonusCard = () => {
+  // State
+  const [offers, setOffers] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+
+  // This object has far more fields than your DB table, 
+  // but we'll only store {title, description, image, price, expiredDate} in the DB.
   const [formData, setFormData] = useState({
     title: '',
     organization: '',
@@ -46,6 +43,41 @@ const BonusCard = () => {
     isActive: true
   });
 
+  // 2. Load all bonCards from the database on component mount
+  useEffect(() => {
+    fetchBonCards();
+  }, []);
+
+  const fetchBonCards = async () => {
+    try {
+      const res = await getAllBonCards();
+      if (res.success) {
+        // res.data is the array of bonCards from DB: 
+        // each item has { id, title, description, image, price, expiredDate, ... }
+        // We must adapt them to your front-end shape
+        const adapted = res.data.map(b => ({
+          id: b.id,
+          title: b.title,
+          organization: '',         // we have no place to store this in DB
+          description: b.description,
+          originalPrice: '',        // also not in DB
+          discountedPrice: b.price, // your DB just has 'price'
+          image: b.image || 'https://via.placeholder.com/400x300',
+          contactType: 'website',   // not in DB
+          contactLink: '',
+          validUntil: b.expiredDate ? b.expiredDate.split('T')[0] : '', // or parse date
+          isActive: true            // not in DB
+        }));
+        setOffers(adapted);
+      } else {
+        toast.error('Failed to fetch bonCards: ' + (res.message || 'Unknown error'));
+      }
+    } catch (error) {
+      toast.error('Error fetching bonCards: ' + error.message);
+    }
+  };
+
+  // 3. Handle open modal for editing
   const handleEdit = (offer) => {
     setIsEditing(true);
     setEditId(offer.id);
@@ -111,52 +143,111 @@ const BonusCard = () => {
     setShowModal(false);
   };
 
-  const handleSubmit = (e) => {
+  // 4. Create or Update in the DB
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!formData.title || !formData.organization || !formData.description) {
+
+    // Basic validation
+    if (!formData.title || !formData.description) {
       toast.error('Please fill in all required fields');
       return;
     }
 
-    const offerData = {
-      ...formData,
-      image: imagePreview || 'https://via.placeholder.com/400x300'
-    };
-
-    if (isEditing) {
-      setOffers(prev => prev.map(offer => 
-        offer.id === editId ? { ...offer, ...offerData } : offer
-      ));
-      toast.success('Offer updated successfully!');
-    } else {
-      const newOffer = {
-        id: Date.now(),
-        ...offerData
+    try {
+      // We'll store only {title, description, image, price, expiredDate} in DB
+      const payload = {
+        title: formData.title,
+        description: formData.description,
+        // If using an actual image upload, you'd handle that differently.
+        image: imagePreview || 'https://via.placeholder.com/400x300',
+        price: parseFloat(formData.discountedPrice) || 0,
+        expiredDate: formData.validUntil || null
       };
-      setOffers(prev => [...prev, newOffer]);
-      toast.success('Offer added successfully!');
-    }
 
-    resetForm();
+      if (isEditing) {
+        // Update existing bonCard
+        const res = await updateBonCard(editId, payload);
+        if (res.success) {
+          // We also update the local state
+          setOffers(prev =>
+            prev.map(offer =>
+              offer.id === editId
+                ? {
+                    ...offer,
+                    ...formData, 
+                    image: imagePreview || offer.image 
+                  }
+                : offer
+            )
+          );
+          toast.success('BonCard updated successfully!');
+        } else {
+          toast.error('Failed to update bonCard: ' + (res.message || 'Unknown error'));
+        }
+      } else {
+        // Create new bonCard
+        const res = await createBonCard(payload);
+        if (res.success) {
+          // Insert the newly created row to local state
+          const newDbRecord = res.data; 
+          // This is { id, title, description, image, price, expiredDate, ... }
+          // Adapt it to your front-end shape
+          const adapted = {
+            id: newDbRecord.id,
+            title: newDbRecord.title,
+            organization: '',
+            description: newDbRecord.description,
+            originalPrice: '',
+            discountedPrice: newDbRecord.price,
+            image: newDbRecord.image || 'https://via.placeholder.com/400x300',
+            contactType: 'website',
+            contactLink: '',
+            validUntil: newDbRecord.expiredDate ? newDbRecord.expiredDate.split('T')[0] : '',
+            isActive: true
+          };
+          setOffers(prev => [...prev, adapted]);
+          toast.success('BonCard created successfully!');
+        } else {
+          toast.error('Failed to create bonCard: ' + (res.message || 'Unknown error'));
+        }
+      }
+    } catch (error) {
+      toast.error('Operation failed: ' + error.message);
+    } finally {
+      resetForm();
+    }
   };
 
-  const deleteOffer = (offerId) => {
+  // 5. Delete from the DB
+  const deleteOffer = async (offerId) => {
     if (window.confirm('Are you sure you want to delete this offer?')) {
-      setOffers(prev => prev.filter(offer => offer.id !== offerId));
-      toast.success('Offer deleted successfully');
+      try {
+        const res = await deleteBonCard(offerId);
+        if (res.success) {
+          setOffers(prev => prev.filter(offer => offer.id !== offerId));
+          toast.success('Offer deleted successfully');
+        } else {
+          toast.error('Failed to delete offer: ' + (res.message || 'Unknown error'));
+        }
+      } catch (error) {
+        toast.error('Error deleting offer: ' + error.message);
+      }
     }
   };
 
+  // 6. Toggle local “isActive” (not stored in DB, just in front-end)
   const toggleOfferStatus = (offerId) => {
-    setOffers(prev => prev.map(offer => 
-      offer.id === offerId 
-        ? { ...offer, isActive: !offer.isActive }
-        : offer
-    ));
+    setOffers(prev =>
+      prev.map(offer =>
+        offer.id === offerId 
+          ? { ...offer, isActive: !offer.isActive }
+          : offer
+      )
+    );
     toast.success('Offer status updated successfully');
   };
 
+  // Same UI as you provided, but now pulling data from the DB
   return (
     <div className="container mx-auto px-4">
       {/* Header */}
@@ -359,7 +450,9 @@ const BonusCard = () => {
                     name="contactLink"
                     value={formData.contactLink}
                     onChange={handleInputChange}
-                    placeholder={formData.contactType === 'whatsapp' ? 'WhatsApp number' : 'Website URL'}
+                    placeholder={
+                      formData.contactType === 'whatsapp' ? 'WhatsApp number' : 'Website URL'
+                    }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
                     required
                   />
@@ -426,7 +519,7 @@ const BonusCard = () => {
                         <div className="flex text-sm text-gray-600">
                           <label
                             htmlFor="file-upload"
-                            className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500"
+                            className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500"
                           >
                             <span>Upload a file</span>
                             <input

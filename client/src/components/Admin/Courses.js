@@ -1,5 +1,5 @@
 // src/components/Admin/Courses.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   PlusIcon, 
@@ -14,6 +14,14 @@ import {
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+// 1. Import the new API methods
+import {
+  getAllCourses,
+  createCourse,
+  updateCourse as updateCourseAPI,
+  deleteCourse as deleteCourseAPI
+} from '../../api/courseAPI';
+
 const Courses = () => {
   const sampleCategories = [
     { id: 1, name: 'Web Development' },
@@ -24,46 +32,74 @@ const Courses = () => {
     { id: 6, name: 'Business' }
   ];
 
-  const [courses, setCourses] = useState([
-    {
-      id: 1,
-      title: "Advanced React Development",
-      instructor: "John Doe",
-      duration: "12 weeks",
-      price: 299,
-      image: "https://via.placeholder.com/400x300",
-      description: "Master React with our comprehensive course covering hooks, state management, and more.",
-      content: [
-        "React Hooks in Depth",
-        "Redux & Context API",
-        "Performance Optimization",
-        "Testing with Jest & RTL"
-      ],
-      category: "Web Development",
-      level: "Advanced",
-      enrollments: 156,
-      isVisible: true,
-      createdAt: "2024-01-15"
-    }
-  ]);
+  // 2. We'll store the fetched courses in state
+  // Initially we had a "courses" array with a sample. Now we want real data from the server.
+  const [courses, setCourses] = useState([]);
 
   const [showModal, setShowModal] = useState(false);
   const [expandedCourse, setExpandedCourse] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+
+  // The front-end has fields not in DB (e.g. "instructor", "category", "level")
+  // We'll keep them local. The DB only stores {title, image, description, content, price, duration, isArchived}
   const [formData, setFormData] = useState({
+    id: null,             // for editing
     title: '',
-    instructor: '',
+    instructor: '',       // not in DB
     duration: '',
     price: '',
     image: null,
     description: '',
     content: '',
-    category: '',
-    level: 'Beginner',
-    isVisible: true
+    category: '',         // not in DB
+    level: 'Beginner',    // not in DB
+    isVisible: true       // local front-end
   });
+
   const [imagePreview, setImagePreview] = useState(null);
 
+  // 3. Fetch courses on mount
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  const fetchCourses = async () => {
+    try {
+      const res = await getAllCourses();
+      if (res.success) {
+        // res.data is array of DB objects, e.g. [ { id, title, image, description, content, price, duration, isArchived, ...}, ... ]
+        // We'll adapt them to have the extra front-end fields.
+        const adapted = res.data.map(dbCourse => ({
+          // DB fields
+          id: dbCourse.id,
+          title: dbCourse.title,
+          image: dbCourse.image || 'https://via.placeholder.com/400x300',
+          description: dbCourse.description,
+          content: Array.isArray(dbCourse.content) 
+            ? dbCourse.content 
+            : dbCourse.content?.split('\n') || [], // in DB, content is TEXT. We'll store as array in front-end.
+          price: dbCourse.price,
+          duration: dbCourse.duration ? `${dbCourse.duration} hours` : 'N/A',
+          isArchived: dbCourse.isArchived,
+
+          // Local front-end fields
+          instructor: '',       // we don't store in DB
+          category: '',         // we don't store in DB
+          level: 'Beginner',    // we don't store in DB
+          enrollments: 0,       // just a placeholder
+          isVisible: true,      // local only
+          createdAt: dbCourse.createdAt?.split('T')[0] || '',
+        }));
+        setCourses(adapted);
+      } else {
+        toast.error('Failed to fetch courses: ' + (res.message || 'Unknown error'));
+      }
+    } catch (error) {
+      toast.error('Error fetching courses: ' + error.message);
+    }
+  };
+
+  // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -87,50 +123,120 @@ const Courses = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  // 4. Create or Update in DB
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!formData.title || !formData.description || !formData.content || !formData.category) {
       toast.error('Please fill in all required fields');
       return;
     }
 
-    const courseData = {
-      ...formData,
-      content: formData.content.split('\n').filter(item => item.trim()),
-      createdAt: new Date().toISOString().split('T')[0],
-      image: imagePreview || 'https://via.placeholder.com/400x300'
+    // We'll combine the front-end fields into the DB shape
+    const dbPayload = {
+      title: formData.title,
+      image: imagePreview || 'https://via.placeholder.com/400x300',
+      description: formData.description,
+      content: formData.content,   // stored as TEXT in DB
+      price: parseFloat(formData.price) || 0,
+      duration: parseInt(formData.duration) || 0,
+      isArchived: false,
     };
 
-    if (isEditing) {
-      setCourses(prev => prev.map(course => 
-        course.id === formData.id ? { ...course, ...courseData } : course
-      ));
-      toast.success('Course updated successfully!');
-    } else {
-      const newCourse = {
-        id: Date.now(),
-        ...courseData,
-        enrollments: 0
-      };
-      setCourses(prev => [...prev, newCourse]);
-      toast.success('Course added successfully!');
+    try {
+      if (isEditing && formData.id) {
+        // Update existing course
+        const res = await updateCourseAPI(formData.id, dbPayload);
+        if (res.success) {
+          // Update in local state
+          setCourses(prev => prev.map(course =>
+            course.id === formData.id
+              ? {
+                  ...course,
+                  ...formData,
+                  content: formData.content.split('\n'), // turn content from string -> array
+                  image: imagePreview || course.image,
+                }
+              : course
+          ));
+          toast.success('Course updated successfully!');
+        } else {
+          toast.error('Failed to update course: ' + (res.message || 'Unknown error'));
+        }
+      } else {
+        // Create new course
+        const res = await createCourse(dbPayload);
+        if (res.success) {
+          const newDbCourse = res.data; // { id, title, image, ... }
+          // Adapt it to front-end shape
+          const adapted = {
+            id: newDbCourse.id,
+            title: newDbCourse.title,
+            image: newDbCourse.image,
+            description: newDbCourse.description,
+            content: newDbCourse.content
+              ? newDbCourse.content.split('\n')
+              : [],
+            price: newDbCourse.price,
+            duration: newDbCourse.duration 
+              ? `${newDbCourse.duration} hours`
+              : 'N/A',
+            isArchived: newDbCourse.isArchived,
+            // local fields
+            instructor: '',
+            category: formData.category,
+            level: formData.level,
+            enrollments: 0,
+            isVisible: true,
+            createdAt: newDbCourse.createdAt?.split('T')[0] || '',
+          };
+          setCourses(prev => [...prev, adapted]);
+          toast.success('Course created successfully!');
+        } else {
+          toast.error('Failed to create course: ' + (res.message || 'Unknown error'));
+        }
+      }
+    } catch (error) {
+      toast.error('Operation failed: ' + error.message);
+    } finally {
+      resetForm();
     }
-    resetForm();
   };
 
+  // 5. Edit local
   const handleEdit = (course) => {
+    setIsEditing(true);
+    // Convert 'duration' from e.g. "12 hours" -> "12"
+    const numericDuration = parseInt(course.duration) || 0;
     setFormData({
       ...course,
-      content: course.content.join('\n')
+      duration: numericDuration.toString(),
+      content: course.content.join('\n'),
+      id: course.id,
     });
     setImagePreview(course.image);
-    setIsEditing(true);
     setShowModal(true);
+  };
+
+  // 6. Delete from DB
+  const deleteCourse = async (courseId) => {
+    if (window.confirm('Are you sure you want to delete this course?')) {
+      try {
+        const res = await deleteCourseAPI(courseId);
+        if (res.success) {
+          setCourses(prev => prev.filter(course => course.id !== courseId));
+          toast.success('Course deleted successfully!');
+        } else {
+          toast.error('Failed to delete course: ' + (res.message || 'Unknown error'));
+        }
+      } catch (error) {
+        toast.error('Error deleting course: ' + error.message);
+      }
+    }
   };
 
   const resetForm = () => {
     setFormData({
+      id: null,
       title: '',
       instructor: '',
       duration: '',
@@ -145,13 +251,6 @@ const Courses = () => {
     setImagePreview(null);
     setShowModal(false);
     setIsEditing(false);
-  };
-
-  const deleteCourse = (courseId) => {
-    if (window.confirm('Are you sure you want to delete this course?')) {
-      setCourses(prev => prev.filter(course => course.id !== courseId));
-      toast.success('Course deleted successfully!');
-    }
   };
 
   return (
@@ -257,7 +356,7 @@ const Courses = () => {
                     </div>
                     <div className="flex items-center text-sm text-gray-600">
                       <UserGroupIcon className="w-5 h-5 mr-2 text-gray-400" />
-                      {course.instructor}
+                      {course.instructor || 'Unknown Instructor'}
                     </div>
                     <div className="flex items-center text-sm text-gray-600">
                       <ClockIcon className="w-5 h-5 mr-2 text-gray-400" />
@@ -370,9 +469,9 @@ const Courses = () => {
                           required
                         >
                           <option value="">Select a category</option>
-                          {sampleCategories.map((category) => (
-                            <option key={category.id} value={category.name}>
-                              {category.name}
+                          {sampleCategories.map((cat) => (
+                            <option key={cat.id} value={cat.name}>
+                              {cat.name}
                             </option>
                           ))}
                         </select>
@@ -387,7 +486,7 @@ const Courses = () => {
                           name="duration"
                           value={formData.duration}
                           onChange={handleInputChange}
-                          placeholder="e.g., 12 weeks"
+                          placeholder="e.g., 12 (for 12 hours)"
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         />
                       </div>
