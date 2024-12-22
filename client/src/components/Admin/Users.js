@@ -1,53 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
-import { format } from 'date-fns';
-import { 
-  PencilIcon, 
-  TrashIcon, 
+import React, { useState, useEffect } from "react";
+import { ToastContainer, toast } from "react-toastify";
+import {
+  PencilIcon,
+  TrashIcon,
   UserPlusIcon,
   MagnifyingGlassIcon,
   UserGroupIcon,
   CheckCircleIcon,
-  XCircleIcon
-} from '@heroicons/react/24/outline';
-import 'react-toastify/dist/ReactToastify.css';
+  XCircleIcon,
+} from "@heroicons/react/24/outline";
+import "react-toastify/dist/ReactToastify.css";
 
 // IMPORTANT: We are importing named exports from UserAPI
-import { 
-  getAllUsers, 
-  createUser, 
-  updateUser, 
-  deleteUser 
-} from '../../api/UserAPI';  // <-- Make sure these exports exist in your UserAPI.js
+import {
+  getAllUsers,
+  createUser,
+  updateUser,
+  deleteUser,
+} from "../../api/UserAPI"; // <-- Make sure these exports exist in your UserAPI.js
 
 const Users = () => {
-  const [currentDateTime, setCurrentDateTime] = useState('');
-  const [currentUser] = useState('mahdiassy');
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    status: 'active'
+    username: "",
+    email: "",
+    password: "",
+    status: "active",
   });
-
-  // Update Date/Time every second
-  useEffect(() => {
-    const updateDateTime = () => {
-      const now = new Date();
-      setCurrentDateTime(format(now, "yyyy-MM-dd HH:mm:ss 'UTC'"));
-    };
-
-    updateDateTime();
-    const timer = setInterval(updateDateTime, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
 
   // Fetch users on component mount
   useEffect(() => {
@@ -64,10 +48,14 @@ const Users = () => {
         console.log("Fetched users:", response.data);
         setUsers(response.data);
       } else {
-        toast.error('Failed to fetch users: ' + (response.message || 'Unknown error'));
+        toast.error(
+          "Failed to fetch users: " + (response.message || "Unknown error")
+        );
       }
     } catch (error) {
-      toast.error('Failed to fetch users: ' + (error.message || 'Unknown error'));
+      toast.error(
+        "Failed to fetch users: " + (error.message || "Unknown error")
+      );
     } finally {
       setIsLoading(false);
     }
@@ -80,8 +68,8 @@ const Users = () => {
     setFormData({
       username: user.username,
       email: user.email,
-      password: '', // blank by default when editing
-      status: user.status || 'active'
+      password: "", // blank by default when editing
+      status: user.status || "active",
     });
     setIsModalOpen(true);
   };
@@ -91,17 +79,17 @@ const Users = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   // Reset the form to default state
   const resetForm = () => {
     setFormData({
-      username: '',
-      email: '',
-      password: '',
-      status: 'active'
+      username: "",
+      email: "",
+      password: "",
+      status: "active",
     });
     setIsEditing(false);
     setEditingId(null);
@@ -114,8 +102,12 @@ const Users = () => {
     setIsLoading(true);
 
     // Validate required fields
-    if (!formData.username || !formData.email || (!isEditing && !formData.password)) {
-      toast.error('Please fill in all required fields');
+    if (
+      !formData.username ||
+      !formData.email ||
+      (!isEditing && !formData.password)
+    ) {
+      toast.error("Please fill in all required fields");
       setIsLoading(false);
       return;
     }
@@ -125,21 +117,21 @@ const Users = () => {
         // Update existing user
         const updatedUser = await updateUser(editingId, formData);
         if (updatedUser.success) {
-          setUsers((prev) => 
+          setUsers((prev) =>
             prev.map((u) => (u.id === editingId ? updatedUser.data : u))
           );
-          toast.success('User updated successfully!');
+          toast.success("User updated successfully!");
         } else {
-          toast.error('Failed to update user: ' + updatedUser.message);
+          toast.error("Failed to update user: " + updatedUser.message);
         }
       } else {
         // Create new user
         const newUser = await createUser(formData);
         if (newUser.success) {
           setUsers((prev) => [...prev, newUser.data]);
-          toast.success('User added successfully!');
+          toast.success("User added successfully!");
         } else {
-          toast.error('Failed to create user: ' + newUser.message);
+          toast.error("Failed to create user: " + newUser.message);
         }
       }
       resetForm();
@@ -152,16 +144,16 @@ const Users = () => {
 
   // Delete user
   const handleDeleteUser = async (userId) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) return;
-    
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
+
     setIsLoading(true);
     try {
       const result = await deleteUser(userId);
       if (result.success) {
         setUsers((prev) => prev.filter((u) => u.id !== userId));
-        toast.success('User deleted successfully!');
+        toast.success("User deleted successfully!");
       } else {
-        toast.error('Failed to delete user: ' + result.message);
+        toast.error("Failed to delete user: " + result.message);
       }
     } catch (error) {
       toast.error(`Failed to delete user: ${error.message}`);
@@ -173,24 +165,29 @@ const Users = () => {
   // Toggle user status (active/inactive)
   const handleStatusToggle = async (userId) => {
     const user = users.find((u) => u.id === userId);
-    const newStatus = user?.status === 'active' ? 'inactive' : 'active';
-    const message = newStatus === 'active' ? 'activate' : 'deactivate';
+    const newStatus = user?.status === "active" ? "inactive" : "active";
+    const message = newStatus === "active" ? "activate" : "deactivate";
 
-    if (!window.confirm(`Are you sure you want to ${message} this user?`)) return;
+    if (!window.confirm(`Are you sure you want to ${message} this user?`))
+      return;
 
     setIsLoading(true);
     try {
-      const updatedUser = await updateUser(userId, { 
-        ...user, 
-        status: newStatus 
+      const updatedUser = await updateUser(userId, {
+        ...user,
+        status: newStatus,
       });
       if (updatedUser.success) {
         setUsers((prev) =>
           prev.map((u) => (u.id === userId ? updatedUser.data : u))
         );
-        toast.success(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully!`);
+        toast.success(
+          `User ${
+            newStatus === "active" ? "activated" : "deactivated"
+          } successfully!`
+        );
       } else {
-        toast.error('Failed to update user status: ' + updatedUser.message);
+        toast.error("Failed to update user status: " + updatedUser.message);
       }
     } catch (error) {
       toast.error(`Failed to update user status: ${error.message}`);
@@ -200,9 +197,10 @@ const Users = () => {
   };
 
   // Filtered user list based on search term
-  const filteredUsers = users.filter((user) =>
-    user?.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user?.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = users.filter(
+    (user) =>
+      user?.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user?.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Loading spinner
@@ -217,45 +215,6 @@ const Users = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-pink-50 p-6">
       {/* DateTime and User Info */}
-      <div className="max-w-7xl mx-auto mb-6">
-        <div className="bg-white rounded-2xl p-4 shadow-lg flex flex-col sm:flex-row justify-between items-center">
-          <div className="flex items-center space-x-2 text-gray-600">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none" 
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
-              />
-            </svg>
-            <span>Current Date and Time (UTC): {currentDateTime}</span>
-          </div>
-          <div className="flex items-center space-x-2 text-gray-600 mt-2 sm:mt-0">
-            <svg 
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" 
-              />
-            </svg>
-            <span>Current User's Login: {currentUser}</span>
-          </div>
-        </div>
-      </div>
-
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header Section */}
         <div className="bg-white rounded-2xl p-8 shadow-lg">
@@ -264,7 +223,9 @@ const Users = () => {
               <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Users Management
               </h1>
-              <p className="text-gray-600 mt-2">Manage and monitor user accounts</p>
+              <p className="text-gray-600 mt-2">
+                Manage and monitor user accounts
+              </p>
             </div>
             <button
               onClick={() => {
@@ -288,7 +249,9 @@ const Users = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600">Total Users</p>
-                <h3 className="text-3xl font-bold text-indigo-600 mt-1">{users.length}</h3>
+                <h3 className="text-3xl font-bold text-indigo-600 mt-1">
+                  {users.length}
+                </h3>
               </div>
               <div className="bg-indigo-100 p-3 rounded-xl">
                 <UserGroupIcon className="w-8 h-8 text-indigo-600" />
@@ -302,7 +265,7 @@ const Users = () => {
               <div>
                 <p className="text-gray-600">Active Users</p>
                 <h3 className="text-3xl font-bold text-green-600 mt-1">
-                  {users.filter((user) => user.status === 'active').length}
+                  {users.filter((user) => user.status === "active").length}
                 </h3>
               </div>
               <div className="bg-green-100 p-3 rounded-xl">
@@ -317,7 +280,7 @@ const Users = () => {
               <div>
                 <p className="text-gray-600">Inactive Users</p>
                 <h3 className="text-3xl font-bold text-red-600 mt-1">
-                  {users.filter((user) => user.status === 'inactive').length}
+                  {users.filter((user) => user.status === "inactive").length}
                 </h3>
               </div>
               <div className="bg-red-100 p-3 rounded-xl">
@@ -350,26 +313,40 @@ const Users = () => {
             <table className="w-full">
               <thead className="bg-gradient-to-r from-indigo-600 to-purple-600">
                 <tr>
-                  <th className="px-6 py-4 text-left text-white font-semibold">Username</th>
-                  <th className="px-6 py-4 text-left text-white font-semibold">Email</th>
-                  <th className="px-6 py-4 text-center text-white font-semibold">Status</th>
-                  <th className="px-6 py-4 text-left text-white font-semibold">Created At</th>
-                  <th className="px-6 py-4 text-center text-white font-semibold">Actions</th>
+                  <th className="px-6 py-4 text-left text-white font-semibold">
+                    Username
+                  </th>
+                  <th className="px-6 py-4 text-left text-white font-semibold">
+                    Email
+                  </th>
+                  <th className="px-6 py-4 text-center text-white font-semibold">
+                    Status
+                  </th>
+                  <th className="px-6 py-4 text-left text-white font-semibold">
+                    Created At
+                  </th>
+                  <th className="px-6 py-4 text-center text-white font-semibold">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredUsers.map((user) => (
-                  <tr 
+                  <tr
                     key={user?.id}
                     className="hover:bg-gray-50 transition-colors duration-150"
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 
-                                       flex items-center justify-center text-white font-medium">
+                        <div
+                          className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 
+                                       flex items-center justify-center text-white font-medium"
+                        >
                           {user?.username?.charAt(0).toUpperCase()}
                         </div>
-                        <span className="ml-3 font-medium text-gray-900">{user?.username}</span>
+                        <span className="ml-3 font-medium text-gray-900">
+                          {user?.username}
+                        </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-gray-600">{user?.email}</td>
@@ -378,21 +355,27 @@ const Users = () => {
                         <span
                           className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
                             ${
-                              user?.status === 'active'
-                                ? 'bg-green-100 text-green-800 ring-1 ring-green-600/20'
-                                : 'bg-red-100 text-red-800 ring-1 ring-red-600/20'
+                              user?.status === "active"
+                                ? "bg-green-100 text-green-800 ring-1 ring-green-600/20"
+                                : "bg-red-100 text-red-800 ring-1 ring-red-600/20"
                             }`}
                         >
                           <span
                             className={`w-1.5 h-1.5 rounded-full mr-2
-                              ${user?.status === 'active' ? 'bg-green-600' : 'bg-red-600'}
+                              ${
+                                user?.status === "active"
+                                  ? "bg-green-600"
+                                  : "bg-red-600"
+                              }
                             `}
                           />
                           {user?.status}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-gray-600">{user?.createdAt}</td>
+                    <td className="px-6 py-4 text-gray-600">
+                      {user?.createdAt}
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">
                         <button
@@ -407,12 +390,14 @@ const Users = () => {
                           className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 
                             hover:scale-105 hover:shadow-lg min-w-[100px] text-center
                             ${
-                              user?.status === 'active'
-                                ? 'bg-red-100 text-red-800 hover:bg-red-200'
-                                : 'bg-green-100 text-green-800 hover:bg-green-200'
+                              user?.status === "active"
+                                ? "bg-red-100 text-red-800 hover:bg-red-200"
+                                : "bg-green-100 text-green-800 hover:bg-green-200"
                             }`}
                         >
-                          {user?.status === 'active' ? 'Deactivate' : 'Activate'}
+                          {user?.status === "active"
+                            ? "Deactivate"
+                            : "Activate"}
                         </button>
                         <button
                           onClick={() => handleDeleteUser(user?.id)}
@@ -438,7 +423,7 @@ const Users = () => {
             <div className="relative bg-white rounded-2xl shadow-xl max-w-lg w-full p-6">
               <div className="bg-gradient-to-r from-indigo-600 to-purple-600 -mx-6 -mt-6 px-6 py-4 rounded-t-2xl">
                 <h3 className="text-xl font-bold text-white">
-                  {isEditing ? 'Edit User' : 'Add New User'}
+                  {isEditing ? "Edit User" : "Add New User"}
                 </h3>
               </div>
 
@@ -477,7 +462,7 @@ const Users = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {isEditing ? 'New Password (optional)' : 'Password'}
+                    {isEditing ? "New Password (optional)" : "Password"}
                   </label>
                   <input
                     type="password"
@@ -506,7 +491,7 @@ const Users = () => {
                                text-white rounded-xl shadow-lg hover:shadow-xl 
                                transition-all duration-200"
                   >
-                    {isEditing ? 'Update User' : 'Add User'}
+                    {isEditing ? "Update User" : "Add User"}
                   </button>
                 </div>
               </form>
@@ -515,7 +500,7 @@ const Users = () => {
         </div>
       )}
 
-      <ToastContainer 
+      <ToastContainer
         position="bottom-right"
         autoClose={3000}
         hideProgressBar={false}

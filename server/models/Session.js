@@ -36,9 +36,5 @@ const Session = sequelize.define(
   { timestamps: true }
 );
 
-// Define association with Course
-Session.belongsTo(Course, { foreignKey: 'courseId' });
-Course.hasMany(Session, { foreignKey: 'courseId' });
-
 // Export the model
 module.exports = Session;

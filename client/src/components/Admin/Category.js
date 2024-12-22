@@ -8,14 +8,13 @@ import {
   TrashIcon,
   BookOpenIcon,
   RectangleStackIcon,
-  AcademicCapIcon
 } from '@heroicons/react/24/outline';
 import CategoryAPI from '../../api/CategoryAPI';
 import 'react-toastify/dist/ReactToastify.css';
 
 const Category = () => {
   const [categories, setCategories] = useState([]);
-  const [modalData, setModalData] = useState({ name: '', description: '' });
+  const [modalData, setModalData] = useState({ name: ''});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -45,7 +44,7 @@ const Category = () => {
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!modalData.name || !modalData.description) {
+    if (!modalData.name) {
       toast.error('Please fill all fields');
       return;
     }
@@ -76,7 +75,7 @@ const Category = () => {
   };
 
   const handleCloseModal = () => {
-    setModalData({ name: '', description: '' });
+    setModalData({ name: ''});
     setIsEditing(false);
     setIsModalOpen(false);
   };
@@ -95,16 +94,6 @@ const Category = () => {
     } catch (error) {
       toast.error('Delete failed');
     }
-  };
-
-  const getTotalCourses = () => {
-    if (!Array.isArray(categories)) return 0;
-    return categories.reduce((total, cat) => total + (cat.Courses?.length || 0), 0);
-  };
-  
-  const getAverageCourses = () => {
-    if (!Array.isArray(categories) || categories.length === 0) return 0;
-    return Math.round(getTotalCourses() / categories.length);
   };
 
   if (isLoading) {
@@ -161,37 +150,6 @@ const Category = () => {
             </div>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-br from-indigo-700 via-purple-600 to-purple-700 rounded-2xl p-6 shadow-lg"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-indigo-100 font-medium">Total Courses</p>
-                <h3 className="text-3xl font-bold text-white mt-1">{getTotalCourses()}</h3>
-              </div>
-              <div className="bg-white/20 p-3 rounded-xl text-white">
-                <BookOpenIcon className="w-6 h-6" />
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-br from-orange-600 via-orange-500 to-amber-600 rounded-2xl p-6 shadow-lg"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-100 font-medium">Average Courses</p>
-                <h3 className="text-3xl font-bold text-white mt-1">{getAverageCourses()}</h3>
-              </div>
-              <div className="bg-white/20 p-3 rounded-xl text-white">
-                <AcademicCapIcon className="w-6 h-6" />
-              </div>
-            </div>
-          </motion.div>
         </div>
 
         {/* Categories Grid */}
@@ -207,7 +165,6 @@ const Category = () => {
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="text-xl font-bold text-gray-800">{category.name}</h3>
-                  <p className="text-gray-600 text-sm mt-1">{category.description}</p>
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -263,19 +220,6 @@ const Category = () => {
                       value={modalData.name}
                       onChange={(e) => setModalData({ ...modalData, name: e.target.value })}
                       className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Description
-                    </label>
-                    <textarea
-                      value={modalData.description}
-                      onChange={(e) => setModalData({ ...modalData, description: e.target.value })}
-                      className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                      rows="3"
                       required
                     />
                   </div>
