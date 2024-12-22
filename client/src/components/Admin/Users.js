@@ -11,13 +11,12 @@ import {
 } from "@heroicons/react/24/outline";
 import "react-toastify/dist/ReactToastify.css";
 
-// IMPORTANT: We are importing named exports from UserAPI
 import {
   getAllUsers,
   createUser,
   updateUser,
   deleteUser,
-} from "../../api/UserAPI"; // <-- Make sure these exports exist in your UserAPI.js
+} from "../../api/UserAPI";
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -33,48 +32,38 @@ const Users = () => {
     status: "active",
   });
 
-  // Fetch users on component mount
   useEffect(() => {
     fetchUsers();
   }, []);
 
-  // Fetch all users from the API
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
       const response = await getAllUsers();
       if (response.success) {
-        // response.data should be an array of users
-        console.log("Fetched users:", response.data);
         setUsers(response.data);
       } else {
-        toast.error(
-          "Failed to fetch users: " + (response.message || "Unknown error")
-        );
+        toast.error("Failed to fetch users: " + (response.message || "Unknown error"));
       }
     } catch (error) {
-      toast.error(
-        "Failed to fetch users: " + (error.message || "Unknown error")
-      );
+      toast.error("Failed to fetch users: " + (error.message || "Unknown error"));
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Open edit modal
   const handleEdit = (user) => {
     setIsEditing(true);
     setEditingId(user.id);
     setFormData({
       username: user.username,
       email: user.email,
-      password: "", // blank by default when editing
+      password: "",
       status: user.status || "active",
     });
     setIsModalOpen(true);
   };
 
-  // Handle form inputs
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -83,7 +72,6 @@ const Users = () => {
     }));
   };
 
-  // Reset the form to default state
   const resetForm = () => {
     setFormData({
       username: "",
@@ -96,17 +84,11 @@ const Users = () => {
     setIsModalOpen(false);
   };
 
-  // Handle form submission for Add/Edit user
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Validate required fields
-    if (
-      !formData.username ||
-      !formData.email ||
-      (!isEditing && !formData.password)
-    ) {
+    if (!formData.username || !formData.email || (!isEditing && !formData.password)) {
       toast.error("Please fill in all required fields");
       setIsLoading(false);
       return;
@@ -114,18 +96,14 @@ const Users = () => {
 
     try {
       if (isEditing) {
-        // Update existing user
         const updatedUser = await updateUser(editingId, formData);
         if (updatedUser.success) {
-          setUsers((prev) =>
-            prev.map((u) => (u.id === editingId ? updatedUser.data : u))
-          );
+          setUsers((prev) => prev.map((u) => (u.id === editingId ? updatedUser.data : u)));
           toast.success("User updated successfully!");
         } else {
           toast.error("Failed to update user: " + updatedUser.message);
         }
       } else {
-        // Create new user
         const newUser = await createUser(formData);
         if (newUser.success) {
           setUsers((prev) => [...prev, newUser.data]);
@@ -142,7 +120,6 @@ const Users = () => {
     }
   };
 
-  // Delete user
   const handleDeleteUser = async (userId) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
 
@@ -162,14 +139,12 @@ const Users = () => {
     }
   };
 
-  // Toggle user status (active/inactive)
   const handleStatusToggle = async (userId) => {
     const user = users.find((u) => u.id === userId);
     const newStatus = user?.status === "active" ? "inactive" : "active";
     const message = newStatus === "active" ? "activate" : "deactivate";
 
-    if (!window.confirm(`Are you sure you want to ${message} this user?`))
-      return;
+    if (!window.confirm(`Are you sure you want to ${message} this user?`)) return;
 
     setIsLoading(true);
     try {
@@ -178,14 +153,8 @@ const Users = () => {
         status: newStatus,
       });
       if (updatedUser.success) {
-        setUsers((prev) =>
-          prev.map((u) => (u.id === userId ? updatedUser.data : u))
-        );
-        toast.success(
-          `User ${
-            newStatus === "active" ? "activated" : "deactivated"
-          } successfully!`
-        );
+        setUsers((prev) => prev.map((u) => (u.id === userId ? updatedUser.data : u)));
+        toast.success(`User ${newStatus === "active" ? "activated" : "deactivated"} successfully!`);
       } else {
         toast.error("Failed to update user status: " + updatedUser.message);
       }
@@ -196,14 +165,12 @@ const Users = () => {
     }
   };
 
-  // Filtered user list based on search term
   const filteredUsers = users.filter(
     (user) =>
       user?.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user?.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Loading spinner
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -214,18 +181,14 @@ const Users = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-pink-50 p-6">
-      {/* DateTime and User Info */}
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header Section */}
         <div className="bg-white rounded-2xl p-8 shadow-lg">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Users Management
               </h1>
-              <p className="text-gray-600 mt-2">
-                Manage and monitor user accounts
-              </p>
+              <p className="text-gray-600 mt-2">Manage and monitor user accounts</p>
             </div>
             <button
               onClick={() => {
@@ -242,16 +205,12 @@ const Users = () => {
           </div>
         </div>
 
-        {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Total Users */}
           <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600">Total Users</p>
-                <h3 className="text-3xl font-bold text-indigo-600 mt-1">
-                  {users.length}
-                </h3>
+                <h3 className="text-3xl font-bold text-indigo-600 mt-1">{users.length}</h3>
               </div>
               <div className="bg-indigo-100 p-3 rounded-xl">
                 <UserGroupIcon className="w-8 h-8 text-indigo-600" />
@@ -259,7 +218,6 @@ const Users = () => {
             </div>
           </div>
 
-          {/* Active Users */}
           <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
@@ -274,7 +232,6 @@ const Users = () => {
             </div>
           </div>
 
-          {/* Inactive Users */}
           <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
@@ -290,9 +247,7 @@ const Users = () => {
           </div>
         </div>
 
-        {/* Search and Table Container */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-          {/* Search Bar */}
           <div className="p-6 border-b border-gray-200">
             <div className="relative max-w-md">
               <input
@@ -308,34 +263,20 @@ const Users = () => {
             </div>
           </div>
 
-          {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gradient-to-r from-indigo-600 to-purple-600">
                 <tr>
-                  <th className="px-6 py-4 text-left text-white font-semibold">
-                    Username
-                  </th>
-                  <th className="px-6 py-4 text-left text-white font-semibold">
-                    Email
-                  </th>
-                  <th className="px-6 py-4 text-center text-white font-semibold">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-left text-white font-semibold">
-                    Created At
-                  </th>
-                  <th className="px-6 py-4 text-center text-white font-semibold">
-                    Actions
-                  </th>
+                  <th className="px-6 py-4 text-left text-white font-semibold">Username</th>
+                  <th className="px-6 py-4 text-left text-white font-semibold">Email</th>
+                  <th className="px-6 py-4 text-center text-white font-semibold">Status</th>
+                  <th className="px-6 py-4 text-left text-white font-semibold">Created At</th>
+                  <th className="px-6 py-4 text-center text-white font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredUsers.map((user) => (
-                  <tr
-                    key={user?.id}
-                    className="hover:bg-gray-50 transition-colors duration-150"
-                  >
+                  <tr key={user?.id} className="hover:bg-gray-50 transition-colors duration-150">
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         <div
@@ -344,9 +285,7 @@ const Users = () => {
                         >
                           {user?.username?.charAt(0).toUpperCase()}
                         </div>
-                        <span className="ml-3 font-medium text-gray-900">
-                          {user?.username}
-                        </span>
+                        <span className="ml-3 font-medium text-gray-900">{user?.username}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-gray-600">{user?.email}</td>
@@ -362,20 +301,14 @@ const Users = () => {
                         >
                           <span
                             className={`w-1.5 h-1.5 rounded-full mr-2
-                              ${
-                                user?.status === "active"
-                                  ? "bg-green-600"
-                                  : "bg-red-600"
-                              }
+                              ${user?.status === "active" ? "bg-green-600" : "bg-red-600"}
                             `}
                           />
                           {user?.status}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-gray-600">
-                      {user?.createdAt}
-                    </td>
+                    <td className="px-6 py-4 text-gray-600">{user?.createdAt}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">
                         <button
@@ -395,9 +328,7 @@ const Users = () => {
                                 : "bg-green-100 text-green-800 hover:bg-green-200"
                             }`}
                         >
-                          {user?.status === "active"
-                            ? "Deactivate"
-                            : "Activate"}
+                          {user?.status === "active" ? "Deactivate" : "Activate"}
                         </button>
                         <button
                           onClick={() => handleDeleteUser(user?.id)}
@@ -416,7 +347,6 @@ const Users = () => {
         </div>
       </div>
 
-      {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50">
           <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20">
@@ -429,9 +359,7 @@ const Users = () => {
 
               <form onSubmit={handleSubmit} className="space-y-6 mt-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Username
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
                   <input
                     type="text"
                     name="username"
@@ -445,9 +373,7 @@ const Users = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
                   <input
                     type="email"
                     name="email"

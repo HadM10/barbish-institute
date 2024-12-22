@@ -1,7 +1,7 @@
 // src/api/subscriptionAPI.js
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = 'http://localhost:5001';
 
 // Existing Subscription APIs
 export async function getAllSubscriptions() {

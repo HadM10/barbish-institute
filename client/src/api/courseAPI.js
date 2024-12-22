@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 // Point this to your backend's URL and port.
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = 'http://localhost:5001';
 
 // GET all courses (GET /api/course)
 export async function getAllCourses() {

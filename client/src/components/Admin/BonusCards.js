@@ -4,15 +4,12 @@ import {
   PlusIcon, 
   TrashIcon, 
   PencilIcon,
-  LinkIcon,
-  TagIcon,
-  ShoppingBagIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// 1. IMPORT your new API functions
+// Import your API functions
 import {
   getAllBonCards,
   createBonCard,
@@ -22,28 +19,22 @@ import {
 
 const BonusCard = () => {
   // State
-  const [offers, setOffers] = useState([]);
+  const [bonCards, setBonCards] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
-  // This object has far more fields than your DB table, 
-  // but we'll only store {title, description, image, price, expiredDate} in the DB.
+  // Define form data based on the BonCard model
   const [formData, setFormData] = useState({
     title: '',
-    organization: '',
     description: '',
-    originalPrice: '',
-    discountedPrice: '',
     image: null,
-    contactType: 'website',
-    contactLink: '',
-    validUntil: '',
-    isActive: true
+    price: '',
+    expiredDate: ''
   });
 
-  // 2. Load all bonCards from the database on component mount
+  // Fetch all BonCards on component mount
   useEffect(() => {
     fetchBonCards();
   }, []);
@@ -52,48 +43,27 @@ const BonusCard = () => {
     try {
       const res = await getAllBonCards();
       if (res.success) {
-        // res.data is the array of bonCards from DB: 
-        // each item has { id, title, description, image, price, expiredDate, ... }
-        // We must adapt them to your front-end shape
-        const adapted = res.data.map(b => ({
-          id: b.id,
-          title: b.title,
-          organization: '',         // we have no place to store this in DB
-          description: b.description,
-          originalPrice: '',        // also not in DB
-          discountedPrice: b.price, // your DB just has 'price'
-          image: b.image || 'https://via.placeholder.com/400x300',
-          contactType: 'website',   // not in DB
-          contactLink: '',
-          validUntil: b.expiredDate ? b.expiredDate.split('T')[0] : '', // or parse date
-          isActive: true            // not in DB
-        }));
-        setOffers(adapted);
+        setBonCards(res.data);
       } else {
-        toast.error('Failed to fetch bonCards: ' + (res.message || 'Unknown error'));
+        toast.error('Failed to fetch BonCards: ' + (res.message || 'Unknown error'));
       }
     } catch (error) {
-      toast.error('Error fetching bonCards: ' + error.message);
+      toast.error('Error fetching BonCards: ' + error.message);
     }
   };
 
-  // 3. Handle open modal for editing
-  const handleEdit = (offer) => {
+  // Handle open modal for editing
+  const handleEdit = (bonCard) => {
     setIsEditing(true);
-    setEditId(offer.id);
+    setEditId(bonCard.id);
     setFormData({
-      title: offer.title,
-      organization: offer.organization,
-      description: offer.description,
-      originalPrice: offer.originalPrice,
-      discountedPrice: offer.discountedPrice,
-      image: offer.image,
-      contactType: offer.contactType,
-      contactLink: offer.contactLink,
-      validUntil: offer.validUntil,
-      isActive: offer.isActive
+      title: bonCard.title,
+      description: bonCard.description,
+      image: bonCard.image,
+      price: bonCard.price,
+      expiredDate: bonCard.expiredDate ? bonCard.expiredDate.split('T')[0] : ''
     });
-    setImagePreview(offer.image);
+    setImagePreview(bonCard.image);
     setShowModal(true);
   };
 
@@ -127,15 +97,10 @@ const BonusCard = () => {
   const resetForm = () => {
     setFormData({
       title: '',
-      organization: '',
       description: '',
-      originalPrice: '',
-      discountedPrice: '',
       image: null,
-      contactType: 'website',
-      contactLink: '',
-      validUntil: '',
-      isActive: true
+      price: '',
+      expiredDate: ''
     });
     setImagePreview(null);
     setIsEditing(false);
@@ -143,72 +108,49 @@ const BonusCard = () => {
     setShowModal(false);
   };
 
-  // 4. Create or Update in the DB
+  // Create or Update in the DB
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Basic validation
-    if (!formData.title || !formData.description) {
+    if (!formData.title || !formData.description || !formData.price) {
       toast.error('Please fill in all required fields');
       return;
     }
 
     try {
-      // We'll store only {title, description, image, price, expiredDate} in DB
+      // Prepare payload based on the BonCard model
       const payload = {
         title: formData.title,
         description: formData.description,
-        // If using an actual image upload, you'd handle that differently.
+        // If handling actual image uploads, integrate accordingly.
         image: imagePreview || 'https://via.placeholder.com/400x300',
-        price: parseFloat(formData.discountedPrice) || 0,
-        expiredDate: formData.validUntil || null
+        price: parseFloat(formData.price) || 0,
+        expiredDate: formData.expiredDate || null
       };
 
       if (isEditing) {
-        // Update existing bonCard
+        // Update existing BonCard
         const res = await updateBonCard(editId, payload);
         if (res.success) {
-          // We also update the local state
-          setOffers(prev =>
-            prev.map(offer =>
-              offer.id === editId
-                ? {
-                    ...offer,
-                    ...formData, 
-                    image: imagePreview || offer.image 
-                  }
-                : offer
+          // Update the local state
+          setBonCards(prev =>
+            prev.map(bonCard =>
+              bonCard.id === editId ? res.data : bonCard
             )
           );
           toast.success('BonCard updated successfully!');
         } else {
-          toast.error('Failed to update bonCard: ' + (res.message || 'Unknown error'));
+          toast.error('Failed to update BonCard: ' + (res.message || 'Unknown error'));
         }
       } else {
-        // Create new bonCard
+        // Create new BonCard
         const res = await createBonCard(payload);
         if (res.success) {
-          // Insert the newly created row to local state
-          const newDbRecord = res.data; 
-          // This is { id, title, description, image, price, expiredDate, ... }
-          // Adapt it to your front-end shape
-          const adapted = {
-            id: newDbRecord.id,
-            title: newDbRecord.title,
-            organization: '',
-            description: newDbRecord.description,
-            originalPrice: '',
-            discountedPrice: newDbRecord.price,
-            image: newDbRecord.image || 'https://via.placeholder.com/400x300',
-            contactType: 'website',
-            contactLink: '',
-            validUntil: newDbRecord.expiredDate ? newDbRecord.expiredDate.split('T')[0] : '',
-            isActive: true
-          };
-          setOffers(prev => [...prev, adapted]);
+          setBonCards(prev => [...prev, res.data]);
           toast.success('BonCard created successfully!');
         } else {
-          toast.error('Failed to create bonCard: ' + (res.message || 'Unknown error'));
+          toast.error('Failed to create BonCard: ' + (res.message || 'Unknown error'));
         }
       }
     } catch (error) {
@@ -218,78 +160,64 @@ const BonusCard = () => {
     }
   };
 
-  // 5. Delete from the DB
-  const deleteOffer = async (offerId) => {
-    if (window.confirm('Are you sure you want to delete this offer?')) {
+  // Delete from the DB
+  const deleteBonCardHandler = async (bonCardId) => {
+    if (window.confirm('Are you sure you want to delete this BonCard?')) {
       try {
-        const res = await deleteBonCard(offerId);
+        const res = await deleteBonCard(bonCardId);
         if (res.success) {
-          setOffers(prev => prev.filter(offer => offer.id !== offerId));
-          toast.success('Offer deleted successfully');
+          setBonCards(prev => prev.filter(bonCard => bonCard.id !== bonCardId));
+          toast.success('BonCard deleted successfully');
         } else {
-          toast.error('Failed to delete offer: ' + (res.message || 'Unknown error'));
+          toast.error('Failed to delete BonCard: ' + (res.message || 'Unknown error'));
         }
       } catch (error) {
-        toast.error('Error deleting offer: ' + error.message);
+        toast.error('Error deleting BonCard: ' + error.message);
       }
     }
   };
 
-  // 6. Toggle local “isActive” (not stored in DB, just in front-end)
-  const toggleOfferStatus = (offerId) => {
-    setOffers(prev =>
-      prev.map(offer =>
-        offer.id === offerId 
-          ? { ...offer, isActive: !offer.isActive }
-          : offer
-      )
-    );
-    toast.success('Offer status updated successfully');
-  };
-
-  // Same UI as you provided, but now pulling data from the DB
+  // Same UI as before but adjusted to the BonCard model
   return (
     <div className="container mx-auto px-4">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Bonus Card Offers</h1>
-          <p className="text-gray-600 mt-2">Manage collaboration offers and discounts</p>
+          <h1 className="text-3xl font-bold text-gray-800">Bonus Cards</h1>
+          <p className="text-gray-600 mt-2">Manage your bonus cards</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
           className="flex items-center px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all duration-300 transform hover:scale-105"
         >
           <PlusIcon className="w-5 h-5 mr-2" />
-          Add New Offer
+          Add New BonCard
         </button>
       </div>
 
-      {/* Offers Grid */}
+      {/* BonCards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {offers.map(offer => (
+        {bonCards.map(bonCard => (
           <div 
-            key={offer.id}
-            className={`bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-300 hover:shadow-xl ${
-              !offer.isActive ? 'opacity-75' : ''
-            }`}
+            key={bonCard.id}
+            className="bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-300 hover:shadow-xl"
           >
-            {/* Offer Image */}
+            {/* BonCard Image */}
             <div className="relative h-48">
               <img
-                src={offer.image}
-                alt={offer.title}
+                src={bonCard.image}
+                alt={bonCard.title}
                 className="w-full h-full object-cover"
               />
               <div className="absolute top-4 right-4 space-x-2">
                 <button
-                  onClick={() => handleEdit(offer)}
+                  onClick={() => handleEdit(bonCard)}
                   className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors duration-200"
                 >
                   <PencilIcon className="w-5 h-5 text-blue-600" />
                 </button>
                 <button
-                  onClick={() => deleteOffer(offer.id)}
+                  onClick={() => deleteBonCardHandler(bonCard.id)}
                   className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors duration-200"
                 >
                   <TrashIcon className="w-5 h-5 text-red-600" />
@@ -297,48 +225,21 @@ const BonusCard = () => {
               </div>
             </div>
 
-            {/* Offer Content */}
+            {/* BonCard Content */}
             <div className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-800">{offer.title}</h3>
-                  <p className="text-gray-600">{offer.organization}</p>
-                </div>
-                <button
-                  onClick={() => toggleOfferStatus(offer.id)}
-                  className={`px-3 py-1 rounded-full text-sm ${
-                    offer.isActive
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}
-                >
-                  {offer.isActive ? 'Active' : 'Inactive'}
-                </button>
-              </div>
-              
-              <p className="text-gray-600 mb-4">{offer.description}</p>
+              <h3 className="text-xl font-semibold text-gray-800">{bonCard.title}</h3>
+              <p className="text-gray-600 mb-4">{bonCard.description}</p>
               
               <div className="flex items-center gap-4 text-gray-600 mb-4">
                 <div className="flex items-center">
-                  <TagIcon className="w-5 h-5 mr-2" />
-                  <span className="line-through">${offer.originalPrice}</span>
-                </div>
-                <div className="flex items-center text-indigo-600">
-                  <ShoppingBagIcon className="w-5 h-5 mr-2" />
-                  <span className="font-semibold">${offer.discountedPrice}</span>
+                  <span className="font-semibold">Price:</span>
+                  <span className="ml-2 text-indigo-600">${bonCard.price.toFixed(2)}</span>
                 </div>
               </div>
 
               <div className="flex items-center text-gray-600">
-                <LinkIcon className="w-5 h-5 mr-2" />
-                <a 
-                  href={offer.contactLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-indigo-600 hover:text-indigo-800"
-                >
-                  {offer.contactType === 'website' ? 'Visit Website' : 'Contact on WhatsApp'}
-                </a>
+                <span className="font-semibold">Expires On:</span>
+                <span className="ml-2">{new Date(bonCard.expiredDate).toLocaleDateString()}</span>
               </div>
             </div>
           </div>
@@ -348,10 +249,10 @@ const BonusCard = () => {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-bold text-gray-900">
-                {isEditing ? 'Edit Offer' : 'Add New Offer'}
+                {isEditing ? 'Edit BonCard' : 'Add New BonCard'}
               </h3>
               <button
                 onClick={resetForm}
@@ -363,10 +264,10 @@ const BonusCard = () => {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Basic Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Offer Title *
+                    Title *
                   </label>
                   <input
                     type="text"
@@ -380,164 +281,99 @@ const BonusCard = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Organization *
+                    Description *
                   </label>
-                  <input
-                    type="text"
-                    name="organization"
-                    value={formData.organization}
+                  <textarea
+                    name="description"
+                    value={formData.description}
                     onChange={handleInputChange}
+                    rows="4"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
                     required
-                  />
+                  ></textarea>
                 </div>
-              </div>
 
-              {/* Pricing */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Pricing */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Original Price ($) *
+                    Price ($) *
                   </label>
                   <input
                     type="number"
-                    name="originalPrice"
-                    value={formData.originalPrice}
+                    name="price"
+                    value={formData.price}
                     onChange={handleInputChange}
+                    min="0"
+                    step="0.01"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
                     required
                   />
                 </div>
 
+                {/* Expiration Date */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Discounted Price ($) *
+                    Expiration Date
                   </label>
                   <input
-                    type="number"
-                    name="discountedPrice"
-                    value={formData.discountedPrice}
+                    type="date"
+                    name="expiredDate"
+                    value={formData.expiredDate}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-                    required
                   />
                 </div>
-              </div>
 
-              {/* Contact Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Image Upload */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Contact Type
+                    Image
                   </label>
-                  <select
-                    name="contactType"
-                    value={formData.contactType}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-                  >
-                    <option value="website">Website</option>
-                    <option value="whatsapp">WhatsApp</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Contact Link *
-                  </label>
-                  <input
-                    type="text"
-                    name="contactLink"
-                    value={formData.contactLink}
-                    onChange={handleInputChange}
-                    placeholder={
-                      formData.contactType === 'whatsapp' ? 'WhatsApp number' : 'Website URL'
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Valid Until */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Valid Until *
-                </label>
-                <input
-                  type="date"
-                  name="validUntil"
-                  value={formData.validUntil}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-                  required
-                />
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Offer Description *
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows="4"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-                  required
-                ></textarea>
-              </div>
-
-              {/* Image Upload */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Offer Image
-                </label>
-                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
-                  <div className="space-y-1 text-center">
-                    {imagePreview ? (
-                      <div className="relative">
-                        <img
-                          src={imagePreview}
-                          alt="Preview"
-                          className="mx-auto h-32 w-auto rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setImagePreview(null);
-                            setFormData(prev => ({ ...prev, image: null }));
-                          }}
-                          className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-full transform transition-transform duration-200 hover:scale-110"
-                        >
-                          <TrashIcon className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex text-sm text-gray-600">
-                          <label
-                            htmlFor="file-upload"
-                            className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500"
+                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
+                    <div className="space-y-1 text-center">
+                      {imagePreview ? (
+                        <div className="relative">
+                          <img
+                            src={imagePreview}
+                            alt="Preview"
+                            className="mx-auto h-32 w-auto rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setImagePreview(null);
+                              setFormData(prev => ({ ...prev, image: null }));
+                            }}
+                            className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-full transform transition-transform duration-200 hover:scale-110"
                           >
-                            <span>Upload a file</span>
-                            <input
-                              id="file-upload"
-                              name="file-upload"
-                              type="file"
-                              className="sr-only"
-                              onChange={handleImageChange}
-                              accept="image/*"
-                            />
-                          </label>
-                          <p className="pl-1">or drag and drop</p>
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
                         </div>
-                        <p className="text-xs text-gray-500">
-                          PNG, JPG, GIF up to 5MB
-                        </p>
-                      </>
-                    )}
+                      ) : (
+                        <>
+                          <div className="flex text-sm text-gray-600">
+                            <label
+                              htmlFor="file-upload"
+                              className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500"
+                            >
+                              <span>Upload a file</span>
+                              <input
+                                id="file-upload"
+                                name="file-upload"
+                                type="file"
+                                className="sr-only"
+                                onChange={handleImageChange}
+                                accept="image/*"
+                              />
+                            </label>
+                            <p className="pl-1">or drag and drop</p>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            PNG, JPG, GIF up to 5MB
+                          </p>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -555,7 +391,7 @@ const BonusCard = () => {
                   type="submit"
                   className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transform transition-all duration-200 hover:scale-105"
                 >
-                  {isEditing ? 'Update Offer' : 'Add Offer'}
+                  {isEditing ? 'Update BonCard' : 'Add BonCard'}
                 </button>
               </div>
             </form>

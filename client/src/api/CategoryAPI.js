@@ -1,7 +1,7 @@
 // client/src/api/CategoryAPI.js
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/categories';
+const API_URL = 'http://localhost:5001/api/categories';
 
 class CategoryAPI {
   static async getAllCategories() {
@@ -12,7 +12,6 @@ class CategoryAPI {
         data: response.data
       };
     } catch (error) {
-      console.error('Get categories error:', error);
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to fetch categories'
@@ -28,7 +27,6 @@ class CategoryAPI {
         data: response.data
       };
     } catch (error) {
-      console.error('Create category error:', error);
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to create category'
@@ -44,7 +42,6 @@ class CategoryAPI {
         data: response.data
       };
     } catch (error) {
-      console.error('Update category error:', error);
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to update category'
@@ -60,7 +57,6 @@ class CategoryAPI {
         data: response.data
       };
     } catch (error) {
-      console.error('Delete category error:', error);
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to delete category'
