@@ -54,9 +54,10 @@ exports.updateUser = async (req, res) => {
 exports.deleteUser = async (req, res) => {
   try {
     const user = await User.findByPk(req.params.id);
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    await user.destroy(); // This should perform a soft delete
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+     await user.destroy({ force: true }); // Force a hard delete
     res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: "Error deleting user", details: error.message });

@@ -34,22 +34,21 @@ const Users = () => {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
-
+ }, []);
   const fetchUsers = async () => {
-    setIsLoading(true);
-    try {
-      const response = await getAllUsers();
-      if (response.success) {
-        setUsers(response.data);
-      } else {
-        toast.error("Failed to fetch users: " + (response.message || "Unknown error"));
-      }
-    } catch (error) {
-      toast.error("Failed to fetch users: " + (error.message || "Unknown error"));
-    } finally {
-      setIsLoading(false);
-    }
+   setIsLoading(true);
+   try {
+     const response = await getAllUsers();
+     if (response.success) {
+       setUsers(response.data);
+     } else {
+       toast.error("Failed to fetch users: " + (response.message || "Unknown error"));
+     }
+   } catch (error) {
+     toast.error("Failed to fetch users: " + (error.message || "Unknown error"));
+   } finally {
+     setIsLoading(false);
+   }
   };
 
   const handleEdit = (user) => {
@@ -122,7 +121,6 @@ const Users = () => {
 
   const handleDeleteUser = async (userId) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
-
     setIsLoading(true);
     try {
       const result = await deleteUser(userId);
@@ -425,19 +423,18 @@ const Users = () => {
           </div>
         </div>
       )}
-
-      <ToastContainer
-        position="bottom-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
+ <ToastContainer
+       position="bottom-right"
+       autoClose={3000}
+       hideProgressBar={false}
+       newestOnTop
+       closeOnClick
+       rtl={false}
+       pauseOnFocusLoss
+       draggable
+       pauseOnHover
+       theme="light"
+     />
     </div>
   );
 };

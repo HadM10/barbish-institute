@@ -48,7 +48,6 @@ export async function updateUser(userId, formData) {
     return { success: false, message: error.message };
   }
 }
-
 export async function deleteUser(userId) {
   try {
     const response = await axios.delete(`${API_BASE_URL}/api/users/${userId}`);
