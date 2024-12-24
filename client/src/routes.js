@@ -1,7 +1,7 @@
 // src/routes.js
 import React from "react";
 import { Routes, Route, Link } from "react-router-dom"; // Added Link import
-import Home from "./pages/ClientSide/Home";
+// import Home from "./pages/ClientSide/Home";
 import Admin from "./pages/AdminPanel/Admin";
 
 // 404 Component
@@ -10,7 +10,9 @@ const NotFound = () => (
     <div className="bg-white rounded-2xl p-8 shadow-lg text-center max-w-lg w-full">
       <div className="mb-6">
         <h2 className="text-6xl font-bold text-red-500">404</h2>
-        <p className="text-xl font-semibold text-gray-800 mt-4">Page Not Found</p>
+        <p className="text-xl font-semibold text-gray-800 mt-4">
+          Page Not Found
+        </p>
       </div>
       <p className="text-gray-600 mb-8">
         The page you're looking for doesn't exist or has been moved.
@@ -35,7 +37,7 @@ const NotFound = () => (
 
 const AppRoutes = () => (
   <Routes>
-    <Route path="/" element={<Home />} />
+    {/* <Route path="/" element={<Home />} /> */}
     <Route path="/admin/*" element={<Admin />} />
     <Route path="*" element={<NotFound />} />
   </Routes>

@@ -1,3 +1,4 @@
+// server.js
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
@@ -6,12 +7,14 @@ const sequelize = require("./config/db");
 // Import route files
 const contactRoutes = require("./routes/contactRoutes");
 const bonCardRoutes = require("./routes/bonCardRoutes");
-userRoutes = require("./routes/userRoutes");
+const userRoutes = require("./routes/userRoutes");
 const courseRoutes = require("./routes/courseRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const sessionRoutes = require("./routes/sessionRoutes");
-const categoryRoutes = require("./routes/categoryRoutes"); // Assuming you have a category route
+const categoryRoutes = require("./routes/categoryRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 
+require("./models/User"); // Ensure User model is imported
 require("./models/Relations"); // Ensure relationships are loaded
 
 const app = express();
@@ -28,11 +31,12 @@ app.get("/", (req, res) => {
 // Routes
 app.use("/api/contact", contactRoutes);
 app.use("/api/boncards", bonCardRoutes);
-app.use("/api/user", userRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/course", courseRoutes);
 app.use("/api/subscription", subscriptionRoutes);
 app.use("/api/session", sessionRoutes);
-app.use("/api/categories", categoryRoutes); // Added category routes
+app.use("/api/categories", categoryRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
@@ -41,14 +45,20 @@ app.use((err, req, res, next) => {
 });
 
 // Sync Database and Start Server
+const PORT = process.env.PORT || 5000;
+
 sequelize
-  .sync()
+  .authenticate() // Check database connection
+  .then(() => {
+    console.log("Database connected");
+    return sequelize.sync({ alter: true }); // Sync models
+  })
   .then(() => {
     console.log("Database synced");
-    app.listen(process.env.PORT || 5000, () => {
-      console.log(`Server is running on port ${process.env.PORT || 5000}`);
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
     });
   })
   .catch((err) => {
-    console.error("Unable to sync the database:", err);
+    console.error("Unable to connect to the database:", err);
   });

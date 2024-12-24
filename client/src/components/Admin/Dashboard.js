@@ -1,35 +1,59 @@
-// components/Admin/Dashboard.js
-import React from 'react';
-import { 
-  UserGroupIcon, 
-  VideoCameraIcon, 
-  BookOpenIcon, 
+import React, { useState, useEffect } from "react";
+import DashboardAPI from "../../api/dashboardAPI"; // Import the StatsAPI
+import {
+  UserGroupIcon,
+  VideoCameraIcon,
+  BookOpenIcon,
   EnvelopeIcon,
   CreditCardIcon,
   Square3Stack3DIcon,
   ChartBarIcon,
-  CurrencyDollarIcon
-} from '@heroicons/react/24/outline';
+  CurrencyDollarIcon,
+} from "@heroicons/react/24/outline";
 
 const Dashboard = () => {
-  // Mock data
-  const stats = {
-    totalUsers: 1234,
-    activeUsers: 892,
-    totalCategories: 48,
-    totalSessions: 156,
-    totalMessages: 324,
-    totalRevenue: 45600,
-    totalCourses: 75,
-    totalSubscriptions: 456
-  };
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    activeUsers: 0,
+    totalCategories: 0,
+    totalSessions: 0,
+    totalMessages: 0,
+    totalRevenue: 5,
+    totalCourses: 0,
+    totalSubscriptions: 0,
+  });
+
+  const [error, setError] = useState("");
+
+  // Fetch stats when the component mounts
+  useEffect(() => {
+    const fetchStats = async () => {
+      const result = await DashboardAPI.getStats();
+      if (result.success) {
+        setStats(result.data); // Set the stats data to state
+      } else {
+        setError(result.message); // Set error message
+      }
+    };
+
+    fetchStats();
+  }, []); // Empty array ensures it runs only once when the component mounts
 
   return (
     <div className="p-6">
+      {/* Display error message if there's any */}
+      {error && (
+        <div className="text-red-500 p-4 mb-4">
+          <p>{error}</p>
+        </div>
+      )}
+
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-indigo-900 to-indigo-700 rounded-3xl p-8 text-white mb-8">
         <h1 className="text-4xl font-bold mb-2">Welcome to Dashboard</h1>
-        <p className="text-indigo-100">Monitor your platform's performance and manage all components</p>
+        <p className="text-indigo-100">
+          Monitor your platform's performance and manage all components
+        </p>
       </div>
 
       {/* Stats Grid */}
@@ -44,7 +68,9 @@ const Dashboard = () => {
               +12% ↑
             </span>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900">{stats.totalUsers}</h3>
+          <h3 className="text-2xl font-bold text-gray-900">
+            {stats.totalUsers}
+          </h3>
           <p className="text-gray-600">Total Users</p>
         </div>
 
@@ -58,7 +84,9 @@ const Dashboard = () => {
               +8% ↑
             </span>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900">{stats.totalCategories}</h3>
+          <h3 className="text-2xl font-bold text-gray-900">
+            {stats.totalCategories}
+          </h3>
           <p className="text-gray-600">Total Categories</p>
         </div>
 
@@ -72,7 +100,9 @@ const Dashboard = () => {
               +15% ↑
             </span>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900">{stats.totalSessions}</h3>
+          <h3 className="text-2xl font-bold text-gray-900">
+            {stats.totalSessions}
+          </h3>
           <p className="text-gray-600">Total Sessions</p>
         </div>
 
@@ -86,7 +116,9 @@ const Dashboard = () => {
               +20% ↑
             </span>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900">${stats.totalRevenue}</h3>
+          <h3 className="text-2xl font-bold text-gray-900">
+            $ {stats.totalRevenue}
+          </h3>
           <p className="text-gray-600">Total Revenue</p>
         </div>
       </div>
@@ -95,22 +127,28 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Platform Statistics */}
         <div className="bg-white rounded-2xl p-6 shadow-lg">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Platform Statistics</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-6">
+            Platform Statistics
+          </h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
               <div className="flex items-center space-x-4">
                 <UserGroupIcon className="w-6 h-6 text-indigo-600" />
                 <span className="text-gray-700">Active Users</span>
               </div>
-              <span className="text-xl font-semibold text-gray-900">{stats.activeUsers}</span>
+              <span className="text-xl font-semibold text-gray-900">
+                {stats.activeUsers}
+              </span>
             </div>
-            
+
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
               <div className="flex items-center space-x-4">
                 <BookOpenIcon className="w-6 h-6 text-orange-600" />
                 <span className="text-gray-700">Total Courses</span>
               </div>
-              <span className="text-xl font-semibold text-gray-900">{stats.totalCourses}</span>
+              <span className="text-xl font-semibold text-gray-900">
+                {stats.totalCourses}
+              </span>
             </div>
 
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
@@ -118,7 +156,9 @@ const Dashboard = () => {
                 <CreditCardIcon className="w-6 h-6 text-sky-600" />
                 <span className="text-gray-700">Subscriptions</span>
               </div>
-              <span className="text-xl font-semibold text-gray-900">{stats.totalSubscriptions}</span>
+              <span className="text-xl font-semibold text-gray-900">
+                {stats.totalSubscriptions}
+              </span>
             </div>
 
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
@@ -126,14 +166,18 @@ const Dashboard = () => {
                 <EnvelopeIcon className="w-6 h-6 text-green-600" />
                 <span className="text-gray-700">New Messages</span>
               </div>
-              <span className="text-xl font-semibold text-gray-900">{stats.totalMessages}</span>
+              <span className="text-xl font-semibold text-gray-900">
+                {stats.totalMessages}
+              </span>
             </div>
           </div>
         </div>
 
         {/* Performance Chart */}
         <div className="bg-white rounded-2xl p-6 shadow-lg">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Performance Overview</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-6">
+            Performance Overview
+          </h2>
           <div className="flex items-center justify-center h-64 bg-gray-50 rounded-xl">
             <ChartBarIcon className="w-16 h-16 text-gray-400" />
           </div>

@@ -1,71 +1,95 @@
 // src/components/Admin/BonusCard.js
-import React, { useState } from 'react';
-import { 
-  PlusIcon, 
-  TrashIcon, 
-  
-  LinkIcon,
-  TagIcon,
-  ShoppingBagIcon,
-  
-} from '@heroicons/react/24/outline';
-import { toast } from 'react-toastify';
+import React, { useState, useEffect } from "react";
+import {
+  PlusIcon,
+  TrashIcon,
+  PencilIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+// Import your API functions
+import {
+  getAllBonCards,
+  createBonCard,
+  updateBonCard,
+  deleteBonCard,
+} from "../../api/BonCardAPI";
 
 const BonusCard = () => {
-  // State for offers
-  const [offers, setOffers] = useState([
-    {
-      id: 1,
-      title: "Premium Gym Membership",
-      organization: "FitLife Gym",
-      description: "Get 30% off on annual membership. Access to all facilities including pool and spa.",
-      originalPrice: 999,
-      discountedPrice: 699,
-      image: "https://via.placeholder.com/400x300",
-      contactType: "website",
-      contactLink: "https://fitlifegym.com",
-      validUntil: "2024-12-31",
-      isActive: true
-    }
-    // Add more sample offers as needed
-  ]);
-
-  // State for modal and form
+  // State
+  const [bonCards, setBonCards] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editId, setEditId] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+
+  // Define form data based on the BonCard model
   const [formData, setFormData] = useState({
-    title: '',
-    organization: '',
-    description: '',
-    originalPrice: '',
-    discountedPrice: '',
+    title: "",
+    description: "",
     image: null,
-    contactType: 'website',
-    contactLink: '',
-    validUntil: '',
-    isActive: true
+    price: "",
+    link: "",
+    expiredDate: "",
   });
 
-  // Handle input changes
+  // Fetch all BonCards on component mount
+  useEffect(() => {
+    fetchBonCards();
+  }, []);
+
+  const fetchBonCards = async () => {
+    try {
+      const res = await getAllBonCards();
+      if (res.success) {
+        setBonCards(res.data);
+      } else {
+        toast.error(
+          "Failed to fetch BonCards: " + (res.message || "Unknown error")
+        );
+      }
+    } catch (error) {
+      toast.error("Error fetching BonCards: " + error.message);
+    }
+  };
+
+  // Handle open modal for editing
+  const handleEdit = (bonCard) => {
+    setIsEditing(true);
+    setEditId(bonCard.id);
+    setFormData({
+      title: bonCard.title,
+      description: bonCard.description,
+      image: bonCard.image,
+      price: bonCard.price,
+      link: bonCard.link,
+      expiredDate: bonCard.expiredDate ? bonCard.expiredDate.split("T")[0] : "",
+    });
+    setImagePreview(bonCard.image);
+    setShowModal(true);
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
-  // Handle image upload
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 5242880) { // 5MB limit
-        toast.error('Image size should be less than 5MB');
+      if (file.size > 5242880) {
+        // 5MB limit
+        toast.error("Image size should be less than 5MB");
         return;
       }
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        image: file
+        image: file,
       }));
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -75,312 +99,284 @@ const BonusCard = () => {
     }
   };
 
-  // Handle form submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    if (!formData.title || !formData.organization || !formData.description) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
-    const newOffer = {
-      id: Date.now(),
-      ...formData,
-      image: imagePreview || 'https://via.placeholder.com/400x300'
-    };
-
-    setOffers(prev => [...prev, newOffer]);
-    resetForm();
-    toast.success('Offer added successfully!');
-  };
-
-  // Reset form
   const resetForm = () => {
     setFormData({
-      title: '',
-      organization: '',
-      description: '',
-      originalPrice: '',
-      discountedPrice: '',
+      title: "",
+      description: "",
       image: null,
-      contactType: 'website',
-      contactLink: '',
-      validUntil: '',
-      isActive: true
+      price: "",
+      link: "",
+      expiredDate: "",
     });
     setImagePreview(null);
+    setIsEditing(false);
+    setEditId(null);
     setShowModal(false);
   };
 
-  // Delete offer
-  const deleteOffer = (offerId) => {
-    if (window.confirm('Are you sure you want to delete this offer?')) {
-      setOffers(prev => prev.filter(offer => offer.id !== offerId));
-      toast.success('Offer deleted successfully');
+  // Create or Update in the DB
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Basic validation
+    if (!formData.title || !formData.description || !formData.price) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    try {
+      // Prepare payload based on the BonCard model
+      const payload = {
+        title: formData.title,
+        description: formData.description,
+        // If handling actual image uploads, integrate accordingly.
+        image: imagePreview || "https://via.placeholder.com/400x300",
+        price: parseFloat(formData.price) || 0,
+        link: formData.link,
+        expiredDate: formData.expiredDate || null,
+      };
+
+      if (isEditing) {
+        // Update existing BonCard
+        const res = await updateBonCard(editId, payload);
+        if (res.success) {
+          // Update the local state
+          setBonCards((prev) =>
+            prev.map((bonCard) => (bonCard.id === editId ? res.data : bonCard))
+          );
+          toast.success("BonCard updated successfully!");
+        } else {
+          toast.error(
+            "Failed to update BonCard: " + (res.message || "Unknown error")
+          );
+        }
+      } else {
+        // Create new BonCard
+        const res = await createBonCard(payload);
+        if (res.success) {
+          setBonCards((prev) => [...prev, res.data]);
+          toast.success("BonCard created successfully!");
+        } else {
+          toast.error(
+            "Failed to create BonCard: " + (res.message || "Unknown error")
+          );
+        }
+      }
+    } catch (error) {
+      toast.error("Operation failed: " + error.message);
+    } finally {
+      resetForm();
     }
   };
 
-  // Toggle offer status
-  const toggleOfferStatus = (offerId) => {
-    setOffers(prev => prev.map(offer => 
-      offer.id === offerId 
-        ? { ...offer, isActive: !offer.isActive }
-        : offer
-    ));
+  // Delete from the DB
+  const deleteBonCardHandler = async (bonCardId) => {
+    if (window.confirm("Are you sure you want to delete this BonCard?")) {
+      try {
+        const res = await deleteBonCard(bonCardId);
+        if (res.success) {
+          setBonCards((prev) =>
+            prev.filter((bonCard) => bonCard.id !== bonCardId)
+          );
+          toast.success("BonCard deleted successfully");
+        } else {
+          toast.error(
+            "Failed to delete BonCard: " + (res.message || "Unknown error")
+          );
+        }
+      } catch (error) {
+        toast.error("Error deleting BonCard: " + error.message);
+      }
+    }
   };
 
+  // Same UI as before but adjusted to the BonCard model
   return (
     <div className="container mx-auto px-4">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Bonus Card Offers</h1>
-          <p className="text-gray-600 mt-2">Manage collaboration offers and discounts</p>
+          <h1 className="text-3xl font-bold text-gray-800">Bonus Cards</h1>
+          <p className="text-gray-600 mt-2">Manage your bonus cards</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg hover:shadow-xl"
+          className="flex items-center px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all duration-300 transform hover:scale-105"
         >
           <PlusIcon className="w-5 h-5 mr-2" />
-          Add New Offer
+          Add New BonCard
         </button>
       </div>
 
-      {/* Offers Grid */}
+      {/* BonCards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {offers.map(offer => (
-          <div 
-            key={offer.id}
-            className={`bg-white rounded-xl shadow-lg overflow-hidden ${
-              !offer.isActive ? 'opacity-75' : ''
-            }`}
+        {bonCards.map((bonCard) => (
+          <div
+            key={bonCard.id}
+            className="bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-300 hover:shadow-xl"
           >
-            {/* Offer Image */}
+            {/* BonCard Image */}
             <div className="relative h-48">
               <img
-                src={offer.image}
-                alt={offer.title}
+                src={bonCard.image}
+                alt={bonCard.title}
                 className="w-full h-full object-cover"
               />
               <div className="absolute top-4 right-4 space-x-2">
                 <button
-                  onClick={() => deleteOffer(offer.id)}
-                  className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-50 transition-colors"
+                  onClick={() => handleEdit(bonCard)}
+                  className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors duration-200"
                 >
-                  <TrashIcon className="w-5 h-5 text-red-500" />
+                  <PencilIcon className="w-5 h-5 text-blue-600" />
+                </button>
+                <button
+                  onClick={() => deleteBonCardHandler(bonCard.id)}
+                  className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors duration-200"
+                >
+                  <TrashIcon className="w-5 h-5 text-red-600" />
                 </button>
               </div>
             </div>
 
-            {/* Offer Content */}
+            {/* BonCard Content */}
             <div className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-xl font-bold text-gray-800">{offer.title}</h3>
-                  <p className="text-gray-600 text-sm">{offer.organization}</p>
-                </div>
-                <div className="flex flex-col items-end">
-                  <span className="text-gray-500 line-through text-sm">
-                    ${offer.originalPrice}
-                  </span>
-                  <span className="text-2xl font-bold text-indigo-600">
-                    ${offer.discountedPrice}
+              <h3 className="text-xl font-semibold text-gray-800">
+                {bonCard.title}
+              </h3>
+              <p className="text-gray-600 mb-4">{bonCard.description}</p>
+
+              <div className="flex items-center gap-4 text-gray-600 mb-4">
+                <div className="flex items-center">
+                  <span className="font-semibold">Price:</span>
+                  <span className="ml-2 text-indigo-600">
+                    ${bonCard.price.toFixed(2)}
                   </span>
                 </div>
               </div>
-
-              <p className="text-gray-600 mb-4">{offer.description}</p>
-
-              <div className="space-y-4">
-                {/* Valid Until */}
-                <div className="flex items-center text-sm text-gray-600">
-                  <TagIcon className="w-4 h-4 mr-2" />
-                  Valid until: {offer.validUntil}
-                </div>
-
-                {/* Contact Link */}
-                <div className="flex justify-between items-center">
-                  <a
-                    href={offer.contactLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                  >
-                    {offer.contactType === 'whatsapp' ? (
-                      <>
-                        <ShoppingBagIcon className="w-4 h-4 mr-2" />
-                        WhatsApp
-                      </>
-                    ) : (
-                      <>
-                        <LinkIcon className="w-4 h-4 mr-2" />
-                        Visit Website
-                      </>
-                    )}
-                  </a>
+              <div className="flex items-center text-gray-600">
+                <span className="font-semibold">Expires On:</span>
+                <span className="ml-2">
+                  {new Date(bonCard.expiredDate).toLocaleDateString()}
+                </span>
+              </div>
+              <div className="flex justify-end">
+                <a
+                  href={bonCard.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <button
-                    onClick={() => toggleOfferStatus(offer.id)}
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      offer.isActive 
-                        ? 'bg-green-100 text-green-600'
-                        : 'bg-gray-100 text-gray-600'
-                    }`}
+                    className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                    title={bonCard.link}
                   >
-                    {offer.isActive ? 'Active' : 'Inactive'}
+                    Visit Link
                   </button>
-                </div>
+                </a>
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Add/Edit Offer Modal */}
+      {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Add New Offer</h2>
-                <button
-                  onClick={resetForm}
-                  className="p-2 hover:bg-gray-100 rounded-full"
-                >
-                  <TrashIcon className="w-6 h-6 text-gray-600" />
-                </button>
-              </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-gray-900">
+                {isEditing ? "Edit BonCard" : "Add New BonCard"}
+              </h3>
+              <button
+                onClick={resetForm}
+                className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+              >
+                <XMarkIcon className="w-6 h-6" />
+              </button>
+            </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Basic Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Offer Title *
-                    </label>
-                    <input
-                      type="text"
-                      name="title"
-                      value={formData.title}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Organization Name *
-                    </label>
-                    <input
-                      type="text"
-                      name="organization"
-                      value={formData.organization}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Pricing */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Original Price ($) *
-                    </label>
-                    <input
-                      type="number"
-                      name="originalPrice"
-                      value={formData.originalPrice}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Discounted Price ($) *
-                    </label>
-                    <input
-                      type="number"
-                      name="discountedPrice"
-                      value={formData.discountedPrice}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Contact Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Contact Type
-                    </label>
-                    <select
-                      name="contactType"
-                      value={formData.contactType}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    >
-                      <option value="website">Website</option>
-                      <option value="whatsapp">WhatsApp</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Contact Link *
-                    </label>
-                    <input
-                      type="text"
-                      name="contactLink"
-                      value={formData.contactLink}
-                      onChange={handleInputChange}
-                      placeholder={formData.contactType === 'whatsapp' ? 'WhatsApp number' : 'Website URL'}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Valid Until */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Basic Information */}
+              <div className="grid grid-cols-1 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Valid Until *
+                    Title *
                   </label>
                   <input
-                    type="date"
-                    name="validUntil"
-                    value={formData.validUntil}
+                    type="text"
+                    name="title"
+                    value={formData.title}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
                     required
                   />
                 </div>
 
-                {/* Description */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Offer Description *
+                    Description *
                   </label>
                   <textarea
                     name="description"
                     value={formData.description}
                     onChange={handleInputChange}
                     rows="4"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
                     required
                   ></textarea>
+                </div>
+
+                {/* Pricing */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Price ($) *
+                  </label>
+                  <input
+                    type="number"
+                    name="price"
+                    value={formData.price}
+                    onChange={handleInputChange}
+                    min="0"
+                    step="0.01"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                    required
+                  />
+                </div>
+                {/* Link */}
+                <div>
+                  <label
+                    htmlFor="link"
+                    className="block text-gray-700 font-semibold mb-2"
+                  >
+                    Link
+                  </label>
+                  <input
+                    type="url"
+                    id="link"
+                    name="link"
+                    value={formData.link}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                  />
+                </div>
+
+                {/* Expiration Date */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Expiration Date
+                  </label>
+                  <input
+                    type="date"
+                    name="expiredDate"
+                    value={formData.expiredDate}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                  />
                 </div>
 
                 {/* Image Upload */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Offer Image
+                    Image
                   </label>
                   <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
                     <div className="space-y-1 text-center">
@@ -395,9 +391,9 @@ const BonusCard = () => {
                             type="button"
                             onClick={() => {
                               setImagePreview(null);
-                              setFormData(prev => ({ ...prev, image: null }));
+                              setFormData((prev) => ({ ...prev, image: null }));
                             }}
-                            className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-full"
+                            className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-full transform transition-transform duration-200 hover:scale-110"
                           >
                             <TrashIcon className="w-4 h-4" />
                           </button>
@@ -407,7 +403,7 @@ const BonusCard = () => {
                           <div className="flex text-sm text-gray-600">
                             <label
                               htmlFor="file-upload"
-                              className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500"
+                              className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500"
                             >
                               <span>Upload a file</span>
                               <input
@@ -429,25 +425,25 @@ const BonusCard = () => {
                     </div>
                   </div>
                 </div>
+              </div>
 
-                {/* Form Actions */}
-                <div className="flex justify-end space-x-4">
-                  <button
-                    type="button"
-                    onClick={resetForm}
-                    className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-                  >
-                    Add Offer
-                  </button>
-                </div>
-              </form>
-            </div>
+              {/* Form Actions */}
+              <div className="flex justify-end space-x-4">
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transform transition-all duration-200 hover:scale-105"
+                >
+                  {isEditing ? "Update BonCard" : "Add BonCard"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

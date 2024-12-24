@@ -1,3 +1,4 @@
+// models/Session.js
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
 const Course = require("./Course");

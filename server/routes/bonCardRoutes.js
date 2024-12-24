@@ -4,7 +4,7 @@ const bonCardController = require("../controllers/bonCardController");
 const router = express.Router();
 
 // GET /api/boncards - Get all BonCards
-router.get("/", bonCardController.getAllBonCards);
+router.get('/', bonCardController.getAllBonCards);
 
 // GET /api/boncards/:id - Get a BonCard by ID
 router.get("/:id", bonCardController.getBonCardById);

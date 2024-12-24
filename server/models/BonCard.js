@@ -25,6 +25,10 @@ const BonCard = sequelize.define(
       type: DataTypes.FLOAT,
       allowNull: false,
     },
+    link: {
+      type: DataTypes.STRING, // Assuming link URL will be stored.
+      allowNull: false, // Link is optional.
+    },
     expiredDate: {
       type: DataTypes.DATE,
       allowNull: true, // The expiration date is optional but can be set if available.

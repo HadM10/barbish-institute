@@ -1,9 +1,12 @@
 const Course = require("../models/Course");
+const Category = require("../models/Category");
 
-// Get all courses 
+// Get all courses
 exports.getAllCourses = async (req, res) => {
   try {
-    const courses = await Course.findAll();
+    const courses = await Course.findAll({
+      include: [Category], // Include related User and Course models
+    });
     res.status(200).send(courses);
   } catch (error) {
     res.status(500).send({
@@ -13,7 +16,7 @@ exports.getAllCourses = async (req, res) => {
   }
 };
 
-// Get a course by ID 
+// Get a course by ID
 exports.getCourseById = async (req, res) => {
   try {
     const course = await Course.findByPk(req.params.id);
@@ -30,10 +33,19 @@ exports.getCourseById = async (req, res) => {
   }
 };
 
-// Create a new course 
+// Create a new course
 exports.createCourse = async (req, res) => {
   try {
-    const { title, image, description, content, price, duration } = req.body;
+    const {
+      title,
+      image,
+      description,
+      content,
+      price,
+      duration,
+      instructor,
+      categoryId,
+    } = req.body;
 
     const newCourse = await Course.create({
       title,
@@ -42,6 +54,8 @@ exports.createCourse = async (req, res) => {
       content,
       price,
       duration,
+      instructor,
+      categoryId,
     });
 
     res.status(201).send(newCourse);
@@ -53,7 +67,7 @@ exports.createCourse = async (req, res) => {
   }
 };
 
-// Update a course by ID 
+// Update a course by ID
 exports.updateCourse = async (req, res) => {
   try {
     const course = await Course.findByPk(req.params.id);
@@ -71,7 +85,7 @@ exports.updateCourse = async (req, res) => {
   }
 };
 
-// Delete a course by ID 
+// Delete a course by ID
 exports.deleteCourse = async (req, res) => {
   try {
     const course = await Course.findByPk(req.params.id);

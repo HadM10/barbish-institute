@@ -34,6 +34,10 @@ const Course = sequelize.define(
     duration: {
       type: DataTypes.INTEGER, // Duration in hours
     },
+    instructor: {
+      type: DataTypes.STRING, // Instructor's name
+      allowNull: false,
+    },
     isArchived: {
       // Archive flag for the course
       type: DataTypes.BOOLEAN,
