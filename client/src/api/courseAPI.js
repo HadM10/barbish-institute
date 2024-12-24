@@ -1,8 +1,8 @@
 // src/api/courseAPI.js
-import axios from 'axios';
+import axios from "axios";
 
 // Point this to your backend's URL and port.
-const API_BASE_URL = 'http://localhost:5001';
+const API_BASE_URL = "http://localhost:5000";
 
 // GET all courses (GET /api/course)
 export async function getAllCourses() {
@@ -14,7 +14,7 @@ export async function getAllCourses() {
   } catch (error) {
     return {
       success: false,
-      message: error.message || 'Failed to fetch courses',
+      message: error.message || "Failed to fetch courses",
     };
   }
 }
@@ -28,7 +28,7 @@ export async function createCourse(courseData) {
   } catch (error) {
     return {
       success: false,
-      message: error.message || 'Failed to create course',
+      message: error.message || "Failed to create course",
     };
   }
 }
@@ -36,13 +36,16 @@ export async function createCourse(courseData) {
 // UPDATE a course by ID (PUT /api/course/:id)
 export async function updateCourse(courseId, courseData) {
   try {
-    const response = await axios.put(`${API_BASE_URL}/api/course/${courseId}`, courseData);
+    const response = await axios.put(
+      `${API_BASE_URL}/api/course/${courseId}`,
+      courseData
+    );
     // The controller returns the updated course object
     return { success: true, data: response.data };
   } catch (error) {
     return {
       success: false,
-      message: error.message || 'Failed to update course',
+      message: error.message || "Failed to update course",
     };
   }
 }
@@ -50,13 +53,15 @@ export async function updateCourse(courseId, courseData) {
 // DELETE a course by ID (DELETE /api/course/:id)
 export async function deleteCourse(courseId) {
   try {
-    const response = await axios.delete(`${API_BASE_URL}/api/course/${courseId}`);
+    const response = await axios.delete(
+      `${API_BASE_URL}/api/course/${courseId}`
+    );
     // The controller returns { message: "Course deleted successfully" }
     return { success: true, data: response.data };
   } catch (error) {
     return {
       success: false,
-      message: error.message || 'Failed to delete course',
+      message: error.message || "Failed to delete course",
     };
   }
 }

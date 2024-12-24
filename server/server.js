@@ -12,6 +12,7 @@ const courseRoutes = require("./routes/courseRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const sessionRoutes = require("./routes/sessionRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 
 require("./models/User"); // Ensure User model is imported
 require("./models/Relations"); // Ensure relationships are loaded
@@ -35,6 +36,7 @@ app.use("/api/course", courseRoutes);
 app.use("/api/subscription", subscriptionRoutes);
 app.use("/api/session", sessionRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
@@ -43,7 +45,7 @@ app.use((err, req, res, next) => {
 });
 
 // Sync Database and Start Server
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 
 sequelize
   .authenticate() // Check database connection

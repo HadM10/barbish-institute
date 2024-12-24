@@ -1,20 +1,20 @@
 // client/src/components/Admin/Category.js
-import React, { useState, useEffect } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
+import React, { useState, useEffect } from "react";
+import { ToastContainer, toast } from "react-toastify";
+import { motion, AnimatePresence } from "framer-motion";
+import {
   PlusIcon,
   PencilSquareIcon,
   TrashIcon,
   BookOpenIcon,
   RectangleStackIcon,
-} from '@heroicons/react/24/outline';
-import CategoryAPI from '../../api/CategoryAPI';
-import 'react-toastify/dist/ReactToastify.css';
+} from "@heroicons/react/24/outline";
+import CategoryAPI from "../../api/categoryAPI";
+import "react-toastify/dist/ReactToastify.css";
 
 const Category = () => {
   const [categories, setCategories] = useState([]);
-  const [modalData, setModalData] = useState({ name: ''});
+  const [modalData, setModalData] = useState({ name: "" });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -26,18 +26,18 @@ const Category = () => {
     try {
       setIsLoading(true);
       const response = await CategoryAPI.getAllCategories();
-      console.log('API Response:', response);
-      
+      console.log("API Response:", response);
+
       if (response?.success && response?.data?.data) {
         setCategories(response.data.data); // Access the nested data array
       } else {
         setCategories([]);
-        toast.error('No categories found');
+        toast.error("No categories found");
       }
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error("Error fetching categories:", error);
       setCategories([]);
-      toast.error('Error loading categories');
+      toast.error("Error loading categories");
     } finally {
       setIsLoading(false);
     }
@@ -45,27 +45,29 @@ const Category = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!modalData.name) {
-      toast.error('Please fill all fields');
+      toast.error("Please fill all fields");
       return;
     }
-  
+
     try {
       const response = isEditing
         ? await CategoryAPI.updateCategory(modalData.id, modalData)
         : await CategoryAPI.createCategory(modalData);
-  
-      console.log('Submit response:', response);
-  
+
+      console.log("Submit response:", response);
+
       if (response?.success) {
-        toast.success(`Category ${isEditing ? 'updated' : 'created'} successfully`);
+        toast.success(
+          `Category ${isEditing ? "updated" : "created"} successfully`
+        );
         handleCloseModal();
         await fetchCategories();
       } else {
-        toast.error(response?.message || 'Operation failed');
+        toast.error(response?.message || "Operation failed");
       }
     } catch (error) {
-      console.error('Operation error:', error);
-      toast.error('Operation failed');
+      console.error("Operation error:", error);
+      toast.error("Operation failed");
     }
   };
   const handleEdit = (category) => {
@@ -75,24 +77,24 @@ const Category = () => {
   };
 
   const handleCloseModal = () => {
-    setModalData({ name: ''});
+    setModalData({ name: "" });
     setIsEditing(false);
     setIsModalOpen(false);
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure?')) return;
+    if (!window.confirm("Are you sure?")) return;
 
     try {
       const result = await CategoryAPI.deleteCategory(id);
       if (result.success) {
-        toast.success('Category deleted');
+        toast.success("Category deleted");
         fetchCategories();
       } else {
         toast.error(result.message);
       }
     } catch (error) {
-      toast.error('Delete failed');
+      toast.error("Delete failed");
     }
   };
 
@@ -108,7 +110,7 @@ const Category = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-50 p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-2xl p-8 shadow-lg mb-8"
@@ -118,7 +120,9 @@ const Category = () => {
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700 bg-clip-text text-transparent">
                 Course Categories
               </h1>
-              <p className="text-gray-600 mt-2">Manage your course categories</p>
+              <p className="text-gray-600 mt-2">
+                Manage your course categories
+              </p>
             </div>
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -142,14 +146,15 @@ const Category = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100 font-medium">Total Categories</p>
-                <h3 className="text-3xl font-bold text-white mt-1">{categories.length}</h3>
+                <h3 className="text-3xl font-bold text-white mt-1">
+                  {categories.length}
+                </h3>
               </div>
               <div className="bg-white/20 p-3 rounded-xl text-white">
                 <RectangleStackIcon className="w-6 h-6" />
               </div>
             </div>
           </motion.div>
-
         </div>
 
         {/* Categories Grid */}
@@ -164,7 +169,9 @@ const Category = () => {
             >
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800">{category.name}</h3>
+                  <h3 className="text-xl font-bold text-gray-800">
+                    {category.name}
+                  </h3>
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -207,7 +214,7 @@ const Category = () => {
                 className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6"
               >
                 <h3 className="text-2xl font-bold text-gray-800 mb-6">
-                  {isEditing ? 'Edit Category' : 'Add New Category'}
+                  {isEditing ? "Edit Category" : "Add New Category"}
                 </h3>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -218,7 +225,9 @@ const Category = () => {
                     <input
                       type="text"
                       value={modalData.name}
-                      onChange={(e) => setModalData({ ...modalData, name: e.target.value })}
+                      onChange={(e) =>
+                        setModalData({ ...modalData, name: e.target.value })
+                      }
                       className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                       required
                     />
@@ -236,7 +245,7 @@ const Category = () => {
                       type="submit"
                       className="px-4 py-2 bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
                     >
-                      {isEditing ? 'Update' : 'Add'} Category
+                      {isEditing ? "Update" : "Add"} Category
                     </button>
                   </div>
                 </form>
@@ -246,7 +255,7 @@ const Category = () => {
         )}
       </AnimatePresence>
 
-      <ToastContainer 
+      <ToastContainer
         position="bottom-right"
         autoClose={3000}
         hideProgressBar={false}

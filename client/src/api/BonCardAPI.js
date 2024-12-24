@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // If your backend runs on http://localhost:5000:
-const API_BASE_URL = "http://localhost:5001";
+const API_BASE_URL = "http://localhost:5000";
 
 // GET all bonCards
 export async function getAllBonCards() {

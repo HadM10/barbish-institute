@@ -1,7 +1,7 @@
 // client/src/api/CategoryAPI.js
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5001/api/categories';
+const API_URL = 'http://localhost:5000/api/categories';
 
 class CategoryAPI {
   static async getAllCategories() {

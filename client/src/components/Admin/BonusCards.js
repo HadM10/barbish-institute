@@ -1,21 +1,21 @@
 // src/components/Admin/BonusCard.js
-import React, { useState, useEffect } from 'react';
-import { 
-  PlusIcon, 
-  TrashIcon, 
+import React, { useState, useEffect } from "react";
+import {
+  PlusIcon,
+  TrashIcon,
   PencilIcon,
-  XMarkIcon
-} from '@heroicons/react/24/outline';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Import your API functions
 import {
   getAllBonCards,
   createBonCard,
   updateBonCard,
-  deleteBonCard
-} from '../../api/BonCardAPI';
+  deleteBonCard,
+} from "../../api/BonCardAPI";
 
 const BonusCard = () => {
   // State
@@ -27,11 +27,12 @@ const BonusCard = () => {
 
   // Define form data based on the BonCard model
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
+    title: "",
+    description: "",
     image: null,
-    price: '',
-    expiredDate: ''
+    price: "",
+    link: "",
+    expiredDate: "",
   });
 
   // Fetch all BonCards on component mount
@@ -45,10 +46,12 @@ const BonusCard = () => {
       if (res.success) {
         setBonCards(res.data);
       } else {
-        toast.error('Failed to fetch BonCards: ' + (res.message || 'Unknown error'));
+        toast.error(
+          "Failed to fetch BonCards: " + (res.message || "Unknown error")
+        );
       }
     } catch (error) {
-      toast.error('Error fetching BonCards: ' + error.message);
+      toast.error("Error fetching BonCards: " + error.message);
     }
   };
 
@@ -61,7 +64,8 @@ const BonusCard = () => {
       description: bonCard.description,
       image: bonCard.image,
       price: bonCard.price,
-      expiredDate: bonCard.expiredDate ? bonCard.expiredDate.split('T')[0] : ''
+      link: bonCard.link,
+      expiredDate: bonCard.expiredDate ? bonCard.expiredDate.split("T")[0] : "",
     });
     setImagePreview(bonCard.image);
     setShowModal(true);
@@ -69,22 +73,23 @@ const BonusCard = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 5242880) { // 5MB limit
-        toast.error('Image size should be less than 5MB');
+      if (file.size > 5242880) {
+        // 5MB limit
+        toast.error("Image size should be less than 5MB");
         return;
       }
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        image: file
+        image: file,
       }));
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -96,11 +101,12 @@ const BonusCard = () => {
 
   const resetForm = () => {
     setFormData({
-      title: '',
-      description: '',
+      title: "",
+      description: "",
       image: null,
-      price: '',
-      expiredDate: ''
+      price: "",
+      link: "",
+      expiredDate: "",
     });
     setImagePreview(null);
     setIsEditing(false);
@@ -114,7 +120,7 @@ const BonusCard = () => {
 
     // Basic validation
     if (!formData.title || !formData.description || !formData.price) {
-      toast.error('Please fill in all required fields');
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -124,9 +130,10 @@ const BonusCard = () => {
         title: formData.title,
         description: formData.description,
         // If handling actual image uploads, integrate accordingly.
-        image: imagePreview || 'https://via.placeholder.com/400x300',
+        image: imagePreview || "https://via.placeholder.com/400x300",
         price: parseFloat(formData.price) || 0,
-        expiredDate: formData.expiredDate || null
+        link: formData.link,
+        expiredDate: formData.expiredDate || null,
       };
 
       if (isEditing) {
@@ -134,27 +141,29 @@ const BonusCard = () => {
         const res = await updateBonCard(editId, payload);
         if (res.success) {
           // Update the local state
-          setBonCards(prev =>
-            prev.map(bonCard =>
-              bonCard.id === editId ? res.data : bonCard
-            )
+          setBonCards((prev) =>
+            prev.map((bonCard) => (bonCard.id === editId ? res.data : bonCard))
           );
-          toast.success('BonCard updated successfully!');
+          toast.success("BonCard updated successfully!");
         } else {
-          toast.error('Failed to update BonCard: ' + (res.message || 'Unknown error'));
+          toast.error(
+            "Failed to update BonCard: " + (res.message || "Unknown error")
+          );
         }
       } else {
         // Create new BonCard
         const res = await createBonCard(payload);
         if (res.success) {
-          setBonCards(prev => [...prev, res.data]);
-          toast.success('BonCard created successfully!');
+          setBonCards((prev) => [...prev, res.data]);
+          toast.success("BonCard created successfully!");
         } else {
-          toast.error('Failed to create BonCard: ' + (res.message || 'Unknown error'));
+          toast.error(
+            "Failed to create BonCard: " + (res.message || "Unknown error")
+          );
         }
       }
     } catch (error) {
-      toast.error('Operation failed: ' + error.message);
+      toast.error("Operation failed: " + error.message);
     } finally {
       resetForm();
     }
@@ -162,17 +171,21 @@ const BonusCard = () => {
 
   // Delete from the DB
   const deleteBonCardHandler = async (bonCardId) => {
-    if (window.confirm('Are you sure you want to delete this BonCard?')) {
+    if (window.confirm("Are you sure you want to delete this BonCard?")) {
       try {
         const res = await deleteBonCard(bonCardId);
         if (res.success) {
-          setBonCards(prev => prev.filter(bonCard => bonCard.id !== bonCardId));
-          toast.success('BonCard deleted successfully');
+          setBonCards((prev) =>
+            prev.filter((bonCard) => bonCard.id !== bonCardId)
+          );
+          toast.success("BonCard deleted successfully");
         } else {
-          toast.error('Failed to delete BonCard: ' + (res.message || 'Unknown error'));
+          toast.error(
+            "Failed to delete BonCard: " + (res.message || "Unknown error")
+          );
         }
       } catch (error) {
-        toast.error('Error deleting BonCard: ' + error.message);
+        toast.error("Error deleting BonCard: " + error.message);
       }
     }
   };
@@ -197,8 +210,8 @@ const BonusCard = () => {
 
       {/* BonCards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {bonCards.map(bonCard => (
-          <div 
+        {bonCards.map((bonCard) => (
+          <div
             key={bonCard.id}
             className="bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-300 hover:shadow-xl"
           >
@@ -227,19 +240,38 @@ const BonusCard = () => {
 
             {/* BonCard Content */}
             <div className="p-6">
-              <h3 className="text-xl font-semibold text-gray-800">{bonCard.title}</h3>
+              <h3 className="text-xl font-semibold text-gray-800">
+                {bonCard.title}
+              </h3>
               <p className="text-gray-600 mb-4">{bonCard.description}</p>
-              
+
               <div className="flex items-center gap-4 text-gray-600 mb-4">
                 <div className="flex items-center">
                   <span className="font-semibold">Price:</span>
-                  <span className="ml-2 text-indigo-600">${bonCard.price.toFixed(2)}</span>
+                  <span className="ml-2 text-indigo-600">
+                    ${bonCard.price.toFixed(2)}
+                  </span>
                 </div>
               </div>
-
               <div className="flex items-center text-gray-600">
                 <span className="font-semibold">Expires On:</span>
-                <span className="ml-2">{new Date(bonCard.expiredDate).toLocaleDateString()}</span>
+                <span className="ml-2">
+                  {new Date(bonCard.expiredDate).toLocaleDateString()}
+                </span>
+              </div>
+              <div className="flex justify-end">
+                <a
+                  href={bonCard.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <button
+                    className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                    title={bonCard.link}
+                  >
+                    Visit Link
+                  </button>
+                </a>
               </div>
             </div>
           </div>
@@ -252,7 +284,7 @@ const BonusCard = () => {
           <div className="bg-white rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-bold text-gray-900">
-                {isEditing ? 'Edit BonCard' : 'Add New BonCard'}
+                {isEditing ? "Edit BonCard" : "Add New BonCard"}
               </h3>
               <button
                 onClick={resetForm}
@@ -309,6 +341,23 @@ const BonusCard = () => {
                     required
                   />
                 </div>
+                {/* Link */}
+                <div>
+                  <label
+                    htmlFor="link"
+                    className="block text-gray-700 font-semibold mb-2"
+                  >
+                    Link
+                  </label>
+                  <input
+                    type="url"
+                    id="link"
+                    name="link"
+                    value={formData.link}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                  />
+                </div>
 
                 {/* Expiration Date */}
                 <div>
@@ -342,7 +391,7 @@ const BonusCard = () => {
                             type="button"
                             onClick={() => {
                               setImagePreview(null);
-                              setFormData(prev => ({ ...prev, image: null }));
+                              setFormData((prev) => ({ ...prev, image: null }));
                             }}
                             className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-full transform transition-transform duration-200 hover:scale-110"
                           >
@@ -391,7 +440,7 @@ const BonusCard = () => {
                   type="submit"
                   className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transform transition-all duration-200 hover:scale-105"
                 >
-                  {isEditing ? 'Update BonCard' : 'Add BonCard'}
+                  {isEditing ? "Update BonCard" : "Add BonCard"}
                 </button>
               </div>
             </form>

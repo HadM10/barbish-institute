@@ -1,23 +1,22 @@
-// src/components/Admin/RecordedSessions.js
-import React, { useState, useEffect } from 'react';
-import { 
+import React, { useState, useEffect } from "react";
+import {
   VideoCameraIcon,
   LinkIcon,
   XMarkIcon,
   PencilIcon,
-  TrashIcon
-} from '@heroicons/react/24/outline';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+  TrashIcon,
+} from "@heroicons/react/24/outline";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import {
   getAllSessions,
   createSession,
   updateSession,
-  deleteSession
-} from '../../api/sessionAPI';
+  deleteSession,
+} from "../../api/sessionAPI";
 
-import { getAllCourses } from '../../api/courseAPI';
+import { getAllCourses } from "../../api/courseAPI";
 
 const RecordedSessions = () => {
   const [courses, setCourses] = useState([]);
@@ -27,13 +26,13 @@ const RecordedSessions = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    content: '',
-    duration: '',
-    videoUrl: '',
-    courseId: '',
-    isActive: true
+    title: "",
+    description: "",
+    content: "",
+    duration: "",
+    videoUrl: "",
+    courseName: "", // Store courseName to display in the form
+    isActive: "active",
   });
 
   // Fetch sessions and courses on component mount
@@ -43,69 +42,131 @@ const RecordedSessions = () => {
   }, []);
 
   const fetchSessions = async () => {
-    const res = await getAllSessions();
-    if (res.success) {
-      setSessions(res.data);
-    } else {
-      toast.error('Failed to fetch sessions: ' + res.message);
+    try {
+      const res = await getAllSessions();
+      if (res.success) {
+        const adapted = res.data.map((session) => ({
+          id: session.id,
+          title: session.title || "Unknown Session",
+          description: session.description || "Unknown description",
+          content: session.content || "Unknown content",
+          courseName: session.Course?.title || "Unknown Course",
+          duration: session.duration || "Unknown Duration",
+          videoUrl: session.videoUrl || "No Video URL",
+          isActive: session.isActive ? "active" : "inactive",
+        }));
+        setSessions(adapted);
+      } else {
+        toast.error("Failed to fetch sessions: " + res.message);
+      }
+    } catch (error) {
+      toast.error("Error fetching sessions: " + error.message);
     }
   };
 
   const fetchCourses = async () => {
-    const res = await getAllCourses();
-    if (res.success) {
-      setCourses(res.data);
-    } else {
-      toast.error('Failed to fetch courses: ' + res.message);
+    try {
+      const res = await getAllCourses();
+      if (res.success) {
+        setCourses(res.data);
+      } else {
+        toast.error("Failed to fetch courses: " + res.message);
+      }
+    } catch (error) {
+      toast.error("Error fetching courses: " + error.message);
     }
   };
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    const { name, value } = e.target;
+
+    if (name === "courseName") {
+      courses.find(
+        (course) => course.courseName === value
+      );
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const { title, description, content, duration, videoUrl, courseId, isActive } = formData;
+    if (
+      !formData.title ||
+      !formData.description ||
+      !formData.duration ||
+      !formData.courseName
+    ) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
 
-    if (!title || !description || !duration || !courseId) {
-      toast.error('Please fill in all required fields');
+    const selectedCourse = courses.find(
+      (course) => course.title === formData.courseName
+    );
+    const isActive = formData.status === "active";
+    const courseId = selectedCourse.id;
+
+    if (!selectedCourse) {
+      toast.error("Invalid course selection");
       return;
     }
 
     const sessionData = {
-      title,
-      description,
-      content,
-      duration: parseInt(duration, 10),
-      videoUrl,
-      courseId: parseInt(courseId, 10),
-      isActive
+      title: formData.title,
+      description: formData.description,
+      content: formData.content,
+      duration: formData.duration,
+      videoUrl: formData.videoUrl,
+      courseId, // Ensure the courseId is passed correctly
+      isActive,
     };
 
-    if (isEditing) {
-      const res = await updateSession(editId, sessionData);
-      if (res.success) {
-        setSessions(prev => prev.map(session => session.id === editId ? res.data : session));
-        toast.success('Session updated successfully!');
+    try {
+      if (isEditing) {
+        const res = await updateSession(editId, sessionData);
+        if (res.success) {
+          setSessions((prev) =>
+            prev.map((session) =>
+              session.id === editId ? { ...session, ...formData, courseName: selectedCourse.title, } : session
+            )
+          );
+          toast.success("Session updated successfully!");
+        } else {
+          toast.error("Failed to update session: " + res.message);
+        }
       } else {
-        toast.error('Failed to update session: ' + res.message);
+        const res = await createSession(sessionData);
+        if (res.success) {
+          const newSession = res.data;
+          const adapted = {
+            id: newSession.id,
+            title: newSession.title,
+            description: newSession.description,
+            content: newSession.content || "No content",
+            duration: newSession.duration || "Unknown Duration",
+            videoUrl: newSession.videoUrl || "No Video URL",
+            courseName: selectedCourse.title,  // Adapted to include the course title
+            isActive: newSession.isActive ? "active" : "inactive",
+          };
+          setSessions((prev) => [...prev, adapted]);
+          toast.success("Session added successfully!");
+        } else {
+          toast.error("Failed to add session: " + (res.message || "Unknown error"));
+        }
       }
-    } else {
-      const res = await createSession(sessionData);
-      if (res.success) {
-        setSessions(prev => [...prev, res.data]);
-        toast.success('Session added successfully!');
-      } else {
-        toast.error('Failed to add session: ' + res.message);
-      }
+    } catch (error) {
+      toast.error("Error creating/updating session: " + error.message);
     }
-
+  
     resetForm();
   };
 
@@ -115,50 +176,58 @@ const RecordedSessions = () => {
     setFormData({
       title: session.title,
       description: session.description,
-      content: session.content || '',
+      content: session.content || "",
       duration: session.duration.toString(),
-      videoUrl: session.videoUrl || '',
-      courseId: session.courseId.toString(),
-      isActive: session.isActive
+      videoUrl: session.videoUrl || "",
+      courseName: session.courseName, // Set courseName to display in the form
+      isActive: session.isActive,
     });
     setShowModal(true);
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this session?')) {
-      const res = await deleteSession(id);
-      if (res.success) {
-        setSessions(prev => prev.filter(session => session.id !== id));
-        toast.success('Session deleted successfully!');
-      } else {
-        toast.error('Failed to delete session: ' + res.message);
+    if (window.confirm("Are you sure you want to delete this session?")) {
+      try {
+        const res = await deleteSession(id);
+        if (res.success) {
+          setSessions((prev) => prev.filter((session) => session.id !== id));
+          toast.success("Session deleted successfully!");
+        } else {
+          toast.error("Failed to delete session: " + res.message);
+        }
+      } catch (error) {
+        toast.error("Error deleting session: " + error.message);
       }
     }
   };
 
   const handleStatusToggle = async (id) => {
-    const session = sessions.find(s => s.id === id);
+    const session = sessions.find((s) => s.id === id);
     if (session) {
       const updatedStatus = !session.isActive;
       const res = await updateSession(id, { isActive: updatedStatus });
       if (res.success) {
-        setSessions(prev => prev.map(s => s.id === id ? res.data : s));
-        toast.success(`Session status changed to ${updatedStatus ? 'Active' : 'Inactive'}`);
+        setSessions((prev) =>
+          prev.map((s) => (s.id === id ? { ...s, isActive: updatedStatus } : s))
+        );
+        toast.success(
+          `Session status changed to ${updatedStatus ? "active" : "inactive"}`
+        );
       } else {
-        toast.error('Failed to update status: ' + res.message);
+        toast.error("Failed to update status: " + res.message);
       }
     }
   };
 
   const resetForm = () => {
     setFormData({
-      title: '',
-      description: '',
-      content: '',
-      duration: '',
-      videoUrl: '',
-      courseId: '',
-      isActive: true
+      title: "",
+      description: "",
+      content: "",
+      duration: "",
+      videoUrl: "",
+      courseName: "", // Reset courseName
+      isActive: true,
     });
     setIsEditing(false);
     setEditId(null);
@@ -205,13 +274,7 @@ const RecordedSessions = () => {
                   Chapter
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Instructor
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Duration (min)
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Video Link
@@ -226,13 +289,22 @@ const RecordedSessions = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {sessions.map((session) => (
-                <tr key={session.id} className="hover:bg-gray-50 transition-colors duration-150">
-                  <td className="px-6 py-4 whitespace-nowrap">{session.title}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{session.Course?.title || 'N/A'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{session.description}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{session.instructor}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{session.duration}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{new Date(session.date).toLocaleDateString()}</td>
+                <tr
+                  key={session.id}
+                  className="hover:bg-gray-50 transition-colors duration-150"
+                >
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {session.title}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {session.courseName}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {session.description}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {session.duration}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {session.videoUrl && (
                       <a
@@ -250,12 +322,12 @@ const RecordedSessions = () => {
                     <button
                       onClick={() => handleStatusToggle(session.id)}
                       className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        session.isActive 
-                          ? 'bg-green-100 text-green-800 hover:bg-green-200' 
-                          : 'bg-red-100 text-red-800 hover:bg-red-200'
+                        session.isActive
+                          ? "bg-green-100 text-green-800 hover:bg-green-200"
+                          : "bg-red-100 text-red-800 hover:bg-red-200"
                       } transition-colors duration-200`}
                     >
-                      {session.isActive ? 'Active' : 'Inactive'}
+                      {session.isActive ? "Active" : "Inactive"}
                     </button>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -287,7 +359,7 @@ const RecordedSessions = () => {
           <div className="bg-white rounded-2xl p-6 w-full max-w-md my-8 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold text-gray-900">
-                {isEditing ? 'Edit Session' : 'Add New Session'}
+                {isEditing ? "Edit Session" : "Add New Session"}
               </h3>
               <button
                 onClick={resetForm}
@@ -339,13 +411,14 @@ const RecordedSessions = () => {
                     value={formData.content}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-150"
-                  />
+                    rows="3"
+                  ></textarea>
                 </div>
 
                 {/* Duration */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Duration (minutes) *
+                    Duration (min) *
                   </label>
                   <input
                     type="number"
@@ -377,48 +450,28 @@ const RecordedSessions = () => {
                     Course *
                   </label>
                   <select
-                    name="courseId"
-                    value={formData.courseId}
+                    name="courseName"
+                    value={formData.courseName}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-150"
                     required
                   >
-                    <option value="">Select a course</option>
-                    {courses.map(course => (
-                      <option key={course.id} value={course.id}>
-                        {course.title} - ${course.price}
+                    <option value="">Select Course</option>
+                    {courses.map((course) => (
+                      <option key={course.id} value={course.title}>
+                        {course.title}
                       </option>
                     ))}
                   </select>
                 </div>
-
-                {/* Status */}
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="isActive"
-                    checked={formData.isActive}
-                    onChange={handleInputChange}
-                    className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Active</span>
-                </div>
               </div>
 
-              {/* Submit and Cancel Buttons */}
-              <div className="flex justify-end gap-4 mt-6">
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all duration-150"
-                >
-                  Cancel
-                </button>
+              <div className="mt-6 text-center">
                 <button
                   type="submit"
-                  className="px-4 py-2 text-white bg-purple-600 rounded-lg hover:bg-purple-700 transform hover:scale-105 transition-all duration-150"
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200"
                 >
-                  {isEditing ? 'Update Session' : 'Save Session'}
+                  {isEditing ? "Update Session" : "Add Session"}
                 </button>
               </div>
             </form>
