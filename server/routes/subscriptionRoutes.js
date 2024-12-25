@@ -1,4 +1,3 @@
-// routes/subscriptionRoutes.js
 const express = require("express");
 const {
   getAllSubscriptions,

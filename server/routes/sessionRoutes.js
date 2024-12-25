@@ -1,4 +1,3 @@
-// routes/sessionRoutes.js
 const express = require("express");
 const {
   getAllSessions,
