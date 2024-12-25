@@ -8,9 +8,36 @@ import {
   TrashIcon,
   BookOpenIcon,
   RectangleStackIcon,
+  CheckCircleIcon,
+  XCircleIcon,
 } from "@heroicons/react/24/outline";
 import CategoryAPI from "../../api/categoryAPI";
 import "react-toastify/dist/ReactToastify.css";
+
+const Notification = ({ message, type, onClose }) => {
+  const bgColor = type === 'error' || type === 'delete' 
+    ? 'bg-red-500' 
+    : 'bg-emerald-500';
+
+  return (
+    <motion.div
+      initial={{ x: 400, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: 400, opacity: 0 }}
+      className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-6 py-4 
+                rounded-lg shadow-lg ${bgColor}`}
+    >
+      {type === 'delete' ? (
+        <TrashIcon className="w-6 h-6 text-white" />
+      ) : type === 'success' ? (
+        <CheckCircleIcon className="w-6 h-6 text-white" />
+      ) : (
+        <XCircleIcon className="w-6 h-6 text-white" />
+      )}
+      <p className="text-white font-medium">{message}</p>
+    </motion.div>
+  );
+};
 
 const Category = () => {
   const [categories, setCategories] = useState([]);
@@ -18,6 +45,8 @@ const Category = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [notification, setNotification] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     fetchCategories();
@@ -29,15 +58,15 @@ const Category = () => {
       console.log("API Response:", response);
 
       if (response?.success && response?.data?.data) {
-        setCategories(response.data.data); // Access the nested data array
+        setCategories(response.data.data);
       } else {
         setCategories([]);
-        toast.error("No categories found");
+        showNotification("No categories found", 'error');
       }
     } catch (error) {
       console.error("Error fetching categories:", error);
       setCategories([]);
-      toast.error("Error loading categories");
+      showNotification("Error loading categories", 'error');
     } finally {
       setIsLoading(false);
     }
@@ -45,7 +74,7 @@ const Category = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!modalData.name) {
-      toast.error("Please fill all fields");
+      showNotification("Please fill all fields", 'error');
       return;
     }
 
@@ -54,20 +83,16 @@ const Category = () => {
         ? await CategoryAPI.updateCategory(modalData.id, modalData)
         : await CategoryAPI.createCategory(modalData);
 
-      console.log("Submit response:", response);
-
       if (response?.success) {
-        toast.success(
-          `Category ${isEditing ? "updated" : "created"} successfully`
-        );
+        showNotification(`Category ${isEditing ? "updated" : "created"} successfully`);
         handleCloseModal();
         await fetchCategories();
       } else {
-        toast.error(response?.message || "Operation failed");
+        showNotification(response?.message || "Operation failed", 'error');
       }
     } catch (error) {
       console.error("Operation error:", error);
-      toast.error("Operation failed");
+      showNotification("Operation failed", 'error');
     }
   };
   const handleEdit = (category) => {
@@ -88,15 +113,24 @@ const Category = () => {
     try {
       const result = await CategoryAPI.deleteCategory(id);
       if (result.success) {
-        toast.success("Category deleted");
+        showNotification("Category deleted successfully", 'delete');
         fetchCategories();
       } else {
-        toast.error(result.message);
+        showNotification(result.message, 'error');
       }
     } catch (error) {
-      toast.error("Delete failed");
+      showNotification("Delete failed", 'error');
     }
   };
+
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  const filteredCategories = categories.filter(category =>
+    category.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (isLoading) {
     return (
@@ -108,6 +142,16 @@ const Category = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-50 p-8">
+      <AnimatePresence>
+        {notification && (
+          <Notification
+            message={notification.message}
+            type={notification.type}
+            onClose={() => setNotification(null)}
+          />
+        )}
+      </AnimatePresence>
+
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
@@ -124,15 +168,37 @@ const Category = () => {
                 Manage your course categories
               </p>
             </div>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setIsModalOpen(true)}
-              className="px-6 py-3 bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
-            >
-              <PlusIcon className="w-5 h-5" />
-              <span>Add Category</span>
-            </motion.button>
+            <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+              {/* Search Box */}
+              <div className="relative flex-1 md:w-64">
+                <input
+                  type="text"
+                  placeholder="Search categories..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg
+                           focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                {searchTerm && (
+                  <button 
+                    onClick={() => setSearchTerm("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+              {/* Keep your existing Add Category button */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setIsModalOpen(true)}
+                className="px-6 py-3 bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+              >
+                <PlusIcon className="w-5 h-5" />
+                <span>Add Category</span>
+              </motion.button>
+            </div>
           </div>
         </motion.div>
 
@@ -159,7 +225,7 @@ const Category = () => {
 
         {/* Categories Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {categories.map((category, index) => (
+          {filteredCategories.map((category, index) => (
             <motion.div
               key={category.id}
               initial={{ opacity: 0, y: 20 }}
@@ -195,6 +261,13 @@ const Category = () => {
             </motion.div>
           ))}
         </div>
+
+        {/* Add No Results Message */}
+        {searchTerm && filteredCategories.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            No categories found matching your search.
+          </div>
+        )}
       </div>
 
       {/* Modal */}

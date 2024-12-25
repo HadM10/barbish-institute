@@ -7,25 +7,177 @@ import {
   ChevronUpIcon,
   XMarkIcon,
   ClockIcon,
+  PencilIcon,
+  CheckCircleIcon,
+  XCircleIcon
 } from "@heroicons/react/24/outline";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import {
   getAllCourses,
   createCourse,
   updateCourse as updateCourseAPI,
   deleteCourse as deleteCourseAPI,
 } from "../../api/courseAPI";
-
 import CategoryAPI from "../../api/categoryAPI";
+
+// Custom Notification Component
+const Notification = ({ message, type, onClose }) => {
+  const bgColor = type === 'error' || type === 'delete' 
+    ? 'bg-red-500' 
+    : 'bg-emerald-500';
+
+  return (
+    <motion.div
+      initial={{ x: 400, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: 400, opacity: 0 }}
+      className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-6 py-4 
+                rounded-lg shadow-lg ${bgColor}`}
+    >
+      {type === 'delete' ? (
+        <TrashIcon className="w-6 h-6 text-white" />
+      ) : type === 'success' ? (
+        <CheckCircleIcon className="w-6 h-6 text-white" />
+      ) : (
+        <XCircleIcon className="w-6 h-6 text-white" />
+      )}
+      <p className="text-white font-medium">{message}</p>
+    </motion.div>
+  );
+};
+
+const CourseTable = ({ courses, categories, onEdit, onDelete, searchTerm }) => {
+  const [expandedRows, setExpandedRows] = useState({});
+
+  // Filter courses based on search term
+  const filteredCourses = courses.filter(course => 
+    course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    course.categoryName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Group filtered courses by category
+  const groupedCourses = filteredCourses.reduce((acc, course) => {
+    if (!acc[course.categoryName]) {
+      acc[course.categoryName] = [];
+    }
+    acc[course.categoryName].push(course);
+    return acc;
+  }, {});
+
+  const toggleRow = (courseId) => {
+    setExpandedRows(prev => ({
+      ...prev,
+      [courseId]: !prev[courseId]
+    }));
+  };
+
+  return (
+    <div className="space-y-6">
+      {Object.entries(groupedCourses).map(([category, categoryCourses]) => (
+        <div key={category} className="bg-white rounded-xl shadow-md overflow-hidden">
+          <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
+            <h3 className="text-xl font-semibold text-white">{category}</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Instructor</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {categoryCourses.map((course) => (
+                  <React.Fragment key={course.id}>
+                    <tr className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center space-x-3">
+                          <img 
+                            src={course.image} 
+                            alt={course.title}
+                            className="h-10 w-10 rounded-lg object-cover"
+                          />
+                          <div>
+                            <div className="font-medium text-gray-900">{course.title}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-gray-500">{course.instructor}</td>
+                      <td className="px-6 py-4 text-gray-500">{course.duration} hours</td>
+                      <td className="px-6 py-4">
+                        <span className="px-2 py-1 text-green-800 text-sm font-medium bg-green-100 rounded-full">
+                          ${course.price}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex justify-end space-x-2">
+                          <button
+                            onClick={() => toggleRow(course.id)}
+                            className="text-gray-400 hover:text-gray-500"
+                          >
+                            {expandedRows[course.id] ? 
+                              <ChevronUpIcon className="w-5 h-5" /> : 
+                              <ChevronDownIcon className="w-5 h-5" />
+                            }
+                          </button>
+                          <button
+                            onClick={() => onEdit(course)}
+                            className="text-blue-400 hover:text-blue-500"
+                          >
+                            <PencilIcon className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => onDelete(course.id)}
+                            className="text-red-400 hover:text-red-500"
+                          >
+                            <TrashIcon className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    {expandedRows[course.id] && (
+                      <tr>
+                        <td colSpan="5" className="px-6 py-4 bg-gray-50">
+                          <div className="space-y-4">
+                            <div>
+                              <h4 className="font-medium text-gray-900">Description</h4>
+                              <p className="mt-1 text-gray-500">{course.description}</p>
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-gray-900">Course Content</h4>
+                              <ul className="mt-1 space-y-1">
+                                {course.content.map((item, index) => (
+                                  <li key={index} className="text-gray-500 flex items-center">
+                                    <div className="w-1.5 h-1.5 bg-purple-600 rounded-full mr-2" />
+                                    {item}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const Courses = () => {
   const [courses, setCourses] = useState([]);
   const [categories, setCategories] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [expandedCourse, setExpandedCourse] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
+  const [notification, setNotification] = useState(null);
   const [formData, setFormData] = useState({
     id: null,
     title: "",
@@ -38,6 +190,13 @@ const Courses = () => {
     isArchived: false,
     categoryName: "",
   });
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
+  };
+
   useEffect(() => {
     fetchCategories();
     fetchCourses();
@@ -49,12 +208,10 @@ const Courses = () => {
       if (res.success) {
         setCategories(res.data.data);
       } else {
-        toast.error(
-          "Failed to fetch categories: " + (res.message || "Unknown error")
-        );
+        showNotification('Failed to fetch categories: ' + (res.message || 'Unknown error'), 'error');
       }
     } catch (error) {
-      toast.error("Error fetching categories: " + error.message);
+      showNotification('Error fetching categories: ' + error.message, 'error');
     }
   };
 
@@ -62,8 +219,7 @@ const Courses = () => {
     try {
       const res = await getAllCourses();
       if (res.success) {
-        const adapted = res.data.map((dbCourse) => {
-          return {
+        const adapted = res.data.map((dbCourse) => ({
           id: dbCourse.id,
           title: dbCourse.title,
           image: dbCourse.image || "https://via.placeholder.com/400x300",
@@ -76,40 +232,30 @@ const Courses = () => {
           instructor: dbCourse.instructor,
           isArchived: dbCourse.isArchived,
           categoryName: dbCourse.Category?.name || "Unknown Category",
-        };
-        });
+        }));
         setCourses(adapted);
       } else {
-        toast.error(
-          "Failed to fetch courses: " + (res.message || "Unknown error")
-        );
+        showNotification('Failed to fetch courses: ' + (res.message || 'Unknown error'), 'error');
       }
     } catch (error) {
-      toast.error("Error fetching courses: " + error.message);
+      showNotification('Error fetching courses: ' + error.message, 'error');
     }
   };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name === "categoryName") {
-      categories.find((category) => category.categoryName === value);
-
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
-    }
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
-        image: file,
+        image: file
       }));
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -117,81 +263,6 @@ const Courses = () => {
       };
       reader.readAsDataURL(file);
     }
-  };
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (
-      !formData.title ||
-      !formData.description ||
-      !formData.price ||
-      !formData.categoryName
-    ) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-    const selectedCategory = categories.find(
-      (category) => category.name === formData.categoryName
-    );
-
-    const categoryId = selectedCategory.id;
-
-    const dbPayload = {
-      title: formData.title,
-      image: imagePreview || "https://via.placeholder.com/400x300",
-      description: formData.description,
-      content: formData.content,
-      price: parseFloat(formData.price),
-      duration: parseInt(formData.duration) || 0,
-      instructor: formData.instructor,
-      isArchived: false,
-      categoryId,
-    };
-    try {
-      if (isEditing && formData.id) {
-        const res = await updateCourseAPI(formData.id, dbPayload);
-        if (res.success) {
-          setCourses((prev) =>
-            prev.map((course) =>
-              course.id === formData.id ? { ...course,
-                ...formData,  categoryName: selectedCategory.name, } : course
-            )
-          );
-          toast.success("Course updated successfully!");
-        } else {
-          toast.error(
-            "Failed to update course: " + (res.message || "Unknown error")
-          );
-        }
-      } else {
-        const res = await createCourse(dbPayload);
-        if (res.success) {
-          const newCourse = res.data;
-          const adapted = {
-            id: newCourse.id,
-            title: newCourse.title,
-            description: newCourse.description,
-            content: Array.isArray(newCourse.content)
-              ? newCourse.content.join("\n")
-              : newCourse.content,
-            price: newCourse.price || 0,
-            duration: newCourse.duration || 0,
-            instructor: newCourse.instructor,
-            isArchived: newCourse.isArchived ? "Archived" : "Active",
-            categoryName: selectedCategory.name,
-          };
-          setCourses((prev) => [...prev, adapted]);
-          toast.success("Course created successfully!");
-        } else {
-          toast.error(
-            "Failed to create course: " + (res.message || "Unknown error")
-          );
-        }
-      }
-    } catch (error) {
-      toast.error("Operation failed: " + error.message);
-    }
-
-    resetForm();
   };
 
   const handleEdit = (course) => {
@@ -201,28 +272,27 @@ const Courses = () => {
       content: Array.isArray(course.content)
         ? course.content.join("\n")
         : course.content || "",
-      id: course.id,
     });
     setImagePreview(course.image);
     setShowModal(true);
   };
-  const deleteCourse = async (courseId) => {
+
+  const handleDelete = async (courseId) => {
     if (window.confirm("Are you sure you want to delete this course?")) {
       try {
         const res = await deleteCourseAPI(courseId);
         if (res.success) {
-          setCourses((prev) => prev.filter((course) => course.id !== courseId));
-          toast.success("Course deleted successfully!");
+          setCourses(prev => prev.filter(course => course.id !== courseId));
+          showNotification('Course deleted successfully!', 'delete');
         } else {
-          toast.error(
-            "Failed to delete course: " + (res.message || "Unknown error")
-          );
+          showNotification('Failed to delete course: ' + (res.message || 'Unknown error'), 'error');
         }
       } catch (error) {
-        toast.error("Error deleting course: " + error.message);
+        showNotification('Error deleting course: ' + error.message, 'error');
       }
     }
   };
+
   const resetForm = () => {
     setFormData({
       id: null,
@@ -240,172 +310,155 @@ const Courses = () => {
     setShowModal(false);
     setIsEditing(false);
   };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!formData.title || !formData.description || !formData.price || !formData.categoryName) {
+      showNotification('Please fill in all required fields', 'error');
+      return;
+    }
+
+    const selectedCategory = categories.find(
+      (category) => category.name === formData.categoryName
+    );
+
+    const categoryId = selectedCategory.id;
+
+    const dbPayload = {
+      title: formData.title,
+      image: imagePreview || "https://via.placeholder.com/400x300",
+      description: formData.description,
+      content: formData.content,
+      price: parseFloat(formData.price),
+      duration: parseInt(formData.duration) || 0,
+      instructor: formData.instructor,
+      isArchived: false,
+      categoryId,
+    };
+
+    try {
+      if (isEditing && formData.id) {
+        const res = await updateCourseAPI(formData.id, dbPayload);
+        if (res.success) {
+          setCourses((prev) =>
+            prev.map((course) =>
+              course.id === formData.id 
+                ? { ...course, ...formData, categoryName: selectedCategory.name } 
+                : course
+            )
+          );
+          showNotification('Course updated successfully!');
+        } else {
+          showNotification('Failed to update course: ' + (res.message || 'Unknown error'), 'error');
+        }
+      } else {
+        const res = await createCourse(dbPayload);
+        if (res.success) {
+          const newCourse = res.data;
+          const adapted = {
+            id: newCourse.id,
+            title: newCourse.title,
+            description: newCourse.description,
+            content: Array.isArray(newCourse.content)
+              ? newCourse.content
+              : newCourse.content?.split("\n") || [],
+            price: newCourse.price || 0,
+            duration: newCourse.duration || 0,
+            instructor: newCourse.instructor,
+            isArchived: newCourse.isArchived,
+            categoryName: selectedCategory.name,
+          };
+          setCourses((prev) => [...prev, adapted]);
+          showNotification('Course created successfully!');
+        } else {
+          showNotification('Failed to create course: ' + (res.message || 'Unknown error'), 'error');
+        }
+      }
+      resetForm();
+    } catch (error) {
+      showNotification('Operation failed: ' + error.message, 'error');
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+    <div className="min-h-screen bg-gray-100 p-6">
+      <AnimatePresence>
+        {notification && (
+          <Notification
+            message={notification.message}
+            type={notification.type}
+            onClose={() => setNotification(null)}
+          />
+        )}
+      </AnimatePresence>
+
       <div className="max-w-7xl mx-auto space-y-8">
-        <div className="bg-white rounded-2xl shadow-lg p-8">
+        <div className="bg-white rounded-xl shadow-md p-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                Course Management
-              </h1>
-              <p className="text-gray-600 mt-2">
-                Create and manage your course catalog
-              </p>
+              <h1 className="text-2xl font-bold text-gray-900">Course Management</h1>
+              <p className="text-gray-500 mt-1">Manage your course catalog</p>
             </div>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setShowModal(true)}
-              className="flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 
-                      text-white rounded-xl hover:shadow-lg transition-all duration-200"
-            >
-              <PlusIcon className="w-5 h-5 mr-2" />
-              Add New Course
-            </motion.button>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <AnimatePresence>
-            {courses.map((course) => (
-              <motion.div
-                key={course.id}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className={`bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 
-                         ${
-                           expandedCourse === course.id
-                             ? "lg:col-span-2 lg:row-span-2"
-                             : ""
-                         }`}
+            <div className="flex items-center gap-4 w-full md:w-auto">
+              <div className="relative flex-1 md:w-64">
+                <input
+                  type="text"
+                  placeholder="Search courses or categories..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg
+                           focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowModal(true)}
+                className="flex-shrink-0 flex items-center px-4 py-2 bg-gradient-to-r 
+                          from-purple-600 to-indigo-600 text-white rounded-lg 
+                          hover:shadow-lg transition-all"
               >
-                <div className="relative pt-[60%] overflow-hidden group">
-                  <img
-                    src={course.image}
-                    alt={course.title}
-                    className="absolute inset-0 w-full h-full object-cover object-center 
-                            transform group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className="absolute top-4 right-4 flex space-x-2">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => handleEdit(course)}
-                      className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="w-5 h-5 text-blue-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      </svg>
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() =>
-                        setExpandedCourse(
-                          expandedCourse === course.id ? null : course.id
-                        )
-                      }
-                      className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors"
-                    >
-                      {expandedCourse === course.id ? (
-                        <ChevronUpIcon className="w-5 h-5 text-gray-600" />
-                      ) : (
-                        <ChevronDownIcon className="w-5 h-5 text-gray-600" />
-                      )}
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => deleteCourse(course.id)}
-                      className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors"
-                    >
-                      <TrashIcon className="w-5 h-5 text-red-500" />
-                    </motion.button>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-xl font-bold text-gray-800 hover:text-purple-600 transition-colors duration-200">
-                      {course.title}
-                    </h3>
-                    <span className="px-3 py-1 bg-purple-100 text-purple-600 rounded-full font-medium">
-                      ${course.price}
-                    </span>
-                  </div>
-                  <div className="flex items-start mb-4">
-                    <h4 className="font-semibold text-gray-800 mb-3 mr-2">
-                      Category:
-                    </h4>
-                    <p className="text-gray-600">{course.categoryName}</p>
-                  </div>
-                  <div className="flex items-start mb-4">
-                    <h4 className="font-semibold text-gray-800 mb-3 mr-2">
-                      Instructor :
-                    </h4>
-                    <p className="text-gray-600 mb-4">{course.instructor}</p>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <ClockIcon className="w-5 h-5 mr-2 text-gray-400" />
-                      {course.duration} hours
-                    </div>
-                  </div>
-                  {expandedCourse === course.id && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="mt-6 pt-6 border-t border-gray-100"
-                    >
-                      <h4 className="font-semibold text-gray-800 mb-3">
-                        Description
-                      </h4>
-                      <p className="text-gray-600 mb-4">{course.description}</p>
-
-                      <h4 className="font-semibold text-gray-800 mb-3">
-                        Course Content
-                      </h4>
-                      <ul className="space-y-2">
-                        {course.content.map((item, index) => (
-                          <motion.li
-                            key={index}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                            className="flex items-center text-gray-600"
-                          >
-                            <div className="w-2 h-2 bg-purple-600 rounded-full mr-3" />
-                            {item}
-                          </motion.li>
-                        ))}
-                      </ul>
-                    </motion.div>
-                  )}
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+                <PlusIcon className="w-5 h-5 mr-2" />
+                Add Course
+              </motion.button>
+            </div>
+          </div>
+          
+          {searchTerm && (
+            <div className="mt-4 text-sm text-gray-500">
+              Showing results for "{searchTerm}"
+              <button 
+                onClick={() => setSearchTerm("")}
+                className="ml-2 text-purple-600 hover:text-purple-700"
+              >
+                Clear search
+              </button>
+            </div>
+          )}
         </div>
+
+        <CourseTable
+          courses={courses}
+          categories={categories}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          searchTerm={searchTerm}
+        />
+
         <AnimatePresence>
           {showModal && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 
+                       flex items-center justify-center p-4"
             >
               <motion.div
                 initial={{ scale: 0.95 }}
@@ -426,7 +479,6 @@ const Courses = () => {
                     </button>
                   </div>
                   <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Title */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Course Title *
@@ -440,7 +492,6 @@ const Courses = () => {
                         required
                       />
                     </div>
-                    {/* Category */}
                     <div className="mb-4">
                       <label>
                         Category *
@@ -461,7 +512,6 @@ const Courses = () => {
                       </select>
                     </div>
 
-                    {/* Price and Duration */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -490,7 +540,6 @@ const Courses = () => {
                         />
                       </div>
                     </div>
-                    {/* Instructor */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Instructor Name
@@ -504,7 +553,6 @@ const Courses = () => {
                         required
                       />
                     </div>
-                    {/* Image Upload */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Course Image
@@ -559,7 +607,6 @@ const Courses = () => {
                         </div>
                       </div>
                     </div>
-                    {/* Description */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Course Description *
@@ -573,7 +620,6 @@ const Courses = () => {
                         required
                       ></textarea>
                     </div>
-                    {/* Content */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Course Content * (One item per line)
@@ -588,7 +634,6 @@ const Courses = () => {
                         required
                       ></textarea>
                     </div>
-                    {/* Form Buttons */}
                     <div className="flex justify-end space-x-4">
                       <motion.button
                         whileHover={{ scale: 1.02 }}
@@ -615,8 +660,8 @@ const Courses = () => {
           )}
         </AnimatePresence>
       </div>
-      <ToastContainer position="bottom-right" />
     </div>
   );
 };
+
 export default Courses;

@@ -10,6 +10,7 @@ import {
   XCircleIcon,
 } from "@heroicons/react/24/outline";
 import "react-toastify/dist/ReactToastify.css";
+import { motion, AnimatePresence } from "framer-motion";
 
 import {
   getAllUsers,
@@ -17,6 +18,31 @@ import {
   updateUser,
   deleteUser,
 } from "../../api/userAPI";
+
+const Notification = ({ message, type, onClose }) => {
+  const bgColor = type === 'error' || type === 'delete' 
+    ? 'bg-red-500' 
+    : 'bg-emerald-500';
+
+  return (
+    <motion.div
+      initial={{ x: 400, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: 400, opacity: 0 }}
+      className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-6 py-4 
+                rounded-lg shadow-lg ${bgColor}`}
+    >
+      {type === 'delete' ? (
+        <TrashIcon className="w-6 h-6 text-white" />
+      ) : type === 'success' ? (
+        <CheckCircleIcon className="w-6 h-6 text-white" />
+      ) : (
+        <XCircleIcon className="w-6 h-6 text-white" />
+      )}
+      <p className="text-white font-medium">{message}</p>
+    </motion.div>
+  );
+};
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -31,10 +57,12 @@ const Users = () => {
     password: "",
     status: "active",
   });
+  const [notification, setNotification] = useState(null);
 
   useEffect(() => {
     fetchUsers();
   }, []);
+
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
@@ -42,14 +70,10 @@ const Users = () => {
       if (response.success) {
         setUsers(response.data);
       } else {
-        toast.error(
-          "Failed to fetch users: " + (response.message || "Unknown error")
-        );
+        showNotification("Failed to fetch users: " + (response.message || "Unknown error"), 'error');
       }
     } catch (error) {
-      toast.error(
-        "Failed to fetch users: " + (error.message || "Unknown error")
-      );
+      showNotification("Failed to fetch users: " + (error.message || "Unknown error"), 'error');
     } finally {
       setIsLoading(false);
     }
@@ -91,12 +115,8 @@ const Users = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    if (
-      !formData.username ||
-      !formData.email ||
-      (!isEditing && !formData.password)
-    ) {
-      toast.error("Please fill in all required fields");
+    if (!formData.username || !formData.email || (!isEditing && !formData.password)) {
+      showNotification("Please fill in all required fields", 'error');
       setIsLoading(false);
       return;
     }
@@ -108,22 +128,22 @@ const Users = () => {
           setUsers((prev) =>
             prev.map((u) => (u.id === editingId ? updatedUser.data : u))
           );
-          toast.success("User updated successfully!");
+          showNotification("User updated successfully!");
         } else {
-          toast.error("Failed to update user: " + updatedUser.message);
+          showNotification("The email address is already in use", 'error');
         }
       } else {
         const newUser = await createUser(formData);
         if (newUser.success) {
           setUsers((prev) => [...prev, newUser.data]);
-          toast.success("User added successfully!");
+          showNotification("User added successfully!");
         } else {
-          toast.error("Failed to create user: " + newUser.message);
+          showNotification("The email address is already in use", 'error');
         }
       }
       resetForm();
     } catch (error) {
-      toast.error(`Operation failed: ${error.message}`);
+      showNotification("The email address is already in use", 'error');
     } finally {
       setIsLoading(false);
     }
@@ -136,12 +156,12 @@ const Users = () => {
       const result = await deleteUser(userId);
       if (result.success) {
         setUsers((prev) => prev.filter((u) => u.id !== userId));
-        toast.success("User deleted successfully!");
+        showNotification("User deleted successfully!", 'delete');
       } else {
-        toast.error("Failed to delete user: " + result.message);
+        showNotification("Failed to delete user: " + result.message, 'error');
       }
     } catch (error) {
-      toast.error(`Failed to delete user: ${error.message}`);
+      showNotification(`Failed to delete user: ${error.message}`, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -152,8 +172,7 @@ const Users = () => {
     const newStatus = user?.status === "active" ? "inactive" : "active";
     const message = newStatus === "active" ? "activate" : "deactivate";
 
-    if (!window.confirm(`Are you sure you want to ${message} this user?`))
-      return;
+    if (!window.confirm(`Are you sure you want to ${message} this user?`)) return;
 
     setIsLoading(true);
     try {
@@ -165,16 +184,12 @@ const Users = () => {
         setUsers((prev) =>
           prev.map((u) => (u.id === userId ? updatedUser.data : u))
         );
-        toast.success(
-          `User ${
-            newStatus === "active" ? "activated" : "deactivated"
-          } successfully!`
-        );
+        showNotification(`User ${newStatus === "active" ? "activated" : "deactivated"} successfully!`);
       } else {
-        toast.error("Failed to update user status: " + updatedUser.message);
+        showNotification("Failed to update user status: " + updatedUser.message, 'error');
       }
     } catch (error) {
-      toast.error(`Failed to update user status: ${error.message}`);
+      showNotification(`Failed to update user status: ${error.message}`, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -186,6 +201,11 @@ const Users = () => {
       user?.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -196,6 +216,16 @@ const Users = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-pink-50 p-6">
+      <AnimatePresence>
+        {notification && (
+          <Notification
+            message={notification.message}
+            type={notification.type}
+            onClose={() => setNotification(null)}
+          />
+        )}
+      </AnimatePresence>
+
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="bg-white rounded-2xl p-8 shadow-lg">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -471,18 +501,6 @@ const Users = () => {
           </div>
         </div>
       )}
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
     </div>
   );
 };

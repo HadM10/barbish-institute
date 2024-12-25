@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import logo from '../../../assets/images/logo.png';
 import { FaBars, FaTimes, FaSearch, FaGift } from 'react-icons/fa';
 
@@ -7,21 +7,28 @@ const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
-const menuItems = [
-  { title: "Home", path: "/" },
-  { title: "About & Services", path: "/about-services" }, // Moved up for better hierarchy
-  { title: "Courses", path: "/courses" },
-  { title: "Recorded Sessions", path: "/recorded-sessions" },
-  { title: "AI Tools", path: "/services" },
-  { title: "Contact Us", path: "/contact" },
-  { 
-    title: "Bonus Cards", 
-    path: "/bonus",
-    isSpecial: true,
-    icon: <FaGift className="text-lg" />,
-    count: 3
+  const location = useLocation();
+
+  // Hide navbar if we're in admin routes
+  if (location.pathname.includes('/admin')) {
+    return null;
   }
-];
+
+  const menuItems = [
+    { title: "Home", path: "/" },
+    { title: "About & Services", path: "/about-services" },
+    { title: "Courses", path: "/courses" },
+    { title: "Recorded Sessions", path: "/recorded-sessions" },
+    { title: "AI Tools", path: "/services" },
+    { title: "Contact Us", path: "/contact" },
+    { 
+      title: "Bonus Cards", 
+      path: "/bonus",
+      isSpecial: true,
+      icon: <FaGift className="text-lg" />,
+      count: 3
+    }
+  ];
 
   const handleSearch = (e) => {
     if (e.key === 'Enter') {

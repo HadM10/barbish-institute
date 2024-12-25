@@ -1,6 +1,6 @@
 // src/components/Admin/Subscriptions.js
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   UserGroupIcon,
   CalendarIcon,
@@ -12,6 +12,7 @@ import {
   ClockIcon,
   CreditCardIcon,
   TrashIcon,
+  XCircleIcon,
 } from "@heroicons/react/24/outline";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -24,6 +25,32 @@ import {
 } from "../../api/subscriptionAPI";
 import { getAllCourses } from "../../api/courseAPI"; // Import course API
 import { getAllUsers } from "../../api/userAPI"; // Import user API
+
+// Add Notification Component
+const Notification = ({ message, type, onClose }) => {
+  const bgColor = type === 'error' || type === 'delete' 
+    ? 'bg-red-500' 
+    : 'bg-emerald-500';
+
+  return (
+    <motion.div
+      initial={{ x: 400, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: 400, opacity: 0 }}
+      className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-6 py-4 
+                rounded-lg shadow-lg ${bgColor}`}
+    >
+      {type === 'delete' ? (
+        <TrashIcon className="w-6 h-6 text-white" />
+      ) : type === 'success' ? (
+        <CheckCircleIcon className="w-6 h-6 text-white" />
+      ) : (
+        <XCircleIcon className="w-6 h-6 text-white" />
+      )}
+      <p className="text-white font-medium">{message}</p>
+    </motion.div>
+  );
+};
 
 const Subscriptions = () => {
   const [subscriptions, setSubscriptions] = useState([]);
@@ -40,6 +67,22 @@ const Subscriptions = () => {
     amount: "",
     status: "active",
   });
+
+  // Add notification and search states
+  const [notification, setNotification] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Add showNotification helper
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  // Filter subscriptions based on search
+  const filteredSubscriptions = subscriptions.filter(sub => 
+    sub.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    sub.courseName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   // Fetch subscriptions, courses, and users on mount
   useEffect(() => {
@@ -121,25 +164,16 @@ const Subscriptions = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (
-      !formData.userName ||
-      !formData.courseName ||
-      !formData.startDate ||
-      !formData.endDate
-    ) {
-      toast.error("Please fill in all required fields");
+    if (!formData.userName || !formData.courseName || !formData.startDate || !formData.endDate) {
+      showNotification('Please fill in all required fields', 'error');
       return;
     }
 
-    const selectedUser = users.find(
-      (user) => user.username === formData.userName
-    );
-    const selectedCourse = courses.find(
-      (course) => course.title === formData.courseName
-    );
+    const selectedUser = users.find((user) => user.username === formData.userName);
+    const selectedCourse = courses.find((course) => course.title === formData.courseName);
 
     if (!selectedUser || !selectedCourse) {
-      toast.error("Invalid user or course selection");
+      showNotification('Invalid user or course selection', 'error');
       return;
     }
 
@@ -172,11 +206,9 @@ const Subscriptions = () => {
                 : sub
             )
           );
-          toast.success("Subscription updated successfully!");
+          showNotification('Subscription updated successfully!');
         } else {
-          toast.error(
-            "Failed to update subscription: " + (res.message || "Unknown error")
-          );
+          showNotification('Failed to update subscription: ' + (res.message || 'Unknown error'), 'error');
         }
       } else {
         const res = await createSubscription(dbPayload);
@@ -192,15 +224,13 @@ const Subscriptions = () => {
             amount: formData.amount || 0,
           };
           setSubscriptions((prev) => [...prev, adapted]);
-          toast.success("Subscription created successfully!");
+          showNotification('Subscription created successfully!');
         } else {
-          toast.error(
-            "Failed to create subscription: " + (res.message || "Unknown error")
-          );
+          showNotification('Failed to create subscription: ' + (res.message || 'Unknown error'), 'error');
         }
       }
     } catch (error) {
-      toast.error("Error creating/updating subscription: " + error.message);
+      showNotification('Error creating/updating subscription: ' + error.message, 'error');
     }
 
     resetForm();
@@ -226,14 +256,12 @@ const Subscriptions = () => {
         const res = await deleteSubscriptionAPI(id);
         if (res.success) {
           setSubscriptions((prev) => prev.filter((sub) => sub.id !== id));
-          toast.success("Subscription deleted successfully!");
+          showNotification('Subscription deleted successfully!', 'delete');
         } else {
-          toast.error(
-            "Failed to delete subscription: " + (res.message || "Unknown error")
-          );
+          showNotification('Failed to delete subscription: ' + (res.message || 'Unknown error'), 'error');
         }
       } catch (error) {
-        toast.error("Error deleting subscription: " + error.message);
+        showNotification('Error deleting subscription: ' + error.message, 'error');
       }
     }
   };
@@ -243,7 +271,7 @@ const Subscriptions = () => {
       prev.map((sub) => {
         if (sub.id === id) {
           const newStatus = sub.status === "active" ? "inactive" : "active";
-          toast.success(`Subscription status changed to ${newStatus}`);
+          showNotification(`Subscription status changed to ${newStatus}`);
           return { ...sub, status: newStatus };
         }
         return sub;
@@ -332,18 +360,61 @@ const Subscriptions = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 p-6">
+      <AnimatePresence>
+        {notification && (
+          <Notification
+            message={notification.message}
+            type={notification.type}
+            onClose={() => setNotification(null)}
+          />
+        )}
+      </AnimatePresence>
+
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header Section */}
+        {/* Header with Search */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-8 text-white shadow-xl"
         >
-          <h1 className="text-3xl font-bold mb-2">Subscriptions Dashboard</h1>
-          <p className="text-purple-100">
-            Manage and monitor all subscription activities
-          </p>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Subscriptions Dashboard</h1>
+              <p className="text-purple-100">Manage and monitor all subscription activities</p>
+            </div>
+            
+            {/* Search Box */}
+            <div className="relative w-full md:w-64">
+              <input
+                type="text"
+                placeholder="Search subscriptions..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2 pr-10 bg-white/10 border border-white/20 
+                         text-white placeholder-white/70 rounded-lg focus:outline-none 
+                         focus:ring-2 focus:ring-white/50"
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
         </motion.div>
+
+        {/* Search Results Summary */}
+        {searchTerm && (
+          <div className="text-sm text-gray-500">
+            Showing results for "{searchTerm}"
+            <button 
+              onClick={() => setSearchTerm("")}
+              className="ml-2 text-purple-600 hover:text-purple-700"
+            >
+              Clear search
+            </button>
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -438,7 +509,7 @@ const Subscriptions = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {subscriptions.map((sub) => (
+                {filteredSubscriptions.map((sub) => (
                   <motion.tr
                     key={sub.id}
                     initial={{ opacity: 0 }}
@@ -640,19 +711,6 @@ const Subscriptions = () => {
           </motion.div>
         </motion.div>
       )}
-
-      <ToastContainer
-        position="bottom-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="colored"
-      />
     </div>
   );
 };
