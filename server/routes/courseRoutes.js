@@ -1,20 +1,28 @@
+// routes/courseRoutes.js
 const express = require("express");
-const router = express.Router(); // Use router directly
-const courseController = require("../controllers/courseController");
+const {
+  getAllCourses,
+  getCourseById,
+  createCourse,
+  updateCourse,
+  deleteCourse,
+} = require("../controllers/courseController");
+
+const router = express.Router();
 
 // GET /courses - Get all courses
-router.get("/", courseController.getAllCourses);
+router.get("/", getAllCourses);
 
 // GET /courses/:id - Get a course by ID
-router.get("/:id", courseController.getCourseById);
+router.get("/:id", getCourseById);
 
 // POST /courses - Create a new course
-router.post("/", courseController.createCourse);
+router.post("/", createCourse);
 
 // PUT /courses/:id - Update a course by ID
-router.put("/:id", courseController.updateCourse);
+router.put("/:id", updateCourse);
 
 // DELETE /courses/:id - Delete a course by ID
-router.delete("/:id", courseController.deleteCourse);
+router.delete("/:id", deleteCourse);
 
 module.exports = router;

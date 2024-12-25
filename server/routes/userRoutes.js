@@ -12,7 +12,7 @@ router.post("/", userController.createUser);
 router.put("/:id", userController.updateUser);
 
 // DELETE /api/users/:id
-router.delete("/:id", userController.deleteUser);
+router.delete('/:id', userController.deleteUser);
 
 // GET /api/users
 router.get("/", userController.getAllUsers);

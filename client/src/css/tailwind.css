@@ -1,3 +1,4 @@
+/* src/css/tailwind.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,7 +7,29 @@
   font-family: "Kuro";
   src: url("../assets/fonts/Kuro-Regular.otf");
 }
+
 /* Apply Kuro font globally */
 body {
   font-family: "Kuro";
+}
+
+/* Add custom utility class for hiding scrollbars */
+@layer utilities {
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+@keyframes animate-gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: animate-gradient 8s ease infinite;
 }
