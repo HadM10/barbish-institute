@@ -80,7 +80,7 @@ const BonusCards = () => {
       </div>
 
       {/* Offers Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4 container mx-auto pb-20">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 px-4 container mx-auto pb-20">
         {filteredOffers.map((offer) => (
           <motion.div
             key={offer.id}
@@ -107,12 +107,12 @@ const BonusCards = () => {
             </div>
 
             {/* Content Section */}
-            <div className="p-8 flex-1 flex flex-col space-y-6">
+            <div className="p-4 flex-1 flex flex-col space-y-4">
               <div>
                 <h3 className="text-amber-400 text-sm font-medium mb-2 tracking-wide uppercase">
                   {offer.organizationName || 'Elite Partner'}
                 </h3>
-                <h2 className="text-2xl font-bold text-white leading-tight">
+                <h2 className="text-xl font-bold text-white leading-tight">
                   {offer.title}
                 </h2>
               </div>
@@ -121,10 +121,10 @@ const BonusCards = () => {
                 {offer.description}
               </p>
 
-              <div className="flex items-center justify-between pt-6 border-t border-white/10">
+              <div className="flex items-center justify-between pt-4 border-t border-white/10">
                 <div className="flex flex-col">
                   <span className="text-sm text-amber-400 uppercase tracking-wider mb-1">Investment</span>
-                  <span className="text-3xl font-bold text-white">
+                  <span className="text-2xl font-bold text-white">
                     ${formatPrice(offer.price)}
                   </span>
                 </div>
@@ -132,7 +132,7 @@ const BonusCards = () => {
                   href={offer.link || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-6 py-3 rounded-full 
+                  className="flex items-center gap-2 px-4 py-2 rounded-full 
                            bg-gradient-to-r from-amber-500 to-amber-600 text-white 
                            hover:shadow-lg hover:from-amber-600 hover:to-amber-700 
                            transition-all duration-300"

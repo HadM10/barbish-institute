@@ -302,14 +302,14 @@ const Subscriptions = () => {
 
   const [totalRevenue, setTotalRevenue] = useState(0);
 
-  // Calculate total revenue whenever subscriptions change
-  useEffect(() => {
-    const total = subscriptions.reduce(
-      (sum, subscription) => sum + subscription.amount,
-      0
-    );
-    setTotalRevenue(total);
-  }, [subscriptions]); // Recalculate when subscriptions change
+  // Update the total revenue calculation
+useEffect(() => {
+  const total = subscriptions.reduce(
+    (sum, subscription) => sum + Number(subscription.amount || 0),
+    0
+  );
+  setTotalRevenue(Number(total)); // Ensure it's a number
+}, [subscriptions]);// Recalculate when subscriptions change
 
   const [activeSubscriptions, setActiveSubscriptions] = useState(0);
 
@@ -405,12 +405,13 @@ const Subscriptions = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatsCard
-            title="Total Subscriptions"
-            value={subscriptions.length}
-            icon={<UserGroupIcon className="w-6 h-6" />}
-            color="from-blue-500 to-blue-600"
-          />
+        
+<StatsCard
+  title="Total Revenue"
+  value={`$${Number(totalRevenue).toLocaleString()}`} // Updated this line
+  icon={<CurrencyDollarIcon className="w-6 h-6" />}
+  color="from-amber-500 to-amber-600"
+/>
           <StatsCard
             title="Active Plans"
             value={activeSubscriptions}

@@ -1,4 +1,4 @@
-// pages/ClientSide/Courses.js
+// File: src/pages/ClientSide/Courses.js
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
@@ -172,36 +172,39 @@ const Courses = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 h-full max-h-[90vh]">
-                {/* Left Side - Responsive Image */}
+                {/* Left Side - Responsive Image (clean, no buttons) */}
                 <div className="relative h-[300px] lg:h-full">
                   <img
                     src={englishCourseImg}
                     alt={course.title}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute top-6 right-6 bg-white/95 px-6 py-3 rounded-full shadow-lg">
-                    <span className="text-primary font-bold text-xl sm:text-2xl">
-                      ${course.price}
-                    </span>
-                  </div>
-                  
-                  {/* Close Button */}
-                  <button
-                    onClick={() => setIsExpanded(false)}
-                    className="absolute top-6 left-6 w-10 h-10 sm:w-12 sm:h-12 rounded-full 
-                             bg-white/10 hover:bg-white/20 transition-colors duration-300 
-                             flex items-center justify-center backdrop-blur-sm"
-                  >
-                    <FaTimes className="text-white text-lg sm:text-xl" />
-                  </button>
                 </div>
 
-                {/* Right Side - Scrollable Content */}
+                {/* Right Side - Content with price and close button */}
                 <div className="overflow-y-auto p-6 sm:p-8 max-h-[calc(90vh-300px)] lg:max-h-[90vh]
                               scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
-                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-6 sm:mb-8 line-clamp-2">
-                    {course.title}
-                  </h2>
+                  {/* Add price and close button at the top */}
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-white line-clamp-2">
+                      {course.title}
+                    </h2>
+                    <div className="flex items-center gap-4">
+                      <div className="bg-white/95 px-6 py-3 rounded-full shadow-lg">
+                        <span className="text-primary font-bold text-xl sm:text-2xl">
+                          ${course.price}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => setIsExpanded(false)}
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full 
+                                  bg-white/10 hover:bg-white/20 transition-colors duration-300 
+                                  flex items-center justify-center backdrop-blur-sm"
+                      >
+                        <FaTimes className="text-white text-lg sm:text-xl" />
+                      </button>
+                    </div>
+                  </div>
 
                   {/* Course Stats - Responsive Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 sm:mb-8">
@@ -289,7 +292,7 @@ const Courses = () => {
 
   return (
     <div className="min-h-screen bg-[#1E1B4B]">
-      <div className="pt-[80px]">
+      <div className="pt-24">
         <div className="bg-gradient-to-br from-[#1E1B4B] via-[#2A2665] to-[#312C7E] relative overflow-hidden">
           <div className="absolute inset-0 opacity-5" 
                style={{
@@ -316,7 +319,7 @@ const Courses = () => {
           </div>
         </div>
 
-        <div className="sticky top-[80px] bg-[#1E1B4B] border-b border-white/10 z-30">
+        <div className="sticky top-20 bg-[#1E1B4B] border-b border-white/10 z-30">
           <div className="container mx-auto px-4">
             <div className="relative flex items-center justify-between">
               <div className="flex-1 flex items-center gap-2 overflow-x-auto hide-scrollbar">
@@ -424,7 +427,7 @@ const Courses = () => {
           ) : error ? (
             <div className="text-red-500 text-center py-12">{error}</div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 p-6">
               {filteredCourses.map((course) => (
                 <motion.div
                   key={course.id}

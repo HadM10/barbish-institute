@@ -102,7 +102,7 @@ const AITools = () => {
         ))}
       </div>
 
-      <div className="pt-[156px] pb-20 relative z-10">
+      <div className="pt-48 pb-20 relative z-10">
         <div className="container mx-auto px-4">
           {/* Hero Section */}
           <motion.div 
