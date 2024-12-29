@@ -1,5 +1,5 @@
-// components/User/Home/FeaturedCourses.js
 import React from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import CourseCard from './CourseCard';
 import course from "../../../assets/images/course.png";
 
@@ -47,12 +47,17 @@ const featuredCourses = [
 ];
 
 const FeaturedCourses = () => {
+  const navigate = useNavigate(); // Initialize useNavigate
+
   return (
     <section className="py-16 bg-background">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center mb-12">
           <h2 className="text-3xl font-bold text-primary">Featured Courses</h2>
-          <button className="px-6 py-2 bg-highlight text-white rounded-lg hover:bg-secondary transition-all duration-300">
+          <button 
+            onClick={() => navigate('/courses')} // Add onClick handler
+            className="px-6 py-2 bg-highlight text-white rounded-lg hover:bg-secondary transition-all duration-300"
+          >
             View All Courses
           </button>
         </div>

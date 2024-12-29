@@ -12,15 +12,18 @@ const Navbar = () => {
   // Hide navbar if we're in admin routes
   if (location.pathname.includes('/admin')) {
     return null;
-  }
+  }   
+  
 
   const menuItems = [
     { title: "Home", path: "/" },
-    { title: "About & Services", path: "/about-services" },
+    
     { title: "Courses", path: "/courses" },
     { title: "Recorded Sessions", path: "/recorded-sessions" },
     { title: "AI Tools", path: "/services" },
     { title: "Contact Us", path: "/contact" },
+    
+    { title: "About & Services", path: "/about-services" },
     { 
       title: "Bonus Cards", 
       path: "/bonus",
@@ -28,6 +31,7 @@ const Navbar = () => {
       icon: <FaGift className="text-lg" />,
       count: 3
     }
+    
   ];
 
   const handleSearch = (e) => {

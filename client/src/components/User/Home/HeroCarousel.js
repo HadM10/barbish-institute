@@ -1,9 +1,14 @@
 // components/User/Home/HeroCarousel.js
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable no-unused-vars */
+
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import homeImage from "../../../assets/images/homeImage.png";
 
 const HeroCarousel = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const navigate = useNavigate();
 
   const carouselSlides = [
     {
@@ -56,9 +61,12 @@ const HeroCarousel = () => {
                 <p className="text-lg md:text-xl text-sky mb-6 md:mb-8">
                   {slide.subtitle}
                 </p>
-                <button className="mt-4 px-6 py-2.5 md:px-8 md:py-3 bg-highlight text-white rounded-full 
-                                 hover:bg-secondary transition-all duration-300 text-sm md:text-base
-                                 hover:shadow-lg hover:shadow-highlight/20">
+                <button 
+                  onClick={() => navigate('/courses')}
+                  className="mt-4 px-6 py-2.5 md:px-8 md:py-3 bg-highlight text-white rounded-full 
+                           hover:bg-secondary transition-all duration-300 text-sm md:text-base
+                           hover:shadow-lg hover:shadow-highlight/20"
+                >
                   Explore Courses
                 </button>
               </div>

@@ -8,6 +8,7 @@ import { FaGraduationCap, FaChartLine, FaCertificate, FaUserTie,
          FaRocket, FaGlobe, FaUsers, FaAward, FaStar, FaCheck,
          FaLaptop, FaPencilAlt, FaBrain, FaHandshake, FaComments } from 'react-icons/fa';
 import CountUp from 'react-countup';
+import { useNavigate } from 'react-router-dom';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -15,6 +16,7 @@ const AboutServices = () => {
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], [0, 300]);
+  const navigate = useNavigate();
 
   const marketingServices = [
     "Platforms & Ad Strategies",
@@ -138,6 +140,7 @@ const AboutServices = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
+              onClick={() => navigate('/courses')}
               className="px-8 py-4 bg-gradient-to-r from-rose-500 to-violet-500 
                        rounded-full text-white text-xl font-semibold
                        hover:shadow-lg hover:shadow-rose-500/30 

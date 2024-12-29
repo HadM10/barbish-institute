@@ -9,8 +9,6 @@ import {
   CheckCircleIcon,
   XCircleIcon
 } from "@heroicons/react/24/outline";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 import {
   getAllSessions,
@@ -79,6 +77,7 @@ const RecordedSessions = () => {
   useEffect(() => {
     fetchSessions();
     fetchCourses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchSessions = async () => {
@@ -97,10 +96,10 @@ const RecordedSessions = () => {
         }));
         setSessions(adapted);
       } else {
-        toast.error("Failed to fetch sessions: " + res.message);
+        showNotification("Failed to fetch sessions: " + res.message, "error");
       }
     } catch (error) {
-      toast.error("Error fetching sessions: " + error.message);
+      showNotification("Error fetching sessions: " + error.message, "error");
     }
   };
 
@@ -110,10 +109,10 @@ const RecordedSessions = () => {
       if (res.success) {
         setCourses(res.data);
       } else {
-        toast.error("Failed to fetch courses: " + res.message);
+        showNotification("Failed to fetch courses: " + res.message, "error");
       }
     } catch (error) {
-      toast.error("Error fetching courses: " + error.message);
+      showNotification("Error fetching courses: " + error.message, "error");
     }
   };
 
@@ -157,7 +156,7 @@ const RecordedSessions = () => {
     const courseId = selectedCourse.id;
 
     if (!selectedCourse) {
-      toast.error("Invalid course selection");
+      showNotification("Invalid course selection", "error");
       return;
     }
 
@@ -245,17 +244,22 @@ const RecordedSessions = () => {
   const handleStatusToggle = async (id) => {
     const session = sessions.find((s) => s.id === id);
     if (session) {
-      const updatedStatus = !session.isActive;
-      const res = await updateSession(id, { isActive: updatedStatus });
-      if (res.success) {
-        setSessions((prev) =>
-          prev.map((s) => (s.id === id ? { ...s, isActive: updatedStatus } : s))
-        );
-        toast.success(
-          `Session status changed to ${updatedStatus ? "active" : "inactive"}`
-        );
-      } else {
-        toast.error("Failed to update status: " + res.message);
+      try {
+        const newStatus = session.isActive === "active" ? "inactive" : "active";
+        const res = await updateSession(id, { isActive: newStatus === "active" });
+
+        if (res.success) {
+          setSessions((prev) =>
+            prev.map((s) =>
+              s.id === id ? { ...s, isActive: newStatus } : s
+            )
+          );
+          showNotification(`Session status changed to ${newStatus}`);
+        } else {
+          showNotification("Failed to update status", "error");
+        }
+      } catch (error) {
+        showNotification("Error updating status", "error");
       }
     }
   };
@@ -405,7 +409,7 @@ const RecordedSessions = () => {
                     <button
                       onClick={() => handleStatusToggle(session.id)}
                       className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        session.isActive
+                        session.isActive === "active"
                           ? "bg-green-100 text-green-800 hover:bg-green-200"
                           : "bg-red-100 text-red-800 hover:bg-red-200"
                       } transition-colors duration-200`}

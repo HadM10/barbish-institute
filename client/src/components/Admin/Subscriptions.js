@@ -1,4 +1,4 @@
-// src/components/Admin/Subscriptions.js
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -266,19 +266,6 @@ const Subscriptions = () => {
     }
   };
 
-  const handleStatusToggle = (id) => {
-    setSubscriptions((prev) =>
-      prev.map((sub) => {
-        if (sub.id === id) {
-          const newStatus = sub.status === "active" ? "inactive" : "active";
-          showNotification(`Subscription status changed to ${newStatus}`);
-          return { ...sub, status: newStatus };
-        }
-        return sub;
-      })
-    );
-  };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
@@ -532,16 +519,15 @@ const Subscriptions = () => {
                       ${sub.amount}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <button
-                        onClick={() => handleStatusToggle(sub.id)}
+                      <span
                         className={`px-3 py-1 rounded-full text-xs font-medium ${
                           sub.status === "active"
-                            ? "bg-green-100 text-green-800 hover:bg-green-200"
-                            : "bg-red-100 text-red-800 hover:bg-red-200"
-                        } transition-colors duration-200`}
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
                       >
                         {sub.status}
-                      </button>
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex gap-3">
