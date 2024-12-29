@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaEnvelope, FaPhone, FaUser, FaPaperPlane, 
+import { FaEnvelope, FaUser, FaPaperPlane, 
          FaMapMarkerAlt, FaClock, FaWhatsapp, FaHeadset } from 'react-icons/fa';
+import { createContact } from '../../api/contactsAPI';
+import { toast } from 'react-toastify';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
-    fullName: '',
+    name: '',
     email: '',
-    phone: '',
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -19,8 +20,31 @@ const Contact = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsSubmitting(false);
+
+    try {
+      const response = await createContact({
+        name: formData.name,
+        email: formData.email,
+        message: formData.message,
+        status: false // Initial status is false
+      });
+
+      if (response.success) {
+        toast.success('Message sent successfully!');
+        // Reset form
+        setFormData({
+          name: '',
+          email: '',
+          message: ''
+        });
+      } else {
+        toast.error(response.message || 'Failed to send message');
+      }
+    } catch (error) {
+      toast.error('An error occurred while sending the message');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -164,9 +188,20 @@ const Contact = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Form inputs with enhanced styling */}
               {[
-                { label: "Full Name", icon: FaUser, type: "text", name: "fullName", placeholder: "John Doe" },
-                { label: "Email Address", icon: FaEnvelope, type: "email", name: "email", placeholder: "john@example.com" },
-                { label: "Phone Number", icon: FaPhone, type: "tel", name: "phone", placeholder: "+1 (234) 567-8900" }
+                { 
+                  label: "Full Name", 
+                  icon: FaUser, 
+                  type: "text", 
+                  name: "name", // Changed from fullName to name to match API
+                  placeholder: "John Doe" 
+                },
+                { 
+                  label: "Email Address", 
+                  icon: FaEnvelope, 
+                  type: "email", 
+                  name: "email", 
+                  placeholder: "john@example.com" 
+                }
               ].map((field, index) => (
                 <div key={index} className="group">
                   <label className="text-blue-100/90 mb-2 block">{field.label}</label>

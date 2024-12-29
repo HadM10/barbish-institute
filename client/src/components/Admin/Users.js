@@ -1,5 +1,6 @@
+// Add this at the top of your file, right after the imports
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from "react";
-import { ToastContainer, toast } from "react-toastify";
 import {
   PencilIcon,
   TrashIcon,
@@ -59,9 +60,11 @@ const Users = () => {
   });
   const [notification, setNotification] = useState(null);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  // For Users.js
+// eslint-disable-next-line react-hooks/exhaustive-deps
+useEffect(() => {
+  fetchUsers();
+}, []);
 
   const fetchUsers = async () => {
     setIsLoading(true);

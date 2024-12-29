@@ -1,17 +1,13 @@
-// src/components/Admin/ContactMessages.js
 /* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   EnvelopeIcon, 
-  PhoneIcon, 
   UserIcon,
-  TrashIcon,
-  PaperAirplaneIcon,
   CheckCircleIcon,
   XCircleIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
+  EyeIcon
 } from '@heroicons/react/24/outline';
 
 import {
@@ -21,9 +17,7 @@ import {
 
 // Notification Component
 const Notification = ({ message, type }) => {
-  const bgColor = type === 'error' || type === 'delete' 
-    ? 'bg-red-500' 
-    : 'bg-emerald-500';
+  const bgColor = type === 'error' ? 'bg-red-500' : 'bg-emerald-500';
 
   return (
     <motion.div
@@ -32,9 +26,7 @@ const Notification = ({ message, type }) => {
       exit={{ x: 400, opacity: 0 }}
       className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-6 py-4 rounded-lg shadow-lg ${bgColor}`}
     >
-      {type === 'delete' ? (
-        <TrashIcon className="w-6 h-6 text-white" />
-      ) : type === 'success' ? (
+      {type === 'success' ? (
         <CheckCircleIcon className="w-6 h-6 text-white" />
       ) : (
         <XCircleIcon className="w-6 h-6 text-white" />
@@ -49,8 +41,7 @@ const ContactMessages = () => {
   const [messages, setMessages] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState('all');
-  const [replyText, setReplyText] = useState('');
-  const [showReplyForm, setShowReplyForm] = useState(null);
+  const [selectedMessage, setSelectedMessage] = useState(null);
 
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
@@ -65,17 +56,16 @@ const ContactMessages = () => {
     try {
       const res = await getAllContacts();
       if (res.success) {
-        const adapted = res.data.map((c) => ({
-          id: c.id,
-          name: c.name,
-          email: c.email,
-          phone: '',
-          subject: '',
-          message: c.message,
-          status: c.status ? 'read' : 'unread',
-          createdAt: c.createdAt,
-          replied: false
-        }));
+        const adapted = res.data
+          .map((c) => ({
+            id: c.id,
+            name: c.name,
+            email: c.email,
+            message: c.message,
+            status: c.status ? 'read' : 'unread',
+            createdAt: c.createdAt
+          }))
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Sort by date, newest first
         setMessages(adapted);
       } else {
         showNotification('Failed to fetch contacts', 'error');
@@ -85,40 +75,34 @@ const ContactMessages = () => {
     }
   };
 
-  const handleDelete = (messageId) => {
-    if (window.confirm('Are you sure you want to delete this message?')) {
-      setMessages(prev => prev.filter(msg => msg.id !== messageId));
-      showNotification('Message deleted successfully', 'delete');
-    }
-  };
-
-  const handleReply = (messageId) => {
-    if (!replyText.trim()) {
-      showNotification('Please enter a reply message', 'error');
-      return;
-    }
-    setMessages(prev => prev.map(msg => 
-      msg.id === messageId ? { ...msg, replied: true } : msg
-    ));
-    showNotification('Reply sent successfully');
-    setReplyText('');
-    setShowReplyForm(null);
-  };
-
-  const handleMarkAsRead = async (messageId) => {
+  const handleToggleStatus = async (messageId, currentStatus) => {
     try {
-      const res = await updateContactStatus(messageId, true);
+      const newStatus = currentStatus === 'read' ? false : true;
+      const res = await updateContactStatus(messageId, newStatus);
       if (res.success) {
         setMessages(prev => prev.map(msg => 
-          msg.id === messageId ? { ...msg, status: 'read' } : msg
+          msg.id === messageId ? { 
+            ...msg, 
+            status: newStatus ? 'read' : 'unread' 
+          } : msg
         ));
-        showNotification('Message marked as read');
+        if (selectedMessage?.id === messageId) {
+          setSelectedMessage(prev => ({
+            ...prev,
+            status: newStatus ? 'read' : 'unread'
+          }));
+        }
+        showNotification(`Message marked as ${newStatus ? 'read' : 'unread'}`);
       } else {
-        showNotification('Failed to mark as read', 'error');
+        showNotification('Failed to update status', 'error');
       }
     } catch (error) {
       showNotification('Error updating message status', 'error');
     }
+  };
+
+  const handleRowClick = (message) => {
+    setSelectedMessage(message);
   };
 
   const filteredMessages = messages.filter(msg => {
@@ -152,7 +136,7 @@ const ContactMessages = () => {
                 Contact Messages
               </h1>
               <p className="text-gray-600 mt-2">
-                Manage and respond to incoming messages
+                View and manage incoming messages
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -195,7 +179,11 @@ const ContactMessages = () => {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredMessages.map((message) => (
-                  <tr key={message.id} className="hover:bg-gray-50">
+                  <tr 
+                    key={message.id} 
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => handleRowClick(message)}
+                  >
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         <UserIcon className="w-5 h-5 text-gray-400 mr-2" />
@@ -221,18 +209,16 @@ const ContactMessages = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-2">
+                      <div className="flex items-center justify-center">
                         <button
-                          onClick={() => setShowReplyForm(message.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleStatus(message.id, message.status);
+                          }}
                           className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title={`Mark as ${message.status === 'read' ? 'unread' : 'read'}`}
                         >
-                          <PaperAirplaneIcon className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(message.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <TrashIcon className="w-5 h-5" />
+                          <EyeIcon className="w-5 h-5" />
                         </button>
                       </div>
                     </td>
@@ -243,34 +229,57 @@ const ContactMessages = () => {
           </div>
         </div>
 
-        {/* Reply Modal */}
-        {showReplyForm && (
+        {/* Message Detail Modal */}
+        {selectedMessage && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl p-6 max-w-lg w-full">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Reply to Message</h3>
-              <textarea
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                placeholder="Type your reply..."
-                rows="4"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent mb-4"
-              />
-              <div className="flex justify-end space-x-4">
+            <div className="bg-white rounded-2xl p-6 max-w-2xl w-full">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900">Message Details</h3>
+                  <p className="text-gray-500">From: {selectedMessage.name}</p>
+                </div>
                 <button
-                  onClick={() => {
-                    setShowReplyForm(null);
-                    setReplyText('');
-                  }}
-                  className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  onClick={() => setSelectedMessage(null)}
+                  className="text-gray-400 hover:text-gray-500"
                 >
-                  Cancel
+                  <XCircleIcon className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Email</label>
+                  <p className="text-gray-900">{selectedMessage.email}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Message</label>
+                  <p className="text-gray-900 whitespace-pre-wrap">{selectedMessage.message}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Status</label>
+                  <span className={`ml-2 px-3 py-1 rounded-full text-xs
+                    ${selectedMessage.status === 'unread' 
+                      ? 'bg-indigo-100 text-indigo-600' 
+                      : 'bg-green-100 text-green-600'}`}
+                  >
+                    {selectedMessage.status}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-4">
+                <button
+                  onClick={() => setSelectedMessage(null)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                >
+                  Close
                 </button>
                 <button
-                  onClick={() => handleReply(showReplyForm)}
-                  className="px-6 py-2 bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700 
+                  onClick={() => handleToggleStatus(selectedMessage.id, selectedMessage.status)}
+                  className="px-4 py-2 bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700 
                            text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
                 >
-                  Send Reply
+                  Mark as {selectedMessage.status === 'read' ? 'unread' : 'read'}
                 </button>
               </div>
             </div>
@@ -288,5 +297,5 @@ const ContactMessages = () => {
     </div>
   );
 };
-  
+
 export default ContactMessages;

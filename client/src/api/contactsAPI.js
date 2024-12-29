@@ -38,7 +38,21 @@ export async function createContact(contactData) {
     };
   }
 }
-
+export const deleteContact = async (id) => {
+  try {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/contacts/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error:', error);
+    return { success: false, message: error.message };
+  }
+};
 /**
  * Update the "status" field (boolean) via PATCH /api/contact/:id
  * Example: await updateContactStatus(contactId, true);
@@ -56,4 +70,5 @@ export async function updateContactStatus(contactId, status) {
       message: error.message || 'Failed to update contact status',
     };
   }
+  
 }

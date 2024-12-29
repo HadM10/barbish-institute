@@ -1,3 +1,5 @@
+
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -6,7 +8,7 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
   XMarkIcon,
-  ClockIcon,
+  
   PencilIcon,
   CheckCircleIcon,
   XCircleIcon
@@ -197,10 +199,12 @@ const Courses = () => {
     setTimeout(() => setNotification(null), 3000);
   };
 
-  useEffect(() => {
-    fetchCategories();
-    fetchCourses();
-  }, []);
+  // Find this useEffect in your Courses.js
+// eslint-disable-next-line react-hooks/exhaustive-deps
+useEffect(() => {
+  fetchCategories();
+  fetchCourses();
+}, []);
 
   const fetchCategories = async () => {
     try {

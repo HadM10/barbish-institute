@@ -5,9 +5,9 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { FaGraduationCap, FaChartLine, FaCertificate, FaUserTie, 
          FaBriefcase, FaCode, FaLanguage, FaPalette, FaLightbulb,
-         FaRocket, FaGlobe, FaUsers, FaAward, FaStar, FaCheck,
-         FaLaptop, FaPencilAlt, FaBrain, FaHandshake, FaComments } from 'react-icons/fa';
-import CountUp from 'react-countup';
+         FaRocket,  FaUsers, FaCheck,
+         FaBrain, FaHandshake, FaComments } from 'react-icons/fa';
+
 import { useNavigate } from 'react-router-dom';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -55,6 +55,7 @@ const AboutServices = () => {
     { icon: <FaGraduationCap />, title: "Qualified Instructors", desc: "Expert professionals" }
   ];
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const ctx = gsap.context(() => {
       gsap.from(".fade-up", {

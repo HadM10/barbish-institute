@@ -67,21 +67,21 @@ const BonusCard = () => {
   };
 
   useEffect(() => {
-    fetchBonCards();
-  }, []);
-
-  const fetchBonCards = async () => {
-    try {
-      const res = await getAllBonCards();
-      if (res.success) {
-        setBonCards(res.data);
-      } else {
-        showNotification("Failed to fetch bonus cards", 'error');
+    const fetchBonCards = async () => {
+      try {
+        const res = await getAllBonCards();
+        if (res.success) {
+          setBonCards(res.data);
+        } else {
+          showNotification("Failed to fetch bonus cards", 'error');
+        }
+      } catch (error) {
+        showNotification("Error loading bonus cards", 'error');
       }
-    } catch (error) {
-      showNotification("Error loading bonus cards", 'error');
-    }
-  };
+    };
+  
+    fetchBonCards();
+  }, []); // Empty dependency array since we're defining fetchBonCards inside useEffect
 
   const handleEdit = (bonCard) => {
     setIsEditing(true);
