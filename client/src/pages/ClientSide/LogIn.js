@@ -1,7 +1,7 @@
 // Login.jsx
-import React from 'react';
-import { Link } from 'react-router-dom';
-import logo from '../../assets/images/logo.png'; // Update this path to your actual logo location
+import React from "react";
+import { Link } from "react-router-dom";
+import logo from "../../assets/images/logo.png"; // Update this path to your actual logo location
 
 const Login = () => {
   return (
@@ -9,11 +9,16 @@ const Login = () => {
       <div className="w-full max-w-md p-8 bg-white rounded-xl shadow-lg">
         <div className="flex items-center justify-center mb-6">
           <img src={logo} alt="Logo" className="w-10 h-10 mr-3" />
-          <h2 className="text-3xl font-extrabold text-gray-800">Welcome Back</h2>
+          <h2 className="text-3xl font-extrabold text-gray-800">
+            Welcome Back
+          </h2>
         </div>
         <form>
           <div className="mb-5">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700"
+            >
               Email
             </label>
             <input
@@ -24,7 +29,10 @@ const Login = () => {
             />
           </div>
           <div className="mb-5">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700"
+            >
               Password
             </label>
             <input
@@ -42,10 +50,16 @@ const Login = () => {
           </button>
         </form>
         <div className="flex justify-between mt-6 text-sm text-gray-600">
-          <Link to="/forgot-password" className="text-highlight font-medium hover:underline">
+          <Link
+            to="/forgot-password"
+            className="text-highlight font-medium hover:underline"
+          >
             Forgot Password?
           </Link>
-          <Link to="/register" className="text-highlight font-medium hover:underline">
+          <Link
+            to="/register"
+            className="text-highlight font-medium hover:underline"
+          >
             Don't have an account?Register
           </Link>
         </div>

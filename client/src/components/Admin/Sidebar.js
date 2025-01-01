@@ -1,6 +1,7 @@
 // Sidebar.js
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { AuthContext } from '../../context/AuthContext'; // Import the AuthContext
 import {
   HomeIcon,
   Square3Stack3DIcon,
@@ -19,6 +20,7 @@ import {
 const Sidebar = () => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const { logout } = useContext(AuthContext);
 
   const menuItems = [
     {
@@ -132,10 +134,11 @@ const Sidebar = () => {
             className="flex items-center px-4 py-3 w-full text-white rounded-xl
               bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500
               transition-all duration-200 shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50"
-            onClick={() => {
-              console.log('Logout clicked');
-              setIsOpen(false);
-            }}
+              onClick={() => {
+                console.log('Logout clicked');
+                logout(); // Call logout function from AuthContext
+                setIsOpen(false); // Close the sidebar after logout
+              }}
           >
             <ArrowRightOnRectangleIcon className="w-5 h-5 mr-3" />
             <span className="font-medium">Logout</span>
