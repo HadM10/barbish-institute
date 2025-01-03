@@ -1,34 +1,53 @@
-// src/components/Admin/ContactMessages.js
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   EnvelopeIcon, 
-  PhoneIcon, 
   UserIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-  TrashIcon,
-  PaperAirplaneIcon
+  CheckCircleIcon,
+  XCircleIcon,
+  MagnifyingGlassIcon,
+  EyeIcon
 } from '@heroicons/react/24/outline';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
-// 1. Import API methods from EXACT file name "contactAPI.js"
 import {
   getAllContacts,
   updateContactStatus,
 } from '../../api/contactsAPI';
 
+// Notification Component
+const Notification = ({ message, type }) => {
+  const bgColor = type === 'error' ? 'bg-red-500' : 'bg-emerald-500';
+
+  return (
+    <motion.div
+      initial={{ x: 400, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: 400, opacity: 0 }}
+      className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-6 py-4 rounded-lg shadow-lg ${bgColor}`}
+    >
+      {type === 'success' ? (
+        <CheckCircleIcon className="w-6 h-6 text-white" />
+      ) : (
+        <XCircleIcon className="w-6 h-6 text-white" />
+      )}
+      <p className="text-white font-medium">{message}</p>
+    </motion.div>
+  );
+};
 
 const ContactMessages = () => {
-  // "messages" now comes from the DB in useEffect
+  const [notification, setNotification] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filter, setFilter] = useState('all');
+  const [selectedMessage, setSelectedMessage] = useState(null);
 
-  const [expandedMessage, setExpandedMessage] = useState(null);
-  const [replyText, setReplyText] = useState('');
-  const [showReplyForm, setShowReplyForm] = useState(null);
-  const [filter, setFilter] = useState('all'); // all, unread, read
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
+  };
 
-  // 2. On component mount, fetch from the API
   useEffect(() => {
     fetchContacts();
   }, []);
@@ -37,227 +56,244 @@ const ContactMessages = () => {
     try {
       const res = await getAllContacts();
       if (res.success) {
-        // "res.data" is an array of objects { id, name, email, message, status, createdAt, ... }
-        // Convert them to your front-end shape: add placeholders for phone, subject, replied, etc.
-        const adapted = res.data.map((c) => ({
-          id: c.id,
-          name: c.name,
-          email: c.email,
-          phone: '',            // not in DB
-          subject: '',          // not in DB
-          message: c.message,
-          status: c.status ? 'read' : 'unread',  // boolean -> 'read'/'unread'
-          createdAt: c.createdAt,
-          replied: false        // not in DB
-        }));
+        const adapted = res.data
+          .map((c) => ({
+            id: c.id,
+            name: c.name,
+            email: c.email,
+            message: c.message,
+            status: c.status ? 'read' : 'unread',
+            createdAt: c.createdAt
+          }))
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Sort by date, newest first
         setMessages(adapted);
       } else {
-        toast.error('Failed to fetch contacts: ' + (res.message || 'Unknown error'));
+        showNotification('Failed to fetch contacts', 'error');
       }
     } catch (error) {
-      toast.error('Error fetching contacts: ' + error.message);
+      showNotification('Error loading contacts', 'error');
     }
   };
 
-  // 3. Delete is not in the controller, so we remove locally only
-  const handleDelete = (messageId) => {
-    if (window.confirm('Are you sure you want to delete this message?')) {
-      setMessages(prev => prev.filter(msg => msg.id !== messageId));
-      toast.success('Message deleted locally (no real API delete).');
-    }
-  };
-
-  // 4. Send a reply (purely local, no real email sending)
-  const handleReply = (messageId) => {
-    if (!replyText.trim()) {
-      toast.error('Please enter a reply message');
-      return;
-    }
-    // Just set replied = true locally
-    setMessages(prev => prev.map(msg => 
-      msg.id === messageId ? { ...msg, replied: true } : msg
-    ));
-    toast.success('Reply sent successfully (simulated)');
-    setReplyText('');
-    setShowReplyForm(null);
-  };
-
-  // 5. Mark message as read => DB status = true
-  const handleMarkAsRead = async (messageId) => {
+  const handleToggleStatus = async (messageId, currentStatus) => {
     try {
-      const res = await updateContactStatus(messageId, true);
+      const newStatus = currentStatus === 'read' ? false : true;
+      const res = await updateContactStatus(messageId, newStatus);
       if (res.success) {
-        // Update local state
         setMessages(prev => prev.map(msg => 
-          msg.id === messageId ? { ...msg, status: 'read' } : msg
+          msg.id === messageId ? { 
+            ...msg, 
+            status: newStatus ? 'read' : 'unread' 
+          } : msg
         ));
+        if (selectedMessage?.id === messageId) {
+          setSelectedMessage(prev => ({
+            ...prev,
+            status: newStatus ? 'read' : 'unread'
+          }));
+        }
+        showNotification(`Message marked as ${newStatus ? 'read' : 'unread'}`);
       } else {
-        toast.error('Failed to mark as read: ' + (res.message || 'Unknown error'));
+        showNotification('Failed to update status', 'error');
       }
     } catch (error) {
-      toast.error('Error marking as read: ' + error.message);
+      showNotification('Error updating message status', 'error');
     }
   };
 
-  // 6. Filter messages by 'all', 'unread', or 'read'
+  const handleRowClick = (message) => {
+    setSelectedMessage(message);
+  };
+
   const filteredMessages = messages.filter(msg => {
-    if (filter === 'unread') return msg.status === 'unread';
-    if (filter === 'read') return msg.status === 'read';
-    return true;
+    const matchesSearch = msg.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         msg.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         msg.message.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filter === 'all' || msg.status === filter;
+    return matchesSearch && matchesFilter;
   });
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800">Contact Messages</h1>
-        <p className="text-gray-600 mt-2">Manage and respond to incoming messages</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-50 p-8">
+      <AnimatePresence>
+        {notification && (
+          <Notification
+            message={notification.message}
+            type={notification.type}
+          />
+        )}
+      </AnimatePresence>
 
-      {/* Filters */}
-      <div className="mb-6">
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+      <div className="max-w-7xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-2xl p-8 shadow-lg mb-8"
         >
-          <option value="all">All Messages</option>
-          <option value="unread">Unread</option>
-          <option value="read">Read</option>
-        </select>
-      </div>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700 bg-clip-text text-transparent">
+                Contact Messages
+              </h1>
+              <p className="text-gray-600 mt-2">
+                View and manage incoming messages
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search messages..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-64 px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 
+                           focus:ring-indigo-500 focus:border-transparent"
+                />
+                <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 absolute right-3 top-2.5" />
+              </div>
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 
+                         focus:ring-indigo-500 focus:border-transparent"
+              >
+                <option value="all">All Messages</option>
+                <option value="unread">Unread</option>
+                <option value="read">Read</option>
+              </select>
+            </div>
+          </div>
+        </motion.div>
 
-      {/* Messages List */}
-      <div className="space-y-4">
-        {filteredMessages.map((message) => (
-          <div 
-            key={message.id}
-            className={`bg-white rounded-lg shadow-md overflow-hidden
-              ${message.status === 'unread' ? 'border-l-4 border-indigo-500' : ''}
-            `}
-          >
-            {/* Message Header */}
-            <div 
-              className="p-4 cursor-pointer hover:bg-gray-50"
-              onClick={() => {
-                setExpandedMessage(expandedMessage === message.id ? null : message.id);
-                if (message.status === 'unread') {
-                  handleMarkAsRead(message.id);
-                }
-              }}
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    {message.subject || 'No Subject'} 
-                  </h3>
-                  <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
-                    <div className="flex items-center">
-                      <UserIcon className="w-4 h-4 mr-1" />
-                      {message.name}
-                    </div>
-                    <div className="flex items-center">
-                      <EnvelopeIcon className="w-4 h-4 mr-1" />
-                      {message.email}
-                    </div>
-                    <div className="flex items-center">
-                      <PhoneIcon className="w-4 h-4 mr-1" />
-                      {message.phone || 'N/A'}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {message.status === 'unread' && (
-                    <span className="px-2 py-1 bg-indigo-100 text-indigo-600 rounded-full text-xs">
-                      New
-                    </span>
-                  )}
-                  {message.replied && (
-                    <span className="px-2 py-1 bg-green-100 text-green-600 rounded-full text-xs">
-                      Replied
-                    </span>
-                  )}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(message.id);
-                    }}
-                    className="p-1 hover:bg-gray-100 rounded-full"
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700">
+                <tr>
+                  <th className="px-6 py-4 text-left text-white font-semibold">Name</th>
+                  <th className="px-6 py-4 text-left text-white font-semibold">Email</th>
+                  <th className="px-6 py-4 text-left text-white font-semibold">Message</th>
+                  <th className="px-6 py-4 text-center text-white font-semibold">Status</th>
+                  <th className="px-6 py-4 text-center text-white font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {filteredMessages.map((message) => (
+                  <tr 
+                    key={message.id} 
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => handleRowClick(message)}
                   >
-                    <TrashIcon className="w-5 h-5 text-red-500" />
-                  </button>
-                  {expandedMessage === message.id ? (
-                    <ChevronUpIcon className="w-5 h-5 text-gray-400" />
-                  ) : (
-                    <ChevronDownIcon className="w-5 h-5 text-gray-400" />
-                  )}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center">
+                        <UserIcon className="w-5 h-5 text-gray-400 mr-2" />
+                        <span className="font-medium">{message.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center">
+                        <EnvelopeIcon className="w-5 h-5 text-gray-400 mr-2" />
+                        {message.email}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="truncate max-w-xs">{message.message}</p>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className={`px-3 py-1 rounded-full text-xs
+                        ${message.status === 'unread' 
+                          ? 'bg-indigo-100 text-indigo-600' 
+                          : 'bg-green-100 text-green-600'}`}
+                      >
+                        {message.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-center">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleStatus(message.id, message.status);
+                          }}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title={`Mark as ${message.status === 'read' ? 'unread' : 'read'}`}
+                        >
+                          <EyeIcon className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Message Detail Modal */}
+        {selectedMessage && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl p-6 max-w-2xl w-full">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900">Message Details</h3>
+                  <p className="text-gray-500">From: {selectedMessage.name}</p>
                 </div>
+                <button
+                  onClick={() => setSelectedMessage(null)}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <XCircleIcon className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Email</label>
+                  <p className="text-gray-900">{selectedMessage.email}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Message</label>
+                  <p className="text-gray-900 whitespace-pre-wrap">{selectedMessage.message}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Status</label>
+                  <span className={`ml-2 px-3 py-1 rounded-full text-xs
+                    ${selectedMessage.status === 'unread' 
+                      ? 'bg-indigo-100 text-indigo-600' 
+                      : 'bg-green-100 text-green-600'}`}
+                  >
+                    {selectedMessage.status}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-4">
+                <button
+                  onClick={() => setSelectedMessage(null)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => handleToggleStatus(selectedMessage.id, selectedMessage.status)}
+                  className="px-4 py-2 bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700 
+                           text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  Mark as {selectedMessage.status === 'read' ? 'unread' : 'read'}
+                </button>
               </div>
             </div>
-
-            {/* Expanded Content */}
-            {expandedMessage === message.id && (
-              <div className="p-4 border-t border-gray-100">
-                {/* Message Content */}
-                <div className="mb-4">
-                  <h4 className="font-medium text-gray-700 mb-2">Message:</h4>
-                  <p className="text-gray-600 whitespace-pre-wrap">
-                    {message.message}
-                  </p>
-                </div>
-
-                {/* Reply Section */}
-                {showReplyForm === message.id ? (
-                  <div className="mt-4">
-                    <textarea
-                      value={replyText}
-                      onChange={(e) => setReplyText(e.target.value)}
-                      placeholder="Type your reply..."
-                      rows="4"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
-                    <div className="mt-2 flex justify-end space-x-2">
-                      <button
-                        onClick={() => {
-                          setShowReplyForm(null);
-                          setReplyText('');
-                        }}
-                        className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={() => handleReply(message.id)}
-                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center"
-                      >
-                        <PaperAirplaneIcon className="w-4 h-4 mr-2" />
-                        Send Reply
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setShowReplyForm(message.id)}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center"
-                  >
-                    <PaperAirplaneIcon className="w-4 h-4 mr-2" />
-                    Reply
-                  </button>
-                )}
-              </div>
-            )}
           </div>
-        ))}
-      </div>
+        )}
 
-      {/* Empty State */}
-      {filteredMessages.length === 0 && (
-        <div className="text-center py-12">
-          <EnvelopeIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900">No messages found</h3>
-          <p className="text-gray-500">There are no messages matching your criteria.</p>
-        </div>
-      )}
+        {filteredMessages.length === 0 && (
+          <div className="text-center py-12">
+            <EnvelopeIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900">No messages found</h3>
+            <p className="text-gray-500">There are no messages matching your criteria.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

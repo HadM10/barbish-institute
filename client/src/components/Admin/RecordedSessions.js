@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   VideoCameraIcon,
   LinkIcon,
   XMarkIcon,
   PencilIcon,
   TrashIcon,
+  CheckCircleIcon,
+  XCircleIcon
 } from "@heroicons/react/24/outline";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 import {
   getAllSessions,
@@ -17,6 +18,32 @@ import {
 } from "../../api/sessionAPI";
 
 import { getAllCourses } from "../../api/courseAPI";
+
+// Add Notification Component
+const Notification = ({ message, type, onClose }) => {
+  const bgColor = type === 'error' || type === 'delete' 
+    ? 'bg-red-500' 
+    : 'bg-emerald-500';
+
+  return (
+    <motion.div
+      initial={{ x: 400, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: 400, opacity: 0 }}
+      className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-6 py-4 
+                rounded-lg shadow-lg ${bgColor}`}
+    >
+      {type === 'delete' ? (
+        <TrashIcon className="w-6 h-6 text-white" />
+      ) : type === 'success' ? (
+        <CheckCircleIcon className="w-6 h-6 text-white" />
+      ) : (
+        <XCircleIcon className="w-6 h-6 text-white" />
+      )}
+      <p className="text-white font-medium">{message}</p>
+    </motion.div>
+  );
+};
 
 const RecordedSessions = () => {
   const [courses, setCourses] = useState([]);
@@ -35,10 +62,22 @@ const RecordedSessions = () => {
     isActive: "active",
   });
 
+  // Add notification state
+  const [notification, setNotification] = useState(null);
+
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Add filtered sessions logic
+  const filteredSessions = sessions.filter(session => 
+    session.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    session.courseName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   // Fetch sessions and courses on component mount
   useEffect(() => {
     fetchSessions();
     fetchCourses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchSessions = async () => {
@@ -57,10 +96,10 @@ const RecordedSessions = () => {
         }));
         setSessions(adapted);
       } else {
-        toast.error("Failed to fetch sessions: " + res.message);
+        showNotification("Failed to fetch sessions: " + res.message, "error");
       }
     } catch (error) {
-      toast.error("Error fetching sessions: " + error.message);
+      showNotification("Error fetching sessions: " + error.message, "error");
     }
   };
 
@@ -70,10 +109,10 @@ const RecordedSessions = () => {
       if (res.success) {
         setCourses(res.data);
       } else {
-        toast.error("Failed to fetch courses: " + res.message);
+        showNotification("Failed to fetch courses: " + res.message, "error");
       }
     } catch (error) {
-      toast.error("Error fetching courses: " + error.message);
+      showNotification("Error fetching courses: " + error.message, "error");
     }
   };
 
@@ -96,16 +135,17 @@ const RecordedSessions = () => {
     }
   };
 
+  // Add showNotification helper
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (
-      !formData.title ||
-      !formData.description ||
-      !formData.duration ||
-      !formData.courseName
-    ) {
-      toast.error("Please fill in all required fields");
+    if (!formData.title || !formData.description || !formData.duration || !formData.courseName) {
+      showNotification('Please fill in all required fields', 'error');
       return;
     }
 
@@ -116,7 +156,7 @@ const RecordedSessions = () => {
     const courseId = selectedCourse.id;
 
     if (!selectedCourse) {
-      toast.error("Invalid course selection");
+      showNotification("Invalid course selection", "error");
       return;
     }
 
@@ -136,12 +176,12 @@ const RecordedSessions = () => {
         if (res.success) {
           setSessions((prev) =>
             prev.map((session) =>
-              session.id === editId ? { ...session, ...formData, courseName: selectedCourse.title, } : session
+              session.id === editId ? { ...session, ...formData, courseName: selectedCourse.title } : session
             )
           );
-          toast.success("Session updated successfully!");
+          showNotification('Session updated successfully!');
         } else {
-          toast.error("Failed to update session: " + res.message);
+          showNotification('Failed to update session: ' + res.message, 'error');
         }
       } else {
         const res = await createSession(sessionData);
@@ -158,13 +198,13 @@ const RecordedSessions = () => {
             isActive: newSession.isActive ? "active" : "inactive",
           };
           setSessions((prev) => [...prev, adapted]);
-          toast.success("Session added successfully!");
+          showNotification('Session added successfully!');
         } else {
-          toast.error("Failed to add session: " + (res.message || "Unknown error"));
+          showNotification('Failed to add session: ' + (res.message || 'Unknown error'), 'error');
         }
       }
     } catch (error) {
-      toast.error("Error creating/updating session: " + error.message);
+      showNotification('Error creating/updating session: ' + error.message, 'error');
     }
   
     resetForm();
@@ -191,12 +231,12 @@ const RecordedSessions = () => {
         const res = await deleteSession(id);
         if (res.success) {
           setSessions((prev) => prev.filter((session) => session.id !== id));
-          toast.success("Session deleted successfully!");
+          showNotification('Session deleted successfully!', 'delete');
         } else {
-          toast.error("Failed to delete session: " + res.message);
+          showNotification('Failed to delete session: ' + res.message, 'error');
         }
       } catch (error) {
-        toast.error("Error deleting session: " + error.message);
+        showNotification('Error deleting session: ' + error.message, 'error');
       }
     }
   };
@@ -204,17 +244,22 @@ const RecordedSessions = () => {
   const handleStatusToggle = async (id) => {
     const session = sessions.find((s) => s.id === id);
     if (session) {
-      const updatedStatus = !session.isActive;
-      const res = await updateSession(id, { isActive: updatedStatus });
-      if (res.success) {
-        setSessions((prev) =>
-          prev.map((s) => (s.id === id ? { ...s, isActive: updatedStatus } : s))
-        );
-        toast.success(
-          `Session status changed to ${updatedStatus ? "active" : "inactive"}`
-        );
-      } else {
-        toast.error("Failed to update status: " + res.message);
+      try {
+        const newStatus = session.isActive === "active" ? "inactive" : "active";
+        const res = await updateSession(id, { isActive: newStatus === "active" });
+
+        if (res.success) {
+          setSessions((prev) =>
+            prev.map((s) =>
+              s.id === id ? { ...s, isActive: newStatus } : s
+            )
+          );
+          showNotification(`Session status changed to ${newStatus}`);
+        } else {
+          showNotification("Failed to update status", "error");
+        }
+      } catch (error) {
+        showNotification("Error updating status", "error");
       }
     }
   };
@@ -236,6 +281,16 @@ const RecordedSessions = () => {
 
   return (
     <div className="p-6 space-y-8">
+      <AnimatePresence>
+        {notification && (
+          <Notification
+            message={notification.message}
+            type={notification.type}
+            onClose={() => setNotification(null)}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-900 to-purple-700 rounded-3xl p-8 text-white">
         <div className="flex items-center gap-4 mb-4">
@@ -249,15 +304,47 @@ const RecordedSessions = () => {
 
       {/* Main content */}
       <div className="bg-white rounded-2xl p-6 shadow-lg">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-800">Sessions List</h2>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+          {/* Search Box */}
+          <div className="relative flex-1 max-w-md">
+            <input
+              type="text"
+              placeholder="Search sessions or courses..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg
+                       focus:ring-2 focus:ring-purple-500 focus:border-transparent
+                       placeholder-gray-400"
+            />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Add Session Button */}
           <button
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-300 transform hover:scale-105"
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 
+                     transition-all duration-300 transform hover:scale-105 flex-shrink-0"
             onClick={() => setShowModal(true)}
           >
             Add Session
           </button>
         </div>
+
+        {/* Search Results Summary */}
+        {searchTerm && (
+          <div className="mb-4 text-sm text-gray-500">
+            Showing results for "{searchTerm}"
+            <button 
+              onClick={() => setSearchTerm("")}
+              className="ml-2 text-purple-600 hover:text-purple-700"
+            >
+              Clear search
+            </button>
+          </div>
+        )}
 
         {/* Sessions Table */}
         <div className="overflow-x-auto">
@@ -288,7 +375,7 @@ const RecordedSessions = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {sessions.map((session) => (
+              {filteredSessions.map((session) => (
                 <tr
                   key={session.id}
                   className="hover:bg-gray-50 transition-colors duration-150"
@@ -322,7 +409,7 @@ const RecordedSessions = () => {
                     <button
                       onClick={() => handleStatusToggle(session.id)}
                       className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        session.isActive
+                        session.isActive === "active"
                           ? "bg-green-100 text-green-800 hover:bg-green-200"
                           : "bg-red-100 text-red-800 hover:bg-red-200"
                       } transition-colors duration-200`}
@@ -350,6 +437,13 @@ const RecordedSessions = () => {
               ))}
             </tbody>
           </table>
+
+          {/* No Results Message */}
+          {filteredSessions.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              No sessions found matching your search.
+            </div>
+          )}
         </div>
       </div>
 
