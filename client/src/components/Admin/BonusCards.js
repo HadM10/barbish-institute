@@ -267,6 +267,7 @@ const BonusCard = () => {
                   <th className="px-6 py-4 text-left text-white font-semibold">Description</th>
                   <th className="px-6 py-4 text-center text-white font-semibold">Price</th>
                   <th className="px-6 py-4 text-center text-white font-semibold">Expiry Date</th>
+                  <th className="px-6 py-4 text-center text-white font-semibold">Link</th>
                   <th className="px-6 py-4 text-center text-white font-semibold">Actions</th>
                 </tr>
               </thead>
@@ -287,6 +288,16 @@ const BonusCard = () => {
                     <td className="px-6 py-4 text-center">${bonCard.price.toFixed(2)}</td>
                     <td className="px-6 py-4 text-center">
                       {new Date(bonCard.expiredDate).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <a
+                        href={bonCard.link || '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 hover:underline"
+                      >
+                        {bonCard.link || 'No link available'}
+                      </a>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">

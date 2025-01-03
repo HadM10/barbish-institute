@@ -102,3 +102,20 @@ exports.deleteCourse = async (req, res) => {
     });
   }
 };
+
+// Get most subscribed courses
+exports.getMostSubscribedCourses = async (req, res) => {
+  try {
+    const courses = await Course.findAll({
+      include: [Category],
+      order: [['subscribers', 'DESC']],
+      limit: 4, // Adjust the limit as needed
+    });
+    res.status(200).send(courses);
+  } catch (error) {
+    res.status(500).send({
+      error: "Error fetching most subscribed courses",
+      details: error.message,
+    });
+  }
+};
