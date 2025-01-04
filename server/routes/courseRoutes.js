@@ -17,7 +17,4 @@ router.put("/:id", courseController.updateCourse);
 // DELETE /courses/:id - Delete a course by ID
 router.delete("/:id", courseController.deleteCourse);
 
-// GET /courses/most-subscribed - Get most subscribed courses
-router.get('/most-subscribed', courseController.getMostSubscribedCourses);
-
 module.exports = router;
