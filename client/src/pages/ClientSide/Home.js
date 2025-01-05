@@ -5,7 +5,7 @@ import HeroCarousel from '../../components/User/Home/HeroCarousel';
 import FeaturedCourses from '../../components/User/Home/FeaturedCourses';
 import WhyChooseUs from '../../components/User/Home/WhyChooseUs';
 import Statistics from '../../components/User/Home/Statistics';
-import Footer from '../../components/User/Home/Footer';
+
 
 const HomePage = () => {
   return (
@@ -19,7 +19,7 @@ const HomePage = () => {
         <FeaturedCourses />
         <WhyChooseUs />
         <Statistics />
-        <Footer />
+    
       </div>
     </div>
   );

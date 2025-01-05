@@ -296,7 +296,7 @@ const BonusCard = () => {
                         rel="noopener noreferrer"
                         className="text-blue-500 hover:underline"
                       >
-                        {bonCard.link || 'No link available'}
+                        {bonCard.link ? 'View Link' : 'No link available'}
                       </a>
                     </td>
                     <td className="px-6 py-4">
