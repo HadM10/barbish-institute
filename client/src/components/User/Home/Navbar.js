@@ -90,19 +90,25 @@ const Navbar = () => {
     setIsSearchBoxOpen(false);
     
     if (type === 'course') {
+      // Find the course's category
+      const courseCategory = courses.find(c => c.id === item.id)?.categoryId || 
+                           courses.find(c => c.id === item.id)?.category_id;
+      
       navigate(`/courses`, { 
         state: { 
           highlightCourseId: item.id,
-          searchTerm: item.title 
-        } 
+          searchTerm: item.title,
+          categoryId: courseCategory,
+          type: 'course'
+        }
       });
     } else if (type === 'category') {
       navigate(`/courses`, { 
         state: { 
           categoryId: item.id,
           categoryName: item.name,
-          selectedCategory: item.id
-        } 
+          type: 'category'
+        }
       });
     }
   };

@@ -14,10 +14,11 @@ import { motion } from "framer-motion";
 import CategoryAPI from '../../api/categoryAPI';
 import { getAllCourses } from '../../api/courseAPI';
 import englishCourseImg from '../../assets/images/english-course.jpg';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const Courses = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { highlightCourseId, searchTerm: initialSearchTerm, categoryId, categoryName } = location.state || {};
   
   const [selectedCategory, setSelectedCategory] = useState(categoryId || "all");
@@ -49,28 +50,23 @@ const Courses = () => {
   // Filter courses based on category and search
   const filteredCourses = useMemo(() => {
     if (!courses.length) return [];
-
-    let filtered = [...courses];
-
-    // If we have a specific category selected or from search
-    if (selectedCategory !== "all") {
-      filtered = filtered.filter(course => 
-        course.categoryId === selectedCategory || 
-        course.category_id === selectedCategory
-      );
+    
+    // If viewing all courses
+    if (selectedCategory === "all") {
+      return courses;
     }
-
-    // Additional search term filtering
-    if (highlightCourseId) {
-      filtered = filtered.filter(course => course.id === highlightCourseId);
-    } else if (initialSearchTerm) {
-      filtered = filtered.filter(course => 
-        course.title.toLowerCase().includes(initialSearchTerm.toLowerCase())
-      );
+    
+    // If searching for a specific course
+    if (location.state?.type === 'course' && location.state?.highlightCourseId) {
+      return courses.filter(course => course.id === location.state.highlightCourseId);
     }
-
-    return filtered;
-  }, [courses, selectedCategory, highlightCourseId, initialSearchTerm]);
+    
+    // Filter by category
+    return courses.filter(course => 
+      course.categoryId === selectedCategory || 
+      course.category_id === selectedCategory
+    );
+  }, [courses, selectedCategory, location.state]);
 
   // Set initial category when component mounts or when categoryId changes
   useEffect(() => {
@@ -321,6 +317,40 @@ const Courses = () => {
     );
   };
 
+  // Simplify the state management useEffect
+  useEffect(() => {
+    const locationState = location.state;
+    
+    if (!locationState) {
+      setSelectedCategory("all");
+      return;
+    }
+
+    if (locationState.type === 'category') {
+      setSelectedCategory(locationState.categoryId);
+    } else if (locationState.type === 'course') {
+      setSelectedCategory(locationState.categoryId || "all");
+    }
+  }, [location.state]);
+
+  // Update the category button click handler to be more efficient
+  const handleCategoryChange = (categoryId) => {
+    // Immediately update the UI
+    setSelectedCategory(categoryId);
+    
+    // Update the navigation state
+    const newState = {
+      categoryId,
+      type: 'category',
+      // Clear any search-related states
+      highlightCourseId: null,
+      searchTerm: null
+    };
+    
+    // Use replace to avoid history stack buildup
+    navigate(location.pathname, { state: newState, replace: true });
+  };
+
   return (
     <div className="min-h-screen bg-[#1E1B4B]">
       <div className="pt-24">
@@ -376,7 +406,7 @@ const Courses = () => {
                       {filteredCategories.map((category) => (
                         <button
                           key={category.id}
-                          onClick={() => setSelectedCategory(category.id)}
+                          onClick={() => handleCategoryChange(category.id)}
                           className={`flex-shrink-0 px-6 py-2.5 rounded-full transition-all duration-300
                             ${selectedCategory === category.id
                               ? "bg-gradient-to-r from-[#4338ca] to-[#5b21b6] text-white shadow-lg"
