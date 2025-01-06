@@ -1,5 +1,6 @@
 // components/User/Home/Footer.js
 import React from 'react';
+import { FaFacebook, FaInstagram, FaTiktok, FaWhatsapp } from 'react-icons/fa';
 
 const Footer = () => {
   return (
@@ -17,8 +18,8 @@ const Footer = () => {
           <div>
             <h3 className="text-xl font-bold mb-4">Contact Information</h3>
             <p className="text-sky">Email: info@barbish.edu</p>
-            <p className="text-sky">Phone: +1 234 567 890</p>
-            <p className="text-sky">Location: Dubai, UAE</p>
+            <p className="text-sky">Phone: +96171020724</p>
+            <p className="text-sky">Location: Sarafand, main road</p>
           </div>
           <div>
             <h3 className="text-xl font-bold mb-4">Our Programs</h3>
@@ -31,6 +32,20 @@ const Footer = () => {
           </div>
         </div>
         <div className="mt-8 pt-8 border-t border-white/20 text-center">
+          <div className="flex justify-center space-x-4 mb-4">
+            <a href="https://www.facebook.com/barbish" target="_blank" rel="noopener noreferrer">
+              <FaFacebook className="text-white text-2xl hover:text-blue-500 transition-colors" />
+            </a>
+            <a href="https://www.instagram.com/barbish" target="_blank" rel="noopener noreferrer">
+              <FaInstagram className="text-white text-2xl hover:text-pink-500 transition-colors" />
+            </a>
+            <a href="https://www.tiktok.com/@barbish" target="_blank" rel="noopener noreferrer">
+              <FaTiktok className="text-white text-2xl hover:text-black transition-colors" />
+            </a>
+            <a href="https://wa.me/96171020724" target="_blank" rel="noopener noreferrer">
+              <FaWhatsapp className="text-white text-2xl hover:text-green-500 transition-colors" />
+            </a>
+          </div>
           <p className="text-sky">
             © {new Date().getFullYear()} Barbish Institution. All rights reserved.
           </p>

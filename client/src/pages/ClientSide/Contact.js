@@ -142,7 +142,7 @@ const Contact = () => {
                     {
                       icon: <FaMapMarkerAlt className="text-2xl" />,
                       title: "Visit Our Campus",
-                      content: "123 Innovation Street, Tech Valley, TX 75023",
+                      content: "Sarafand, main road",
                       color: "from-blue-400 to-blue-600"
                     },
                     {
@@ -154,7 +154,7 @@ const Contact = () => {
                     {
                       icon: <FaWhatsapp className="text-2xl" />,
                       title: "WhatsApp Support",
-                      content: "+1 (234) 567-8900",
+                      content: "+96171020724",
                       color: "from-green-400 to-green-600"
                     },
                     {
@@ -257,14 +257,14 @@ const Contact = () => {
                     icon: FaUser, 
                     type: "text", 
                     name: "name", // Changed from fullName to name to match API
-                    placeholder: "John Doe" 
+                    placeholder: "Mahdi Assi" 
                   },
                   { 
                     label: "Email Address", 
                     icon: FaEnvelope, 
                     type: "email", 
                     name: "email", 
-                    placeholder: "john@example.com" 
+                    placeholder: "mahdi@example.com" 
                   }
                 ].map((field, index) => (
                   <div key={index} className="group">

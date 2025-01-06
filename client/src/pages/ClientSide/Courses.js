@@ -8,6 +8,8 @@ import {
   FaUser,
   FaChevronLeft,
   FaChevronRight,
+  FaChevronUp,
+  FaLightbulb,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
 import CategoryAPI from '../../api/categoryAPI';
@@ -120,6 +122,7 @@ const Courses = () => {
 
   const CourseCard = ({ course }) => {
     const [isExpanded, setIsExpanded] = useState(false);
+    const [showDetails, setShowDetails] = useState(false);
 
     return (
       <div className="relative group animate-fadeIn">
@@ -138,13 +141,11 @@ const Courses = () => {
                        group-hover:scale-105 transition-transform duration-700"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent" />
-            
+
             {/* Price Badge */}
-            <div className="absolute top-4 right-4 bg-gradient-to-r from-blue-600 to-purple-600
-                           px-4 py-2 rounded-full shadow-lg">
-              <span className="text-white font-bold text-lg">
-                ${course.price}
-              </span>
+            <div className="absolute bottom-0 right-0 bg-gradient-to-r from-purple-600 to-blue-600
+                           px-4 py-2 rounded-tl-lg shadow-lg">
+              <span className="text-white font-bold text-lg">${course.price}</span>
             </div>
           </div>
 
@@ -193,86 +194,82 @@ const Courses = () => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ type: "spring", duration: 0.5 }}
-              className="bg-white rounded-xl w-full max-w-[700px] overflow-hidden shadow-2xl"
+              className="bg-white rounded-xl w-full max-w-[400px] overflow-hidden shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex h-[400px]">
-                {/* Square Image Container */}
-                <div className="w-[400px] h-[400px] flex-shrink-0">
-                  <img
-                    src={englishCourseImg}
-                    alt={course.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+              <div className="relative">
+                {/* Toggle Button */}
+                <button
+                  className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full shadow-lg"
+                  onClick={() => setShowDetails(!showDetails)}
+                >
+                  {showDetails ? "View Image" : "View Details"}
+                </button>
 
-                {/* Content Container */}
-                <div className="flex-1 bg-gradient-to-br from-[#4338ca] to-[#5b21b6] p-5 overflow-y-auto">
-                  {/* Header with Price and Close */}
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="bg-white/95 px-4 py-2 rounded-full">
-                      <span className="text-primary font-bold text-lg">${course.price}</span>
+                {showDetails ? (
+                  <div className="p-5 bg-gradient-to-br from-[#4338ca] to-[#5b21b6] overflow-y-auto">
+                    {/* Header with Price and Close */}
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="bg-white/95 px-4 py-2 rounded-full">
+                        <span className="text-primary font-bold text-lg">${course.price}</span>
+                      </div>
+                      <button
+                        onClick={() => setIsExpanded(false)}
+                        className="p-1.5 hover:bg-white/10 rounded-full transition-colors"
+                      >
+                        <FaTimes className="text-white text-lg" />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => setIsExpanded(false)}
-                      className="p-1.5 hover:bg-white/10 rounded-full transition-colors"
-                    >
-                      <FaTimes className="text-white text-lg" />
-                    </button>
-                  </div>
 
-                  {/* Course Title */}
-                  <h2 className="text-xl font-bold text-white mb-4">{course.title}</h2>
+                    {/* Course Title */}
+                    <h2 className="text-xl font-bold text-white mb-4">{course.title}</h2>
 
-                  {/* Course Details Grid */}
-                  <div className="grid grid-cols-2 gap-2 mb-4">
-                    <div className="bg-white/10 rounded-lg p-2.5">
-                      <div className="flex items-center gap-2">
-                        <FaClock className="text-white text-sm" />
-                        <span className="text-white text-sm">{course.duration} hours</span>
+                    {/* Course Details Grid */}
+                    <div className="grid grid-cols-2 gap-2 mb-4">
+                      <div className="bg-white/10 rounded-lg p-2.5">
+                        <div className="flex items-center gap-2">
+                          <FaClock className="text-white text-sm" />
+                          <span className="text-white text-sm">{course.duration} hours</span>
+                        </div>
+                      </div>
+                      <div className="bg-white/10 rounded-lg p-2.5">
+                        <div className="flex items-center gap-2">
+                          <FaUser className="text-white text-sm" />
+                          <span className="text-white text-sm">{course.instructor || 'Mahdi'}</span>
+                        </div>
                       </div>
                     </div>
-                    <div className="bg-white/10 rounded-lg p-2.5">
-                      <div className="flex items-center gap-2">
-                        <FaUser className="text-white text-sm" />
-                        <span className="text-white text-sm">{course.instructor || 'Mahdi'}</span>
-                      </div>
+
+                    {/* Course Description */}
+                    <div className="mb-4">
+                      <h3 className="text-white font-semibold mb-2">Description</h3>
+                      <p className="text-white/90 text-sm leading-relaxed">
+                        {course.description}
+                      </p>
+                    </div>
+
+                    {/* What You'll Learn */}
+                    <div className="mb-4">
+                      <h3 className="text-white font-semibold mb-2">What You'll Learn</h3>
+                      <ul className="space-y-2">
+                        {course.content?.split('\n').map((item, index) => (
+                          <li key={index} className="flex items-start gap-2 text-white/90 text-sm">
+                            <div className="w-1.5 h-1.5 rounded-full bg-white/70 mt-1.5" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   </div>
-
-                  {/* Course Description */}
-                  <div className="mb-4">
-                    <h3 className="text-white font-semibold mb-2">Description</h3>
-                    <p className="text-white/90 text-sm leading-relaxed">
-                      {course.description}
-                    </p>
+                ) : (
+                  <div className="w-full h-full">
+                    <img
+                      src={englishCourseImg}
+                      alt={course.title}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-
-                  {/* What You'll Learn */}
-                  <div className="mb-4">
-                    <h3 className="text-white font-semibold mb-2">What You'll Learn</h3>
-                    <ul className="space-y-2">
-                      {course.content?.split('\n').map((item, index) => (
-                        <li key={index} className="flex items-start gap-2 text-white/90 text-sm">
-                          <div className="w-1.5 h-1.5 rounded-full bg-white/70 mt-1.5" />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Enquire Button - Fixed at bottom */}
-                  <div className="sticky bottom-0 pt-2">
-                    <button 
-                      className="w-full bg-white hover:bg-white/90 text-indigo-600 
-                               py-2.5 rounded-lg font-medium flex items-center 
-                               justify-center gap-2 transition-colors"
-                    >
-                      <FaWhatsapp className="text-lg" />
-                      <span>Enquire Now</span>
-                    </button>
-                  </div>
-                </div>
+                )}
               </div>
             </motion.div>
           </div>
@@ -297,28 +294,28 @@ const Courses = () => {
     }
   }, [location.state]);
 
-  // Update the category button click handler to be more efficient
+  // Handle category change
   const handleCategoryChange = (categoryId) => {
-    // Immediately update the UI
     setSelectedCategory(categoryId);
-    
-    // Update the navigation state
+    setShowFilters(false); // Close the filter box
     const newState = {
       categoryId,
       type: 'category',
-      // Clear any search-related states
       highlightCourseId: null,
       searchTerm: null
     };
-    
-    // Use replace to avoid history stack buildup
     navigate(location.pathname, { state: newState, replace: true });
+  };
+
+  // Scroll to top function
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="pt-[160px]">
-        <div className="sticky top-[140px] bg-white border-b border-gray-200 z-30">
+        <div className="bg-white border-b border-gray-200 z-30">
           <div className="container mx-auto px-4">
             <div className="relative flex items-center justify-between py-4">
               <div className="flex-1 overflow-x-auto hide-scrollbar">
@@ -333,7 +330,7 @@ const Courses = () => {
                     ref={scrollContainerRef}
                     className="flex items-center gap-3 py-2 overflow-x-auto hide-scrollbar touch-pan-x"
                   >
-                    {filteredCategories.map((category) => (
+                    {categories.map((category) => (
                       <button
                         key={category.id}
                         onClick={() => handleCategoryChange(category.id)}
@@ -352,10 +349,10 @@ const Courses = () => {
 
               <div className="ml-3">
                 <button
-                  onClick={() => setShowFilters(!showFilters)}
+                  onClick={() => setShowFilters(true)}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-full
-                           bg-white/10 hover:bg-white/20 text-gray-800
-                           transition-all duration-300"
+                           bg-gradient-to-r from-blue-500 to-purple-500 text-white
+                           shadow-md hover:shadow-lg transition-all duration-300"
                 >
                   <FaFilter className="text-sm" />
                   <span className="hidden sm:inline text-sm">Filters</span>
@@ -363,6 +360,55 @@ const Courses = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Filter Popup */}
+        {showFilters && (
+          <div
+            className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center"
+            onClick={() => setShowFilters(false)}
+          >
+            <div
+              className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold">Select Category</h3>
+                <button
+                  onClick={() => setShowFilters(false)}
+                  className="p-1.5 hover:bg-gray-200 rounded-full transition-colors"
+                >
+                  <FaTimes className="text-gray-600" />
+                </button>
+              </div>
+              <div className="flex flex-col gap-2">
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => handleCategoryChange(category.id)}
+                    className={`px-4 py-2 rounded-full transition-all duration-300
+                      ${selectedCategory === category.id
+                        ? "bg-gradient-to-r from-[#4338ca] to-[#5b21b6] text-white shadow-lg"
+                        : "bg-white/10 text-gray-800 hover:bg-gray-100"
+                      }`}
+                  >
+                    {category.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Motivational Section */}
+        <div className="container mx-auto px-4 py-6 text-center">
+          <h2 className="text-2xl font-bold text-gray-800 flex items-center justify-center gap-2">
+            <FaLightbulb className="text-yellow-500" />
+            "Unlock Your Potential with Our Courses"
+          </h2>
+          <p className="text-gray-600 mt-2">
+            Discover new skills and advance your career with our expertly crafted courses.
+          </p>
         </div>
 
         <div className="container mx-auto px-4 py-12">
@@ -394,6 +440,14 @@ const Courses = () => {
             </div>
           )}
         </div>
+
+        {/* Back to Top Button */}
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-4 right-4 p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition"
+        >
+          <FaChevronUp />
+        </button>
       </div>
     </div>
   );
