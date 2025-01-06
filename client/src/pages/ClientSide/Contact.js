@@ -4,6 +4,7 @@ import { FaEnvelope, FaUser, FaPaperPlane,
          FaMapMarkerAlt, FaClock, FaWhatsapp, FaHeadset } from 'react-icons/fa';
 import { createContact } from '../../api/contactsAPI';
 import { toast } from 'react-toastify';
+import Footer from '../../components/User/Home/Footer';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -85,7 +86,7 @@ const Contact = () => {
   return (
     <>
       <style>{styles}</style>
-      <main className="relative min-h-screen pt-48 pb-20">
+      <main className="relative min-h-screen pt-48 pb-0">
         {/* Background with modern gradient */}
         <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
           {/* Animated gradient circles */}
@@ -332,6 +333,9 @@ const Contact = () => {
             </motion.div>
           </div>
         </div>
+        
+        {/* Add Footer component */}
+        <Footer />
       </main>
     </>
   );

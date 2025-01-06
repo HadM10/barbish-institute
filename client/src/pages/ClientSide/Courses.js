@@ -133,16 +133,19 @@ const Courses = () => {
 
         {isExpanded && (
           <div
-            className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm mt-[100px]"
+            className="fixed inset-0 bg-black/80 z-[99999] flex items-start justify-center backdrop-blur-sm"
             onClick={() => setIsExpanded(false)}
+            style={{ paddingTop: '10vh' }}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ type: "spring", duration: 0.5 }}
-              className={`bg-white rounded-xl overflow-hidden shadow-2xl
-                         ${isLargeScreen ? 'w-full max-w-3xl h-[500px]' : 'w-full max-w-[240px]'}`}
+              className={`bg-white rounded-xl overflow-hidden shadow-2xl relative
+                         ${isLargeScreen 
+                           ? 'w-full max-w-[900px] h-[450px]' 
+                           : 'w-[85%] aspect-square max-w-[350px]'}`}
               onClick={(e) => e.stopPropagation()}
             >
               {isLargeScreen ? (
@@ -231,7 +234,7 @@ const Courses = () => {
                   </div>
                 </div>
               ) : (
-                <div className="relative">
+                <div className="relative h-full">
                   <button
                     className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 
                              rounded-full shadow-lg z-10"
@@ -241,64 +244,58 @@ const Courses = () => {
                   </button>
 
                   {showDetails ? (
-                    <div className="p-5 bg-gradient-to-br from-[#4338ca] to-[#5b21b6]">
-                      <div className="flex justify-between items-center mb-4">
-                        <div className="bg-white/95 px-4 py-2 rounded-full">
-                          <span className="text-primary font-bold text-lg">${course.price}</span>
-                        </div>
-                        <button
-                          onClick={() => setIsExpanded(false)}
-                          className="p-1.5 hover:bg-white/10 rounded-full transition-colors"
-                        >
-                          <FaTimes className="text-white text-lg" />
-                        </button>
-                      </div>
-                      <h2 className="text-xl font-bold text-white mb-4">{course.title}</h2>
-                      <div className="grid grid-cols-2 gap-2 mb-4">
-                        <div className="bg-white/10 rounded-lg p-2.5">
-                          <div className="flex items-center gap-2">
-                            <FaClock className="text-white text-sm" />
-                            <span className="text-white text-sm">{course.duration} hours</span>
+                    <div className="h-full bg-gradient-to-br from-[#4338ca] to-[#5b21b6] flex flex-col">
+                      <div className="p-6 flex-1 overflow-y-auto" style={{ maxHeight: 'calc(100% - 80px)' }}>
+                        <div className="flex justify-between items-center mb-4">
+                          <div className="bg-white/95 px-4 py-2 rounded-full">
+                            <span className="text-primary font-bold text-lg">${course.price}</span>
                           </div>
                         </div>
-                        <div className="bg-white/10 rounded-lg p-2.5">
-                          <div className="flex items-center gap-2">
-                            <FaUser className="text-white text-sm" />
-                            <span className="text-white text-sm">{course.instructor || 'Mahdi'}</span>
+                        <h2 className="text-xl font-bold text-white mb-4">{course.title}</h2>
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                          <div className="bg-white/10 rounded-lg p-3">
+                            <div className="flex items-center gap-2">
+                              <FaClock className="text-white text-base" />
+                              <span className="text-white text-sm">{course.duration} hours</span>
+                            </div>
+                          </div>
+                          <div className="bg-white/10 rounded-lg p-3">
+                            <div className="flex items-center gap-2">
+                              <FaUser className="text-white text-base" />
+                              <span className="text-white text-sm">{course.instructor || 'Mahdi'}</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="mb-4">
-                        <h3 className="text-white font-semibold mb-2">Description</h3>
-                        <p className="text-white/90 text-sm leading-relaxed">
-                          {course.description}
-                        </p>
-                      </div>
-                      <div className="mb-4">
-                        <h3 className="text-white font-semibold mb-2">What You'll Learn</h3>
-                        <ul className="space-y-2">
-                          {course.content?.split('\n').map((item, index) => (
-                            <li key={index} className="flex items-start gap-2 text-white/90 text-sm">
-                              <div className="w-1.5 h-1.5 rounded-full bg-white/70 mt-1.5" />
-                              <span>{item}</span>
-                            </li>
-                          ))}
-                        </ul>
+                        <div className="mb-4">
+                          <h3 className="text-white font-semibold mb-2">Description</h3>
+                          <p className="text-white/90 text-sm leading-relaxed">
+                            {course.description}
+                          </p>
+                        </div>
+                        <div>
+                          <h3 className="text-white font-semibold mb-2">What You'll Learn</h3>
+                          <ul className="space-y-2">
+                            {course.content?.split('\n').map((item, index) => (
+                              <li key={index} className="flex items-start gap-2 text-white/90 text-sm">
+                                <div className="w-1.5 h-1.5 rounded-full bg-white/70 mt-1.5" />
+                                <span>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       </div>
 
-                      <div className="sticky bottom-0 left-0 right-0 pt-4 
-                                    bg-gradient-to-t from-[#4338ca] to-transparent">
+                      <div className="p-4 bg-[#4338ca]">
                         <button
                           className="w-full bg-white hover:bg-white/90 text-indigo-600
                                    px-6 py-3 rounded-xl transition-all duration-300
                                    flex items-center justify-center gap-2
-                                   text-lg font-semibold shadow-xl"
+                                   text-base font-semibold shadow-xl"
                           onClick={(e) => {
                             e.stopPropagation();
-                            // Add your enquire logic here
                           }}
                         >
-                          <FaWhatsapp className="text-xl" />
+                          <FaWhatsapp className="text-lg" />
                           <span>Enquire Now</span>
                         </button>
                       </div>

@@ -42,57 +42,58 @@ const BonusCards = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
-      {/* Hero Section - slightly reduced padding */}
+      {/* Hero Section */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center pt-48 mb-12 px-4"
+        className="text-center pt-60 mb-16 px-4"
       >
-        <div className="inline-block p-2 px-5 rounded-full bg-purple-500/10 text-purple-300 mb-4">
-          <div className="flex items-center gap-1.5">
-            <FaGift className="text-base" />
-            <span className="text-sm">Exclusive Member Benefits</span>
+        <div className="inline-block p-2 px-6 rounded-full bg-purple-500/10 text-purple-300 mb-6">
+          <div className="flex items-center gap-2">
+            <FaGift className="text-lg" />
+            <span>Exclusive Member Benefits</span>
           </div>
         </div>
-        <h1 className="text-3xl md:text-5xl font-bold text-transparent bg-clip-text 
-                     bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 mb-4">
+        <h1 className="text-4xl md:text-6xl font-bold text-transparent bg-clip-text 
+                     bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 mb-6">
           Premium Partner Offers
         </h1>
-        <p className="text-base md:text-lg text-gray-300 max-w-2xl mx-auto">
+        <p className="text-lg md:text-xl text-gray-300 max-w-3xl mx-auto">
           Access exclusive benefits curated for our distinguished members
         </p>
       </motion.div>
 
-      {/* Search Bar - slightly smaller */}
-      <div className="max-w-lg mx-auto mb-12 px-4">
+      {/* Search Bar */}
+      <div className="max-w-xl mx-auto mb-16 px-4">
         <div className="relative">
           <input
             type="text"
             placeholder="Search premium offers..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-5 py-3 rounded-xl bg-white/10 border border-white/20 
+            className="w-full px-6 py-4 rounded-2xl bg-white/10 border border-white/20 
                      text-white placeholder-gray-400 focus:outline-none focus:border-purple-500
-                     text-sm backdrop-blur-sm"
+                     text-base backdrop-blur-sm"
           />
-          <FaSearch className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 text-base" />
+          <FaSearch className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 text-lg" />
         </div>
       </div>
 
-      {/* Offers Grid - adjusted for smaller cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 px-4 container mx-auto pb-16">
+      {/* Offers Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 px-3 container mx-auto pb-16">
         {filteredOffers.map((offer) => (
           <motion.div
             key={offer.id}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            whileHover={{ y: -4 }}
+            whileHover={{ y: -5 }}
             className="bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-xl 
                      rounded-2xl overflow-hidden border border-white/10 group 
-                     flex flex-col shadow-lg hover:shadow-xl transition-all duration-300"
+                     flex flex-col shadow-xl hover:shadow-2xl transition-all duration-300
+                     transform scale-[0.97]"
           >
             {/* Image Container */}
-            <div className="relative aspect-square">
+            <div className="relative aspect-[5/4]">
               <img
                 src={offer.image}
                 alt={offer.title}
@@ -100,31 +101,31 @@ const BonusCards = () => {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               <div className="absolute top-3 right-3 bg-gradient-to-r from-amber-500 to-amber-600 
-                            px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-md">
-                <FaCrown className="text-white text-sm" />
-                <span className="text-white font-semibold text-sm">Premium</span>
+                            px-3 py-1.5 rounded-full flex items-center gap-2 shadow-lg">
+                <FaCrown className="text-white" />
+                <span className="text-white font-semibold">Premium</span>
               </div>
             </div>
 
             {/* Content Section */}
-            <div className="p-2.5 flex-1 flex flex-col space-y-2">
+            <div className="p-2.5 flex-1 flex flex-col space-y-2.5">
               <div>
-                <h3 className="text-amber-400 text-xs font-medium mb-0.5 tracking-wide uppercase">
+                <h3 className="text-amber-400 text-xs font-medium mb-1 tracking-wide uppercase">
                   {offer.organizationName || 'Elite Partner'}
                 </h3>
-                <h2 className="text-base font-bold text-white leading-tight">
+                <h2 className="text-lg font-bold text-white leading-tight">
                   {offer.title}
                 </h2>
               </div>
 
-              <p className="text-gray-300 flex-1 leading-relaxed text-xs">
+              <p className="text-gray-300 flex-1 leading-relaxed text-sm">
                 {offer.description}
               </p>
 
-              <div className="flex items-center justify-between pt-2 border-t border-white/10">
+              <div className="flex items-center justify-between pt-2.5 border-t border-white/10">
                 <div className="flex flex-col">
-                  <span className="text-xs text-amber-400 uppercase tracking-wider mb-0.5">Investment</span>
-                  <span className="text-lg font-bold text-white">
+                  <span className="text-xs text-amber-400 uppercase tracking-wider mb-1">Investment</span>
+                  <span className="text-xl font-bold text-white">
                     ${formatPrice(offer.price)}
                   </span>
                 </div>
@@ -132,10 +133,10 @@ const BonusCards = () => {
                   href={offer.link || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full 
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full 
                            bg-gradient-to-r from-amber-500 to-amber-600 text-white 
-                           hover:shadow-md hover:from-amber-600 hover:to-amber-700 
-                           transition-all duration-300 text-sm"
+                           hover:shadow-lg hover:from-amber-600 hover:to-amber-700 
+                           transition-all duration-300"
                 >
                   {getLinkIcon(offer.linkType)}
                   <span>Access Now</span>
