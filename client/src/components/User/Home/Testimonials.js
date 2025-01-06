@@ -1,71 +1,146 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { FaQuoteLeft } from 'react-icons/fa';
-
-const testimonials = [
-  {
-    name: "Hadi Makki",
-    feedback: "This institution has transformed my career. The courses are top-notch and the instructors are very knowledgeable.",
-    role: "Software Engineer"
-  },
-  {
-    name: "Lara Fayad",
-    feedback: "I love the flexibility and the quality of the courses offered. Highly recommend to anyone looking to upskill.",
-    role: "Project Manager"
-  },
-  {
-    name: "Sam AL-Haj",
-    feedback: "The learning experience here is unparalleled. The support from the staff is amazing.",
-    role: "Data Analyst"
-  }
-];
+import React, { useEffect } from 'react';
+import { motion, useAnimation } from 'framer-motion';
+import { FaUserGraduate, FaBookOpen, FaChalkboardTeacher, FaTrophy } from 'react-icons/fa';
 
 const Testimonials = () => {
-  return (
-    <section className="py-16 bg-gray-100">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-4xl md:text-5xl font-extrabold text-gray-900
-                     tracking-tight leading-tight mb-4"
-          >
-            What Our Students Say
-          </motion.h2>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="max-w-xl mx-auto"
-          >
-            <p className="text-gray-700 text-base">
-              Hear from our students about their learning experiences.
-            </p>
-          </motion.div>
-        </div>
+  const controls = useAnimation();
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {testimonials.map((testimonial, index) => (
+  useEffect(() => {
+    controls.start({
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.8 }
+    });
+  }, [controls]);
+
+  const stats = [
+    {
+      icon: FaUserGraduate,
+      number: "1000+",
+      label: "Students Enrolled",
+      color: "from-blue-500 to-purple-500"
+    },
+    {
+      icon: FaBookOpen,
+      number: "50+",
+      label: "Professional Courses",
+      color: "from-purple-500 to-pink-500"
+    },
+    {
+      icon: FaChalkboardTeacher,
+      number: "30+",
+      label: "Expert Instructors",
+      color: "from-pink-500 to-red-500"
+    },
+    {
+      icon: FaTrophy,
+      number: "95%",
+      label: "Success Rate",
+      color: "from-red-500 to-orange-500"
+    }
+  ];
+
+  return (
+    <section className="py-24 relative overflow-hidden bg-[#0A0F2C]">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0">
+        <div className="absolute w-full h-full">
+          {[...Array(50)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute rounded-full opacity-20 animate-float"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                width: `${Math.random() * 10 + 5}px`,
+                height: `${Math.random() * 10 + 5}px`,
+                backgroundColor: `hsl(${Math.random() * 60 + 200}, 70%, 60%)`,
+                animationDelay: `${Math.random() * 5}s`,
+                animationDuration: `${Math.random() * 10 + 10}s`
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={controls}
+          className="text-center mb-20"
+        >
+          <h2 className="text-5xl font-bold text-white mb-6">
+            Our Impact in Numbers
+          </h2>
+          <div className="flex items-center justify-center gap-4">
+            <div className="h-1 w-20 bg-blue-500 rounded-full"></div>
+            <p className="text-blue-200 text-xl">Transforming Education</p>
+            <div className="h-1 w-20 bg-blue-500 rounded-full"></div>
+          </div>
+        </motion.div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {stats.map((stat, index) => (
             <motion.div
               key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="bg-white rounded-2xl p-6 shadow-lg flex flex-col justify-between"
+              initial={{ opacity: 0, y: 50 }}
+              animate={controls}
+              transition={{ delay: index * 0.2 }}
+              className="relative group"
             >
-              <div>
-                <FaQuoteLeft className="text-blue-500 text-3xl mb-4" />
-                <p className="text-gray-800 text-lg mb-4">{testimonial.feedback}</p>
-              </div>
-              <div className="mt-4">
-                <p className="text-gray-600 font-semibold text-center">{testimonial.name}</p>
-                <p className="text-gray-500 text-sm text-center">{testimonial.role}</p>
+              <div className="absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-700"
+                   style={{ background: `linear-gradient(to right, ${stat.color})` }} />
+              <div className="relative bg-white/10 backdrop-blur-lg rounded-2xl p-8
+                            border border-white/20 hover:border-white/40 transition-all duration-500
+                            transform hover:-translate-y-2">
+                <div className="flex flex-col items-center">
+                  <stat.icon className="text-4xl text-blue-400 mb-4" />
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: index * 0.3, type: "spring" }}
+                    className="text-4xl font-bold text-white mb-2"
+                  >
+                    {stat.number}
+                  </motion.div>
+                  <p className="text-blue-200 text-lg text-center">{stat.label}</p>
+                </div>
               </div>
             </motion.div>
           ))}
         </div>
+
+        {/* Level Advancement Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={controls}
+          transition={{ delay: 0.8 }}
+          className="mt-16 bg-white/10 backdrop-blur-lg rounded-2xl p-8 max-w-3xl mx-auto
+                    border border-white/20 hover:border-white/40 transition-all duration-500"
+        >
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-2xl font-bold text-white">Level Advancement</h3>
+            <div className="flex items-center gap-4">
+              <span className="text-blue-300">B1</span>
+              <div className="h-0.5 w-16 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+              <span className="text-blue-300">C1</span>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: "85%" }}
+                transition={{ delay: 1, duration: 1.5 }}
+                className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
+              />
+            </div>
+            <p className="text-blue-200 text-center">
+              85% of our students advance two levels within 6 months
+            </p>
+          </div>
+        </motion.div>
       </div>
     </section>
   );
