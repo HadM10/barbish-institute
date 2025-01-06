@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   FaWhatsapp,
-  FaTimes,
   FaClock,
   FaGraduationCap,
   FaTrophy
@@ -99,7 +98,7 @@ const CourseCard = ({ course, index }) => {
         </div>
       </div>
 
-      {/* Optimized Modal */}
+      {/* Redesigned Modal - Smaller Size */}
       {isExpanded && (
         <div
           className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 backdrop-blur-sm"
@@ -110,64 +109,44 @@ const CourseCard = ({ course, index }) => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ type: "spring", duration: 0.5 }}
-            className="bg-[#1a1d2d] rounded-2xl overflow-hidden shadow-2xl
-                     w-[90%] sm:w-[400px] md:w-[450px] max-w-[500px]
-                     max-h-[85vh] flex flex-col"
+            className="bg-white rounded-2xl overflow-hidden shadow-2xl
+                     w-[90%] sm:w-[500px] md:w-[550px] max-w-[600px]
+                     max-h-[80vh] flex flex-col md:flex-row"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Image Section */}
-            <div className="relative aspect-[4/3] w-full">
+            {/* Image Section - Adjusted size */}
+            <div className="md:w-2/5">
               <img
                 src={englishCourseImg}
                 alt={course.title}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#1a1d2d] via-transparent to-transparent" />
-              
-              {/* Close Button */}
-              <button
-                onClick={() => setIsExpanded(false)}
-                className="absolute top-4 right-4 p-2 rounded-full 
-                         bg-black/30 hover:bg-black/40 
-                         transition-colors duration-200"
-              >
-                <FaTimes className="text-white text-lg" />
-              </button>
-
-              {/* Price Badge */}
-              <div className="absolute top-4 left-4">
-                <div className="px-4 py-2 rounded-full 
-                            bg-gradient-to-r from-blue-600/90 to-violet-600/90 
-                            backdrop-blur-sm shadow-lg">
-                  <span className="text-white font-bold">${course.price}</span>
-                </div>
-              </div>
             </div>
 
             {/* Content Section */}
-            <div className="p-6 overflow-y-auto">
-              <h3 className="text-xl font-bold text-white mb-4">
+            <div className="p-5 flex-1 overflow-y-auto">
+              <h3 className="text-lg font-bold text-gray-800 mb-3">
                 {course.title}
               </h3>
 
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-white/5 rounded-xl p-3">
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <div className="bg-gray-100 rounded-xl p-2.5">
                   <div className="flex items-center gap-2">
                     <FaClock className="text-blue-400" />
                     <div>
-                      <p className="text-white/60 text-xs">Duration</p>
-                      <p className="text-white font-medium text-sm">
+                      <p className="text-gray-600 text-xs">Duration</p>
+                      <p className="text-gray-800 font-medium text-sm">
                         {course.duration} hours
                       </p>
                     </div>
                   </div>
                 </div>
-                <div className="bg-white/5 rounded-xl p-3">
+                <div className="bg-gray-100 rounded-xl p-2.5">
                   <div className="flex items-center gap-2">
                     <FaGraduationCap className="text-blue-400" />
                     <div>
-                      <p className="text-white/60 text-xs">Students</p>
-                      <p className="text-white font-medium text-sm">
+                      <p className="text-gray-600 text-xs">Students</p>
+                      <p className="text-gray-800 font-medium text-sm">
                         Active Students
                       </p>
                     </div>
@@ -175,15 +154,14 @@ const CourseCard = ({ course, index }) => {
                 </div>
               </div>
 
-              <p className="text-white/70 text-sm leading-relaxed mb-6">
+              <p className="text-gray-600 text-sm leading-relaxed mb-4">
                 {course.description}
               </p>
 
               <button
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 
-                        rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 
-                        text-white font-medium shadow-lg shadow-blue-500/25
-                        hover:shadow-blue-500/40 transform hover:scale-[0.98] 
+                className="w-full flex items-center justify-center gap-2 px-5 py-2.5 
+                        bg-gradient-to-r from-blue-500 to-violet-500 
+                        text-white font-medium rounded-xl shadow-md hover:shadow-lg 
                         transition-all duration-300"
                 onClick={(e) => e.stopPropagation()}
               >
@@ -218,7 +196,7 @@ const FeaturedCourses = () => {
   }, []);
 
   return (
-    <section className="py-16 bg-gradient-to-b from-[#1E1B4B] via-[#1E1B4B] to-[#2D2A5E]">
+    <section className="py-16 bg-white">
       <div className="container mx-auto px-4">
         {/* Compact Header */}
         <div className="text-center mb-12">
@@ -226,18 +204,17 @@ const FeaturedCourses = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="inline-flex items-center gap-2 px-5 py-1.5 rounded-full 
-                     bg-white/5 backdrop-blur-sm border border-white/10 mb-4"
+                     bg-gray-200 backdrop-blur-sm border border-gray-300 mb-4"
           >
-            <FaTrophy className="text-amber-400 text-sm" />
-            <span className="text-white/80 text-sm font-medium">Featured Collection</span>
+            <FaTrophy className="text-amber-500 text-sm" />
+            <span className="text-gray-800 text-sm font-semibold">Featured Collection</span>
           </motion.div>
           
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent 
-                     bg-gradient-to-r from-white via-blue-200 to-white
+            className="text-4xl md:text-5xl font-extrabold text-gray-900
                      tracking-tight leading-tight mb-4"
           >
             Most Subscribed Courses
@@ -249,7 +226,7 @@ const FeaturedCourses = () => {
             transition={{ delay: 0.3 }}
             className="max-w-xl mx-auto"
           >
-            <p className="text-white/60 text-base">
+            <p className="text-gray-700 text-base">
               Join thousands of students in our most popular professional courses
             </p>
           </motion.div>
@@ -271,19 +248,16 @@ const FeaturedCourses = () => {
         >
           <motion.button
             onClick={() => navigate('/courses')}
-            className="group relative inline-flex items-center gap-3 px-8 py-3.5 
-                     bg-gradient-to-r from-white/10 to-white/5 
-                     backdrop-blur-md rounded-full overflow-hidden
-                     border border-white/10 shadow-2xl shadow-blue-500/10
-                     hover:shadow-blue-500/20 transition-all duration-500"
-            whileHover={{ scale: 1.02 }}
+            className="group relative inline-flex items-center gap-3 px-10 py-4 
+                     bg-gradient-to-r from-blue-500 to-violet-500 
+                     text-white font-semibold rounded-full overflow-hidden
+                     shadow-lg hover:shadow-xl transition-all duration-500"
+            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.98 }}
           >
-            <span className="relative z-10 text-white font-medium">
-              View All Courses
-            </span>
+            <span className="relative z-10">View All Courses</span>
             <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-blue-600 to-violet-600"
+              className="absolute inset-0 bg-gradient-to-r from-blue-600 to-violet-600 opacity-0 group-hover:opacity-100"
               initial={{ x: "100%" }}
               whileHover={{ x: 0 }}
               transition={{ duration: 0.4 }}

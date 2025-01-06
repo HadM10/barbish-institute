@@ -15,6 +15,7 @@ import {
 } from "@heroicons/react/24/outline";
 import CategoryAPI from "../../api/categoryAPI";
 import "react-toastify/dist/ReactToastify.css";
+import { getAllCourses } from '../../api/courseAPI';
 
 const Notification = ({ message, type, onClose }) => {
   const bgColor = type === 'error' || type === 'delete' 
@@ -56,11 +57,26 @@ const Category = () => {
   const fetchCategories = async () => {
     try {
       setIsLoading(true);
-      const response = await CategoryAPI.getAllCategories();
-      console.log("API Response:", response);
+      // Get all courses first
+      const coursesRes = await getAllCourses();
+      const allCourses = coursesRes.success ? coursesRes.data : [];
 
-      if (response?.success && response?.data?.data) {
-        setCategories(response.data.data);
+      // Get categories
+      const res = await CategoryAPI.getAllCategories();
+      if (res.success) {
+        // Map categories and count courses for each
+        const categoriesWithCounts = res.data.data.map(category => {
+          const courseCount = allCourses.filter(
+            course => course.categoryId === category.id || course.category_id === category.id
+          ).length;
+          
+          return {
+            ...category,
+            Courses: new Array(courseCount) // Create array with length equal to course count
+          };
+        });
+        
+        setCategories(categoriesWithCounts);
       } else {
         setCategories([]);
         showNotification("No categories found", 'error');
@@ -233,32 +249,47 @@ const Category = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-200"
+              className="relative overflow-hidden bg-gradient-to-br from-white to-gray-50 
+                         rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300"
             >
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-xl font-bold text-gray-800">
-                    {category.name}
-                  </h3>
+              {/* Background Pattern */}
+              <div className="absolute inset-0 opacity-5"
+                   style={{
+                     backgroundImage: `radial-gradient(circle at 1px 1px, #4338ca 1px, transparent 0)`,
+                     backgroundSize: '16px 16px'
+                   }}
+              />
+              
+              {/* Content */}
+              <div className="relative">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-800">
+                      {category.name}
+                    </h3>
+                    {/* Course Count Badge */}
+                    <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full 
+                                  bg-indigo-100 text-indigo-800 text-sm font-medium">
+                      {category.Courses?.length || 0} {category.Courses?.length === 1 ? 'Course' : 'Courses'}
+                    </div>
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(category)}
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    >
+                      <PencilSquareIcon className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(category.id)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <TrashIcon className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(category)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                  >
-                    <PencilSquareIcon className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(category.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <TrashIcon className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-gray-600">
-                <BookOpenIcon className="w-5 h-5" />
-                <span>{category.Courses?.length || 0} Courses</span>
               </div>
             </motion.div>
           ))}

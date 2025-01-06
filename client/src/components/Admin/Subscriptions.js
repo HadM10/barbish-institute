@@ -112,9 +112,7 @@ const Subscriptions = () => {
       const res = await getAllSubscriptions();
       if (res.success) {
         const adapted = res.data.map((sub) => {
-          
           return {
-            
             id: sub.id,
             userName: sub.User?.username || "Unknown User",
             courseName: sub.Course?.title || "Unknown Course",
@@ -124,8 +122,10 @@ const Subscriptions = () => {
             amount: sub.amount,
           };
         });
-       
-        setSubscriptions(adapted);
+        
+        // Sort subscriptions by ID in descending order (newest first)
+        const sortedSubscriptions = adapted.sort((a, b) => b.id - a.id);
+        setSubscriptions(sortedSubscriptions);
       } else {
         toast.error("Failed to fetch subscriptions: " + res.message);
       }
@@ -223,7 +223,8 @@ const Subscriptions = () => {
             status: newSub.isActive ? "active" : "inactive",
             amount: formData.amount || 0,
           };
-          setSubscriptions((prev) => [...prev, adapted]);
+          // Add new subscription at the beginning of the array
+          setSubscriptions((prev) => [adapted, ...prev]);
           showNotification('Subscription created successfully!');
         } else {
           showNotification('Failed to create subscription: ' + (res.message || 'Unknown error'), 'error');
