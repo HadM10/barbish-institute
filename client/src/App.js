@@ -10,9 +10,11 @@ const App = () => {
   const isAdminRoute = location.pathname.startsWith('/admin');
 
   return (
-    <div>
+    <div className="flex flex-col min-h-screen">
       {!isAdminRoute && <Navbar />}
-      <AppRoutes />
+      <div className="flex-1">
+        <AppRoutes />
+      </div>
       {!isAdminRoute && <Footer />}
     </div>
   );

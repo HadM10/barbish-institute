@@ -16,12 +16,12 @@ const CourseCard = ({ course, index }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="w-full max-w-[370px] mx-auto"
+      className="w-full max-w-[407px] mx-auto"
     >
       <div className="group relative bg-gradient-to-br from-white/10 to-white/5 
                     backdrop-blur-sm rounded-3xl p-0.5 
                     hover:shadow-2xl hover:shadow-blue-500/20 
-                    transition-all duration-500 transform scale-[0.98]">
+                    transition-all duration-500 transform scale-[1]">
         <div className="relative overflow-hidden rounded-[24px] bg-[#1a1d2d]">
           {/* Image Container with improved resolution */}
           <div className="relative aspect-[4/3] w-full overflow-hidden">
@@ -138,48 +138,52 @@ const FeaturedCourses = () => {
   }, []);
 
   return (
-    <section className="relative py-12 bg-white overflow-hidden">
-      {/* LED Line Effect */}
+    <section className="relative py-12 bg-white">
+      {/* Animated Border Line */}
       <div className="absolute inset-0">
-        {/* Horizontal LED line */}
-        <motion.div 
-          className="absolute top-1/2 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-blue-400/50 to-transparent"
-          initial={{ x: "-100%" }}
-          animate={{ 
-            x: "100%",
-            transition: {
-              repeat: Infinity,
-              duration: 3,
-              ease: "linear"
-            }
+        <motion.div
+          className="absolute"
+          style={{
+            width: '6px', // Thick line
+            height: '6px',
+            background: 'linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899)',
+            boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)',
+            borderRadius: '4px',
           }}
-        />
-        
-        {/* Vertical LED lines */}
-        <div className="absolute inset-0 flex justify-between">
-          {[...Array(4)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="w-[2px] h-full bg-gradient-to-b from-transparent via-blue-400/30 to-transparent"
-              initial={{ y: "-100%" }}
-              animate={{
-                y: "100%",
-                transition: {
-                  repeat: Infinity,
-                  duration: 4,
-                  delay: i * 0.5,
-                  ease: "linear"
-                }
-              }}
-            />
-          ))}
-        </div>
+          animate={{
+            pathLength: 1,
+            pathOffset: 0
+          }}
+          initial={{
+            top: 0,
+            left: 0
+          }}
+          transition={{
+            duration: 4,
+            ease: "linear",
+            repeat: Infinity,
+            repeatType: "loop"
+          }}
+        >
+          <motion.div
+            animate={{
+              x: ['0%', '100%', '100%', '0%', '0%'],
+              y: ['0%', '0%', '100%', '100%', '0%'],
+            }}
+            transition={{
+              duration: 8,
+              ease: "linear",
+              repeat: Infinity,
+              times: [0, 0.25, 0.5, 0.75, 1]
+            }}
+          />
+        </motion.div>
       </div>
 
-      {/* Container */}
-      <div className="container mx-auto px-4 relative z-10">
+      {/* Container with padding to avoid overlap with border */}
+      <div className="container mx-auto px-8 py-4 relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-10">
+        <div className="text-center mb-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -213,16 +217,16 @@ const FeaturedCourses = () => {
           </motion.p>
         </div>
 
-        {/* Cards Grid */}
-        <div className="relative max-w-7xl mx-auto mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Cards Grid with adjusted gap for larger cards */}
+        <div className="relative max-w-7xl mx-auto mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {courses.slice(0, 3).map((course, index) => (
               <motion.div
                 key={course.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.2 }}
-                className="relative z-20"
+                className="relative"
               >
                 <CourseCard course={course} index={index} />
               </motion.div>
