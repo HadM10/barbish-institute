@@ -219,7 +219,7 @@ const FeaturedCourses = () => {
 
         {/* Cards Grid with adjusted gap for larger cards */}
         <div className="relative max-w-7xl mx-auto mb-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {courses.slice(0, 3).map((course, index) => (
               <motion.div
                 key={course.id}
