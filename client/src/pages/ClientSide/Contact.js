@@ -4,7 +4,6 @@ import { FaEnvelope, FaUser, FaPaperPlane,
          FaMapMarkerAlt, FaClock, FaWhatsapp, FaHeadset } from 'react-icons/fa';
 import { createContact } from '../../api/contactsAPI';
 import { toast } from 'react-toastify';
-import Footer from '../../components/User/Home/Footer';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -95,7 +94,7 @@ const Contact = () => {
           </div>
         </div>
 
-        <div className="relative z-10 pt-48 pb-20">
+        <div className="relative z-10 pt-48">
           <div className="container mx-auto px-4">
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
@@ -119,7 +118,7 @@ const Contact = () => {
               </p>
             </motion.div>
 
-            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -323,10 +322,6 @@ const Contact = () => {
             </div>
           </div>
         </div>
-        
-        <footer className="relative z-[1]">
-          <Footer />
-        </footer>
       </main>
     </div>
   );

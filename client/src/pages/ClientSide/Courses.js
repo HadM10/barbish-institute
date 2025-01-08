@@ -23,8 +23,18 @@ const Courses = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchedCourse, setSearchedCourse] = useState(null);
-  const [showFilterOptions, setShowFilterOptions] = useState(false);
   const [sortOption, setSortOption] = useState('default');
+  const [showSortOptions, setShowSortOptions] = useState(false);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+
+  // Add effect to handle scroll on navigation
+  useEffect(() => {
+    // Scroll to top when component mounts or when navigating to courses
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }, [location.pathname]); // Add location.pathname as dependency
 
   // Update initialization effect
   useEffect(() => {
@@ -39,6 +49,36 @@ const Courses = () => {
     } else {
       // Reset to "all" when no specific category or search is present
       setSelectedCategory("all");
+    }
+  }, [location.state, courses]);
+
+  // Update initialization effect to handle navbar search
+  useEffect(() => {
+    if (location.state?.searchTerm) {
+      const searchQuery = location.state.searchTerm.toLowerCase();
+      
+      // Find the exact course that matches the search
+      const exactMatch = courses.find(course => 
+        course.title.toLowerCase() === searchQuery ||
+        course.id === location.state.courseId
+      );
+      
+      if (exactMatch) {
+        // Set the searched course
+        setSearchedCourse(exactMatch);
+        // Set category to the course's category
+        const courseCategory = exactMatch.categoryId || exactMatch.category_id;
+        setSelectedCategory(courseCategory);
+        
+        // Scroll to top when searching
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }
+    } else {
+      // Reset search when no search term is present
+      setSearchedCourse(null);
     }
   }, [location.state, courses]);
 
@@ -87,19 +127,20 @@ const Courses = () => {
   const handleCategoryChange = (categoryId) => {
     setSelectedCategory(categoryId);
     setSearchedCourse(null);
-    setShowFilterOptions(false);
   };
 
   // Update filtered courses logic
   const filteredCourses = useMemo(() => {
-    if (!courses.length) return [];
-    
-    // Show only exact searched course if we have an active search
-    if (searchedCourse && location.state?.courseId) {
-      return [searchedCourse];
+    // If there's a searched course, show it in its category
+    if (searchedCourse) {
+      const courseCategory = searchedCourse.categoryId || searchedCourse.category_id;
+      if (selectedCategory === courseCategory || selectedCategory === "all") {
+        return [searchedCourse];
+      }
+      return [];
     }
     
-    // Otherwise show all courses in the selected category
+    // Normal category filtering when not searching
     if (selectedCategory === "all") {
       return courses;
     }
@@ -108,7 +149,7 @@ const Courses = () => {
       course.categoryId === selectedCategory || 
       course.category_id === selectedCategory
     );
-  }, [courses, selectedCategory, searchedCourse, location.state?.courseId]);
+  }, [courses, selectedCategory, searchedCourse]);
 
   const sortedAndFilteredCourses = useMemo(() => {
     let result = [...filteredCourses];
@@ -155,9 +196,12 @@ const Courses = () => {
     fetchData();
   }, []);
 
-  const getCategoryCourseCount = (categoryId) => {
+  const getCategoryCount = (categoryId) => {
     if (categoryId === "all") return courses.length;
-    return courses.filter(course => course.categoryId === categoryId || course.category_id === categoryId).length;
+    return courses.filter(course => 
+      course.categoryId === categoryId || 
+      course.category_id === categoryId
+    ).length;
   };
 
   const CourseCard = ({ course }) => {
@@ -385,179 +429,18 @@ const Courses = () => {
     );
   };
 
-  const FilterSection = () => (
-    <div className="ml-3 relative">
-      <button
-        onClick={() => setShowFilterOptions(!showFilterOptions)}
-        className={`
-          flex items-center gap-3 px-5 py-2.5 rounded-xl
-          bg-white border border-gray-200 hover:border-blue-400
-          text-gray-700 hover:text-blue-600
-          shadow-sm hover:shadow-md
-          transition-all duration-300 ease-in-out
-          ${showFilterOptions ? 'border-blue-400 text-blue-600' : ''}
-        `}
-      >
-        <div className="flex items-center gap-2">
-          <svg 
-            className="w-5 h-5" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path 
-              d="M3 7C3 6.44772 3.44772 6 4 6H20C20.5523 6 21 6.44772 21 7C21 7.55228 20.5523 8 20 8H4C3.44772 8 3 7.55228 3 7Z" 
-              fill="currentColor"
-            />
-            <path 
-              d="M6 12C6 11.4477 6.44772 11 7 11H17C17.5523 11 18 11.4477 18 12C18 12.5523 17.5523 13 17 13H7C6.44772 13 6 12.5523 6 12Z" 
-              fill="currentColor"
-            />
-            <path 
-              d="M9 17C9 16.4477 9.44772 16 10 16H14C14.5523 16 15 16.4477 15 17C15 17.5523 14.5523 18 14 18H10C9.44772 18 9 17.5523 9 17Z" 
-              fill="currentColor"
-            />
-          </svg>
-          <span className="font-medium">Refine</span>
-        </div>
-        <div className={`
-          transform transition-transform duration-300
-          ${showFilterOptions ? 'rotate-180' : ''}
-        `}>
-          <svg 
-            className="w-4 h-4" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path 
-              d="M19 9L12 16L5 9" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
-      </button>
+  // Add click outside handler
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.dropdown-container')) {
+        setShowSortOptions(false);
+        setShowCategoryDropdown(false);
+      }
+    };
 
-      {/* Enhanced Filter Options Dropdown */}
-      {showFilterOptions && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl 
-                      border border-gray-100 overflow-hidden z-50
-                      transform transition-all duration-300 ease-out">
-          <div className="divide-y divide-gray-100">
-            {/* Sort Options */}
-            <div className="p-5">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <svg 
-                  className="w-5 h-5 text-blue-500" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path 
-                    d="M3 4H16M3 8H12M3 12H9M13 12L17 8M17 8L21 12M17 8V20" 
-                    stroke="currentColor" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                Sort By
-              </h3>
-              <div className="space-y-2">
-                {[
-                  { id: 'default', label: 'Most Relevant' },
-                  { id: 'price-low-high', label: 'Price: Low to High' },
-                  { id: 'price-high-low', label: 'Price: High to Low' },
-                  { id: 'duration-low-high', label: 'Duration: Shortest First' },
-                  { id: 'duration-high-low', label: 'Duration: Longest First' },
-                ].map((option) => (
-                  <button
-                    key={option.id}
-                    onClick={() => {
-                      setSortOption(option.id);
-                      setShowFilterOptions(false);
-                    }}
-                    className={`
-                      w-full text-left px-4 py-2.5 rounded-xl transition-all duration-200
-                      flex items-center justify-between
-                      ${sortOption === option.id 
-                        ? 'bg-blue-50 text-blue-600 font-medium' 
-                        : 'text-gray-600 hover:bg-gray-50'}
-                    `}
-                  >
-                    <span>{option.label}</span>
-                    {sortOption === option.id && (
-                      <svg 
-                        className="w-5 h-5 text-blue-600" 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path 
-                          d="M20 6L9 17L4 12" 
-                          stroke="currentColor" 
-                          strokeWidth="2" 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Categories Section */}
-            <div className="p-5">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <svg 
-                  className="w-5 h-5 text-blue-500" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path 
-                    d="M4 6H20M4 12H20M4 18H20" 
-                    stroke="currentColor" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                Categories
-              </h3>
-              <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
-                {categories.map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => {
-                      handleCategoryChange(category.id);
-                      setShowFilterOptions(false);
-                    }}
-                    className={`
-                      w-full text-left px-4 py-2.5 rounded-xl transition-all duration-200
-                      flex items-center justify-between
-                      ${selectedCategory === category.id 
-                        ? 'bg-blue-50 text-blue-600 font-medium' 
-                        : 'text-gray-600 hover:bg-gray-50'}
-                    `}
-                  >
-                    <span>{category.name}</span>
-                    <span className="text-sm bg-gray-100 px-2 py-1 rounded-full">
-                      {getCategoryCourseCount(category.id)}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -565,33 +448,124 @@ const Courses = () => {
         <div className="bg-white border-b border-gray-200 z-30">
           <div className="container mx-auto px-4">
             <div className="relative flex items-center justify-between py-4">
+              {/* Keep existing category buttons */}
               <div className="flex-1 overflow-x-auto hide-scrollbar">
-                {isLoading ? (
-                  <div className="flex items-center justify-center w-full py-3">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-500"></div>
-                  </div>
-                ) : error ? (
-                  <div className="text-red-500 py-3">{error}</div>
-                ) : (
-                  <div className="flex items-center gap-3 py-2">
-                    {categories.map((category) => (
-                      <button
-                        key={category.id}
-                        onClick={() => handleCategoryChange(category.id)}
-                        className={`flex-shrink-0 px-5 py-2.5 rounded-full transition-all duration-300
-                          ${selectedCategory === category.id
-                            ? "bg-gradient-to-r from-[#4338ca] to-[#5b21b6] text-white shadow-lg"
-                            : "bg-white/10 text-gray-800 hover:bg-gray-100"
-                          }`}
-                      >
-                        <span className="font-medium text-sm">{category.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
+                <div className="flex items-center gap-3 py-2">
+                  {categories.map((category) => (
+                    <button
+                      key={category.id}
+                      onClick={() => handleCategoryChange(category.id)}
+                      className={`flex-shrink-0 px-5 py-2.5 rounded-full transition-all duration-300
+                        ${selectedCategory === category.id
+                          ? "bg-gradient-to-r from-[#4338ca] to-[#5b21b6] text-white shadow-lg"
+                          : "bg-white/10 text-gray-800 hover:bg-gray-100"
+                        }`}
+                    >
+                      <span className="font-medium text-sm">{category.name}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <FilterSection />
+              {/* Right side buttons */}
+              <div className="flex items-center gap-4 ml-4">
+                {/* Category Dropdown */}
+                <div className="relative dropdown-container">
+                  <button
+                    onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                    className="px-5 py-2.5 rounded-xl bg-white border border-gray-200 
+                             hover:border-blue-400 transition-all duration-300
+                             flex items-center gap-2"
+                  >
+                    <span className="font-medium">Categories</span>
+                    <span className="text-sm bg-blue-50 px-2 py-1 rounded-full text-blue-600">
+                      {getCategoryCount(selectedCategory)}
+                    </span>
+                  </button>
+
+                  {showCategoryDropdown && (
+                    <div className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-lg z-50">
+                      <div className="p-4">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Categories</h3>
+                        <div className="space-y-2">
+                          {categories.map((category) => (
+                            <button
+                              key={category.id}
+                              onClick={() => {
+                                handleCategoryChange(category.id);
+                                setShowCategoryDropdown(false);
+                              }}
+                              className={`
+                                w-full text-left px-4 py-3 rounded-lg transition-all duration-200
+                                flex items-center justify-between
+                                ${selectedCategory === category.id 
+                                  ? 'bg-blue-50 text-blue-600' 
+                                  : 'hover:bg-gray-50'
+                                }
+                              `}
+                            >
+                              <span>{category.name}</span>
+                              <span className="text-sm bg-gray-100 px-2 py-1 rounded-full">
+                                {category.id === "all" 
+                                  ? courses.length
+                                  : courses.filter(course => 
+                                      course.categoryId === category.id || 
+                                      course.category_id === category.id
+                                    ).length
+                                }
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Sort Button */}
+                <div className="relative dropdown-container">
+                  <button
+                    onClick={() => setShowSortOptions(!showSortOptions)}
+                    className="px-5 py-2.5 rounded-xl bg-white border border-gray-200 
+                             hover:border-blue-400 transition-all duration-300"
+                  >
+                    <span className="font-medium">Sort By</span>
+                  </button>
+
+                  {showSortOptions && (
+                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg z-50">
+                      <div className="p-4">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Sort By</h3>
+                        <div className="space-y-2">
+                          {[
+                            { id: 'price-low-high', label: 'Price: Low to High' },
+                            { id: 'price-high-low', label: 'Price: High to Low' },
+                            { id: 'duration-low-high', label: 'Duration: Shortest First' },
+                            { id: 'duration-high-low', label: 'Duration: Longest First' },
+                          ].map((option) => (
+                            <button
+                              key={option.id}
+                              onClick={() => {
+                                setSortOption(option.id);
+                                setShowSortOptions(false);
+                              }}
+                              className={`
+                                w-full text-left px-4 py-3 rounded-lg transition-all duration-200
+                                ${sortOption === option.id 
+                                  ? 'bg-blue-50 text-blue-600' 
+                                  : 'hover:bg-gray-50'
+                                }
+                              `}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
