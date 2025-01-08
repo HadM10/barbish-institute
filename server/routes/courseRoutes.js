@@ -1,5 +1,5 @@
 const express = require("express");
-const router = express.Router(); // Use router directly
+const router = express.Router();
 const courseController = require("../controllers/courseController");
 
 // GET /courses - Get all courses

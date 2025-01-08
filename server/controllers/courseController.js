@@ -1,5 +1,6 @@
 const Course = require("../models/Course");
 const Category = require("../models/Category");
+const sequelize = require("../config/db");
 
 // Get all courses
 exports.getAllCourses = async (req, res) => {
