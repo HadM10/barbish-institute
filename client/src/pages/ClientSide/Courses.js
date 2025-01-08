@@ -26,6 +26,7 @@ const Courses = () => {
   const [sortOption, setSortOption] = useState("default");
   const [showSortOptions, setShowSortOptions] = useState(false);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [selectedCategoryName, setSelectedCategoryName] = useState("Categories");
 
   // Add effect to handle scroll on navigation
   useEffect(() => {
@@ -132,7 +133,18 @@ const Courses = () => {
   const handleCategoryChange = (categoryId) => {
     setSelectedCategory(categoryId);
     setSearchedCourse(null);
+    // Update the category button text
+    const selectedCat = categories.find(cat => cat.id === categoryId);
+    setSelectedCategoryName(selectedCat ? selectedCat.name : "Categories");
   };
+
+  // Initialize category name when categories are loaded
+  useEffect(() => {
+    if (categories.length > 0 && selectedCategory) {
+      const currentCategory = categories.find(cat => cat.id === selectedCategory);
+      setSelectedCategoryName(currentCategory ? currentCategory.name : "Categories");
+    }
+  }, [categories, selectedCategory]);
 
   // Update filtered courses logic
   const filteredCourses = useMemo(() => {
@@ -495,58 +507,66 @@ const Courses = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Update the sort handling
+  const handleSort = (option) => {
+    setSortOption(option);
+    setShowSortOptions(false);
+    // No page refresh needed as sortedAndFilteredCourses will handle the sorting
+  };
+
+  // Add effect to reset to "All Courses" on page load/refresh
+  useEffect(() => {
+    setSelectedCategory("all");
+    setSelectedCategoryName("All Courses");
+    setSortOption("default");
+  }, []); // Empty dependency array means this runs once on mount
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="pt-[160px]">
         <div className="bg-white border-b border-gray-200 z-30">
           <div className="container mx-auto px-4">
-            <div className="relative flex items-center justify-between py-4">
-              {/* Keep existing category buttons */}
-              <div className="flex-1 overflow-x-auto hide-scrollbar">
-                <div className="flex items-center gap-3 py-2">
+            <div className="flex flex-col md:flex-row md:items-center justify-between py-4 gap-4">
+              {/* Category Buttons - Hidden on mobile, visible on md and up */}
+              <div className="hidden md:block md:flex-1">
+                <div className="flex items-center gap-3 overflow-x-auto hide-scrollbar">
                   {categories.map((category) => (
                     <button
                       key={category.id}
                       onClick={() => handleCategoryChange(category.id)}
                       className={`flex-shrink-0 px-5 py-2.5 rounded-full transition-all duration-300
-                        ${
-                          selectedCategory === category.id
-                            ? "bg-gradient-to-r from-[#4338ca] to-[#5b21b6] text-white shadow-lg"
-                            : "bg-white/10 text-gray-800 hover:bg-gray-100"
+                        ${selectedCategory === category.id
+                          ? "bg-gradient-to-r from-[#4338ca] to-[#5b21b6] text-white shadow-lg"
+                          : "bg-white/10 text-gray-800 hover:bg-gray-100"
                         }`}
                     >
-                      <span className="font-medium text-sm">
-                        {category.name}
-                      </span>
+                      <span className="font-medium text-sm">{category.name}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Right side buttons */}
-              <div className="flex items-center gap-4 ml-4">
+              {/* Right side buttons - Centered on mobile */}
+              <div className="flex items-center justify-between w-full md:w-auto md:gap-4">
                 {/* Category Dropdown */}
                 <div className="relative dropdown-container">
                   <button
-                    onClick={() =>
-                      setShowCategoryDropdown(!showCategoryDropdown)
-                    }
+                    onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
                     className="px-5 py-2.5 rounded-xl bg-white border border-gray-200 
                              hover:border-blue-400 transition-all duration-300
                              flex items-center gap-2"
                   >
-                    <span className="font-medium">Categories</span>
+                    <span className="font-medium">{selectedCategoryName}</span>
                     <span className="text-sm bg-blue-50 px-2 py-1 rounded-full text-blue-600">
                       {getCategoryCount(selectedCategory)}
                     </span>
                   </button>
 
                   {showCategoryDropdown && (
-                    <div className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-lg z-50">
+                    <div className="fixed md:absolute left-0 right-0 md:left-auto md:right-0 
+                                  mx-4 md:mx-0 mt-2 md:w-72 bg-white rounded-xl shadow-lg z-50">
                       <div className="p-4">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                          Categories
-                        </h3>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Categories</h3>
                         <div className="space-y-2">
                           {categories.map((category) => (
                             <button
@@ -558,22 +578,15 @@ const Courses = () => {
                               className={`
                                 w-full text-left px-4 py-3 rounded-lg transition-all duration-200
                                 flex items-center justify-between
-                                ${
-                                  selectedCategory === category.id
-                                    ? "bg-blue-50 text-blue-600"
-                                    : "hover:bg-gray-50"
+                                ${selectedCategory === category.id
+                                  ? "bg-blue-50 text-blue-600"
+                                  : "hover:bg-gray-50"
                                 }
                               `}
                             >
                               <span>{category.name}</span>
                               <span className="text-sm bg-gray-100 px-2 py-1 rounded-full">
-                                {category.id === "all"
-                                  ? courses.length
-                                  : courses.filter(
-                                      (course) =>
-                                        course.categoryId === category.id ||
-                                        course.category_id === category.id
-                                    ).length}
+                                {getCategoryCount(category.id)}
                               </span>
                             </button>
                           ))}
@@ -590,46 +603,37 @@ const Courses = () => {
                     className="px-5 py-2.5 rounded-xl bg-white border border-gray-200 
                              hover:border-blue-400 transition-all duration-300"
                   >
-                    <span className="font-medium">Sort By</span>
+                    <span className="font-medium">
+                      {sortOption === "default" ? "Sort By" : 
+                        sortOption === "price-low-high" ? "Price: Low to High" :
+                        sortOption === "price-high-low" ? "Price: High to Low" :
+                        sortOption === "duration-low-high" ? "Duration: Shortest First" :
+                        "Duration: Longest First"
+                      }
+                    </span>
                   </button>
 
                   {showSortOptions && (
-                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg z-50">
+                    <div className="fixed md:absolute left-0 right-0 md:left-auto md:right-0 
+                                  mx-4 md:mx-0 mt-2 md:w-64 bg-white rounded-xl shadow-lg z-50">
                       <div className="p-4">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                          Sort By
-                        </h3>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Sort By</h3>
                         <div className="space-y-2">
                           {[
-                            {
-                              id: "price-low-high",
-                              label: "Price: Low to High",
-                            },
-                            {
-                              id: "price-high-low",
-                              label: "Price: High to Low",
-                            },
-                            {
-                              id: "duration-low-high",
-                              label: "Duration: Shortest First",
-                            },
-                            {
-                              id: "duration-high-low",
-                              label: "Duration: Longest First",
-                            },
+                            { id: "default", label: "Default" },
+                            { id: "price-low-high", label: "Price: Low to High" },
+                            { id: "price-high-low", label: "Price: High to Low" },
+                            { id: "duration-low-high", label: "Duration: Shortest First" },
+                            { id: "duration-high-low", label: "Duration: Longest First" },
                           ].map((option) => (
                             <button
                               key={option.id}
-                              onClick={() => {
-                                setSortOption(option.id);
-                                setShowSortOptions(false);
-                              }}
+                              onClick={() => handleSort(option.id)}
                               className={`
                                 w-full text-left px-4 py-3 rounded-lg transition-all duration-200
-                                ${
-                                  sortOption === option.id
-                                    ? "bg-blue-50 text-blue-600"
-                                    : "hover:bg-gray-50"
+                                ${sortOption === option.id
+                                  ? "bg-blue-50 text-blue-600"
+                                  : "hover:bg-gray-50"
                                 }
                               `}
                             >
@@ -672,19 +676,23 @@ const Courses = () => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <motion.div 
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+              layout
+            >
               {sortedAndFilteredCourses.map((course) => (
                 <motion.div
                   key={course.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
+                  layout
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
                 >
                   <CourseCard course={course} />
                 </motion.div>
               ))}
-            </div>
+            </motion.div>
           )}
         </div>
 
