@@ -1,9 +1,7 @@
 // models/Session.js
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
-const Course = require("./Course");
 
-// Define Session Model
 const Session = sequelize.define(
   "Session",
   {
@@ -11,6 +9,14 @@ const Session = sequelize.define(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
+    },
+    courseId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Courses',
+        key: 'id'
+      }
     },
     title: {
       type: DataTypes.STRING,
@@ -23,10 +29,10 @@ const Session = sequelize.define(
       type: DataTypes.TEXT,
     },
     duration: {
-      type: DataTypes.INTEGER, // Duration in minutes
+      type: DataTypes.INTEGER,
     },
     videoUrl: {
-      type: DataTypes.STRING, // URL or path for the session video
+      type: DataTypes.STRING,
     },
     isActive: {
       type: DataTypes.BOOLEAN,
@@ -36,5 +42,4 @@ const Session = sequelize.define(
   { timestamps: true }
 );
 
-// Export the model
 module.exports = Session;
