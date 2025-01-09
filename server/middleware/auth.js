@@ -1,35 +1,66 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/User"); // Ensure this path is correct
+const User = require("../models/User");
 
 module.exports = async (req, res, next) => {
-  // Check for token in the 'x-auth-token' header
-  const token = req.header("x-auth-token");
-
-  if (!token) {
-    return res.status(401).json({ msg: "No token, authorization denied" });
-  }
-
   try {
-    // Verify the JWT token using the secret key
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Check for token in both headers for flexibility
+    const token =
+      req.header("x-auth-token") ||
+      req.header("Authorization")?.replace("Bearer ", "");
 
-    // Fetch the user from the database using the decoded token's ID
-    const user = await User.findByPk(decoded.id);
-
-    // Check if the user exists
-    if (!user) {
-      return res.status(404).json({ msg: "User not found" });
+    if (!token) {
+      return res.status(401).json({
+        status: "error",
+        message: "No token, authorization denied",
+      });
     }
 
-    // Attach the decoded user info to the request object for later use
-    req.user = decoded;
+    // Verify the JWT token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Proceed to the next middleware or route handler
+    // Fetch the user from database
+    const user = await User.findByPk(decoded.id);
+
+    if (!user) {
+      return res.status(404).json({
+        status: "error",
+        message: "User not found",
+      });
+    }
+
+    // Check if user is active (optional, if you have an active status)
+    if (user.isActive === false) {
+      return res.status(401).json({
+        status: "error",
+        message: "User account is deactivated",
+      });
+    }
+
+    // Attach both decoded token and user object to request
+    req.user = decoded;
+    req.userDetails = user; // Full user object from database
+
     next();
   } catch (err) {
-    console.error("Token verification error:", err);
+    console.error("Authentication error:", err);
 
-    // Send appropriate response if the token is invalid
-    res.status(401).json({ msg: "Token is not valid" });
+    if (err.name === "JsonWebTokenError") {
+      return res.status(401).json({
+        status: "error",
+        message: "Invalid token",
+      });
+    }
+
+    if (err.name === "TokenExpiredError") {
+      return res.status(401).json({
+        status: "error",
+        message: "Token has expired",
+      });
+    }
+
+    res.status(500).json({
+      status: "error",
+      message: "Server authentication error",
+    });
   }
 };

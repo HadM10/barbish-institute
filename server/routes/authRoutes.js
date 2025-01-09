@@ -1,10 +1,13 @@
-// /routes/authRoutes.js
 const express = require("express");
-const { login } = require("../controllers/authController"); // Import the controller
+const { login, getUserCourses } = require("../controllers/authController");
+const authMiddleware = require("../middleware/auth"); // Import auth middleware
 
 const router = express.Router();
 
-// POST /login route for user login
+// Public route - no auth required
 router.post("/", login);
+
+// Protected route - requires valid JWT token
+router.get("/my-courses", authMiddleware, getUserCourses);
 
 module.exports = router;
