@@ -62,3 +62,18 @@ export async function deleteUser(userId) {
     return { success: false, message: error.message };
   }
 }
+
+export const getUserSubscribedCourses = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/api/auth/my-courses`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching subscribed courses:', error);
+    throw error;
+  }
+};

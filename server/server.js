@@ -15,9 +15,12 @@ const categoryRoutes = require("./routes/categoryRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const authRoutes = require("./routes/authRoutes");
 const mostSubCoursesRoutes = require("./routes/mostSubCoursesRoutes");
+const userSessionRoutes = require("./routes/userSessionRoutes");
 
-require("./models/User"); // Ensure User model is imported
-require("./models/Relations"); // Ensure relationships are loaded
+// Import models
+require("./models/User");
+require("./models/UserSession");
+require("./models/Relations");
 
 const app = express();
 
@@ -41,6 +44,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/mostSubCourses", mostSubCoursesRoutes);
+app.use("/api/user-sessions", userSessionRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
@@ -52,10 +56,10 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT;
 
 sequelize
-  .authenticate() // Check database connection
+  .authenticate()
   .then(() => {
     console.log("Database connected");
-    return sequelize.sync({ alter: true }); // Sync models
+    return sequelize.sync({ alter: true });
   })
   .then(() => {
     console.log("Database synced");

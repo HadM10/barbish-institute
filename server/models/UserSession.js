@@ -1,23 +1,39 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
-const User = require("./User");
-const Session = require("./Session");
 
-// Define UserSession Model
 const UserSession = sequelize.define(
   "UserSession",
   {
     id: {
       type: DataTypes.INTEGER,
-      autoIncrement: true,
       primaryKey: true,
+      autoIncrement: true
+    },
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    sessionId: {
+      type: DataTypes.INTEGER,
+      allowNull: false
     },
     completed: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false,
+      defaultValue: false
     },
+    watchTime: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    },
+    lastWatched: {
+      type: DataTypes.DATE,
+      defaultValue: null
+    }
   },
-  { timestamps: true }
+  {
+    tableName: 'user_sessions',
+    timestamps: true
+  }
 );
 
 module.exports = UserSession;
