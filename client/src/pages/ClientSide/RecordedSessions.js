@@ -34,6 +34,7 @@ const EmptyState = ({ type, courseName }) => {
       description: "Please login to access your courses and learning materials.",
       actionText: "Login Now",
       actionLink: "/login",
+      showAction: true
     },
     noSubscription: {
       icon: <FaBookReader className="text-6xl text-blue-500 mb-4" />,
@@ -41,31 +42,33 @@ const EmptyState = ({ type, courseName }) => {
       description: "Subscribe to our courses to start your learning journey!",
       actionText: "Browse Courses",
       actionLink: "/courses",
+      showAction: true
     },
     noSessions: {
-      icon: <FaVideo className="text-6xl text-blue-500 mb-4" />,
-      title: "No Recorded Sessions",
-      description: `This course doesn't have any recorded sessions yet. Our team is working on creating high-quality content for ${courseName}. We'll notify you when new sessions are added.`,
-      actionText: "Back to Courses",
-      actionLink: "/courses",
+      icon: <FaVideo className="text-6xl text-gray-400 mb-4" />,
+      title: "Coming Soon",
+      description: `We're currently preparing the recorded sessions for ${courseName}. Our team is working hard to create high-quality content that meets our standards. You'll be notified as soon as new content becomes available.`,
+      showAction: false
     },
   };
 
-  const { icon, title, description, actionText, actionLink } = content[type];
+  const { icon, title, description, actionText, actionLink, showAction } = content[type];
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl p-12 text-center max-w-2xl mx-auto">
+    <div className="bg-white/50 backdrop-blur-sm rounded-xl shadow-sm p-8 text-center">
       <div className="flex justify-center">{icon}</div>
-      <h2 className="text-3xl font-bold text-gray-900 mt-4 mb-3">{title}</h2>
-      <p className="text-gray-600 text-lg mb-8">{description}</p>
-      <Link
-        to={actionLink}
-        className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-xl 
-                 hover:bg-blue-700 transition-all duration-200 transform hover:scale-105"
-      >
-        {actionText}
-        <FaChevronRight className="ml-2" />
-      </Link>
+      <h2 className="text-2xl font-bold text-gray-800 mt-4 mb-2">{title}</h2>
+      <p className="text-gray-600 text-base mb-6">{description}</p>
+      {showAction && (
+        <Link
+          to={actionLink}
+          className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-xl 
+                   hover:bg-blue-700 transition-all duration-200 transform hover:scale-105"
+        >
+          {actionText}
+          <FaChevronRight className="ml-2" />
+        </Link>
+      )}
     </div>
   );
 };
