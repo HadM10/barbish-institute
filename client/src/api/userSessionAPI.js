@@ -26,7 +26,7 @@ export const markSessionAsWatched = async (sessionId) => {
     }
 
     const response = await axios.post(
-      `${API_URL}/api/user-sessions/mark-watched`,
+      `${API_URL}/user-sessions/mark-watched`,
       { userId, sessionId },
       {
         headers: {
@@ -53,7 +53,7 @@ export const getSessionProgress = async (courseId) => {
     }
 
     const response = await axios.get(
-      `${API_URL}/api/user-sessions/progress/${userId}/${courseId}`,
+      `${API_URL}/user-sessions/progress/${userId}/${courseId}`,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
