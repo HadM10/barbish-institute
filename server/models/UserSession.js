@@ -17,22 +17,24 @@ const UserSession = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false
     },
-    completed: {
+    isWatched: {
       type: DataTypes.BOOLEAN,
       defaultValue: false
     },
-    watchTime: {
-      type: DataTypes.INTEGER,
-      defaultValue: 0
-    },
-    lastWatched: {
+    watchedAt: {
       type: DataTypes.DATE,
-      defaultValue: null
+      allowNull: true
     }
   },
   {
     tableName: 'user_sessions',
-    timestamps: true
+    timestamps: true,
+    indexes: [
+      {
+        unique: true,
+        fields: ['userId', 'sessionId']
+      }
+    ]
   }
 );
 

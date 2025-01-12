@@ -15,6 +15,7 @@ const categoryRoutes = require("./routes/categoryRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const authRoutes = require("./routes/authRoutes");
 const mostSubCoursesRoutes = require("./routes/mostSubCoursesRoutes");
+const userSessionRoutes = require("./routes/userSessionRoutes");
 
 // Import models
 require("./models/User");
@@ -42,6 +43,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/mostSubCourses", mostSubCoursesRoutes);
+app.use("/api/user-sessions", userSessionRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
