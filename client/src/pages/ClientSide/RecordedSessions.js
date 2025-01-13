@@ -85,11 +85,8 @@ const RecordedSessions = () => {
       const sessionProgress = currentProgress?.sessions?.find(s => s.sessionId === sessionId);
       const newWatchStatus = !sessionProgress?.isWatched;
 
-      const response = await markSessionAsWatched(sessionId, {
-        isWatched: newWatchStatus,
-        courseId: courseId,
-        updatedAt: new Date().toISOString()
-      });
+      const response = await markSessionAsWatched(sessionId,  newWatchStatus
+      );
       
       if (response.status === 'success') {
         await fetchCourseProgress(courseId);
@@ -276,23 +273,64 @@ const RecordedSessions = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="pt-24 pb-20">
+      <div className="pt-32 pb-20">
         <div className="max-w-5xl mx-auto px-4">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">
-            My Learning Journey
-          </h1>
+          <div className="mb-10 pb-8 border-b border-gray-200">
+            <div className="flex flex-col items-start">
+              <span className="inline-block px-4 py-2 rounded-full bg-blue-50 text-blue-600 text-sm font-semibold mb-4">
+                Learning Dashboard
+              </span>
+              <h1 className="text-4xl font-bold text-gray-900 mb-4 leading-tight">
+                Recorded Sessions
+              </h1>
+              <div className="flex items-center text-lg text-gray-600 space-x-2">
+                <svg 
+                  className="w-5 h-5 text-blue-500" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" 
+                  />
+                </svg>
+                <p className="font-medium">
+                  Track your learning journey and access comprehensive course materials
+                </p>
+              </div>
+            </div>
+          </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             {courses.map((course) => (
-              <CourseCard
-                key={course.id}
-                course={course}
-                progress={sessionsProgress[course.id]}
-                isExpanded={expandedCourses[course.id]}
-                onToggle={() => toggleCourse(course.id)}
-              />
+              <div key={course.id} className="relative">
+                <CourseCard
+                  course={course}
+                  progress={sessionsProgress[course.id]}
+                  isExpanded={expandedCourses[course.id]}
+                  onToggle={() => toggleCourse(course.id)}
+                />
+                
+                {expandedCourses[course.id] && course.Sessions?.length === 0 && (
+                  <div className="mt-4 bg-white rounded-lg shadow-sm p-6">
+                    <EmptyState 
+                      type="noSessions" 
+                      courseName={course.title} 
+                    />
+                  </div>
+                )}
+              </div>
             ))}
           </div>
+
+          {courses.length === 0 && (
+            <div className="mt-8">
+              <EmptyState type="noSubscription" />
+            </div>
+          )}
         </div>
       </div>
     </div>
