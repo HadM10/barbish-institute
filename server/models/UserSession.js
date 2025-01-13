@@ -7,34 +7,27 @@ const UserSession = sequelize.define(
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
-      autoIncrement: true
+      autoIncrement: true,
     },
     userId: {
       type: DataTypes.INTEGER,
-      allowNull: false
+      allowNull: false,
     },
     sessionId: {
       type: DataTypes.INTEGER,
-      allowNull: false
+      allowNull: false,
     },
     isWatched: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false
+      defaultValue: false,
     },
     watchedAt: {
       type: DataTypes.DATE,
-      allowNull: true
-    }
+      allowNull: true,
+    },
   },
   {
-    tableName: 'user_sessions',
-    timestamps: true,
-    indexes: [
-      {
-        unique: true,
-        fields: ['userId', 'sessionId']
-      }
-    ]
+    timestamps: true, // Automatically adds createdAt and updatedAt fields
   }
 );
 

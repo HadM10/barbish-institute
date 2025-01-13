@@ -18,7 +18,6 @@ const mostSubCoursesRoutes = require("./routes/mostSubCoursesRoutes");
 const userSessionRoutes = require("./routes/userSessionRoutes");
 
 // Import models
-require("./models/User");
 require("./models/Relations");
 
 const app = express();
