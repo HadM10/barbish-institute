@@ -153,11 +153,13 @@ const Courses = () => {
 
   // Update filtered courses logic
   const filteredCourses = useMemo(() => {
+    // First filter out archived courses
+    let filtered = courses.filter(course => !course.isArchived);
+    
     // If there's a searched course, show it in its category
     if (searchedCourse) {
-      const courseCategory =
-        searchedCourse.categoryId || searchedCourse.category_id;
-      if (selectedCategory === courseCategory || selectedCategory === "all") {
+      const courseCategory = searchedCourse.categoryId || searchedCourse.category_id;
+      if ((selectedCategory === courseCategory || selectedCategory === "all") && !searchedCourse.isArchived) {
         return [searchedCourse];
       }
       return [];
@@ -165,10 +167,10 @@ const Courses = () => {
 
     // Normal category filtering when not searching
     if (selectedCategory === "all") {
-      return courses;
+      return filtered;
     }
 
-    return courses.filter(
+    return filtered.filter(
       (course) =>
         course.categoryId === selectedCategory ||
         course.category_id === selectedCategory
@@ -275,7 +277,7 @@ const Courses = () => {
             </p>
 
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-full">
+              <div className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-full"> 
                 <FaClock className="text-blue-600 text-sm" />
                 <span className="text-sm text-blue-600 font-medium">
                   {course.duration} hours
@@ -305,11 +307,11 @@ const Courses = () => {
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ type: "spring", duration: 0.5 }}
               className="bg-white rounded-[2rem] shadow-2xl relative overflow-hidden
-                 w-[95%] md:w-[90%] max-w-[900px]"
+                 w-[95%] md:w-[90%] max-w-[1200px] h-[90vh]"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Desktop Layout */}
-              <div className="hidden md:flex h-[600px]">
+              <div className="hidden md:flex h-full">
                 {/* Image Section */}
                 <div className="w-1/2 h-full">
                   <div className="h-full">
@@ -323,30 +325,28 @@ const Courses = () => {
 
                 {/* Content Section */}
                 <div className="w-1/2 bg-[#1E3A8A] flex flex-col h-full">
-                  <div className="p-6 border-b border-white/10">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <h2 className="text-xl font-bold text-white leading-tight mb-3">
-                          {course.title}
-                        </h2>
-                        <div className="inline-flex bg-gradient-to-r from-blue-600 to-purple-600 
-                                    px-4 py-1.5 rounded-full shadow-lg">
-                          <span className="text-white font-bold">${course.price}</span>
-                        </div>
+                  <div className="p-8 border-b border-white/10 flex items-start justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold text-white leading-tight mb-3">
+                        {course.title}
+                      </h2>
+                      <div className="inline-flex bg-gradient-to-r from-blue-600 to-purple-600 
+                                  px-4 py-1.5 rounded-full shadow-lg">
+                        <span className="text-white font-bold">${course.price}</span>
                       </div>
-                      <button
-                        onClick={() => setIsExpanded(false)}
-                        className="p-2 hover:bg-white/10 rounded-full transition-colors"
-                      >
-                        <FaTimes className="text-white text-xl" />
-                      </button>
                     </div>
+                    <button
+                      onClick={() => setIsExpanded(false)}
+                      className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                    >
+                      <FaTimes className="text-white text-2xl" />
+                    </button>
                   </div>
 
                   <div className="flex-1 overflow-y-auto custom-scrollbar">
-                    <div className="p-6 space-y-6 pb-24">
+                    <div className="p-8 space-y-8 pb-24">
                       {/* Course Info Grid */}
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-6">
                         <div className="bg-white/10 rounded-xl p-4">
                           <div className="flex items-center gap-3">
                             <FaClock className="text-blue-400 text-lg" />
@@ -369,12 +369,12 @@ const Courses = () => {
 
                       <div className="space-y-6">
                         <div>
-                          <h3 className="text-white font-medium mb-3">Description</h3>
+                          <h3 className="text-white font-medium text-lg mb-3">Description</h3>
                           <p className="text-white/80 leading-relaxed">{course.description}</p>
                         </div>
 
                         <div>
-                          <h3 className="text-white font-medium mb-3">What You'll Learn</h3>
+                          <h3 className="text-white font-medium text-lg mb-3">What You'll Learn</h3>
                           <ul className="space-y-3">
                             {course.content?.split("\n").map((item, index) => (
                               <li key={index} className="flex items-start gap-3">
@@ -389,7 +389,7 @@ const Courses = () => {
                   </div>
 
                   {/* Fixed Enquire Button */}
-                  <div className="absolute bottom-0 left-1/2 right-0 p-6 bg-gradient-to-t from-[#1E3A8A] via-[#1E3A8A] to-transparent">
+                  <div className="absolute bottom-0 left-1/2 right-0 p-8 bg-gradient-to-t from-[#1E3A8A] via-[#1E3A8A] to-transparent">
                     <button
                       onClick={(e) => e.stopPropagation()}
                       className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white
@@ -404,10 +404,10 @@ const Courses = () => {
               </div>
 
               {/* Mobile Layout */}
-              <div className="md:hidden flex flex-col h-[80vh]">
+              <div className="md:hidden flex flex-col h-full">
                 {/* Image Section */}
                 <div className="w-full h-[40vh]">
-                  <div className="h-full">
+                  <div className="h-full relative">
                     <img
                       src={englishCourseImg}
                       alt={course.title}
@@ -425,8 +425,8 @@ const Courses = () => {
 
                 {/* Content Section */}
                 <div className="flex-1 bg-[#1E3A8A] flex flex-col min-h-0">
-                  <div className="p-4 border-b border-white/10">
-                    <h2 className="text-lg font-bold text-white mb-2">{course.title}</h2>
+                  <div className="p-6 border-b border-white/10">
+                    <h2 className="text-xl font-bold text-white mb-2">{course.title}</h2>
                     <div className="inline-flex bg-gradient-to-r from-blue-600 to-purple-600 
                                  px-3 py-1.5 rounded-full shadow-lg">
                       <span className="text-white font-bold">${course.price}</span>
@@ -434,9 +434,9 @@ const Courses = () => {
                   </div>
 
                   <div className="flex-1 overflow-y-auto custom-scrollbar">
-                    <div className="p-4 space-y-4 pb-20">
+                    <div className="p-6 space-y-6 pb-20">
                       {/* Mobile content - same structure as desktop */}
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-2 gap-4">
                         <div className="bg-white/10 rounded-xl p-3">
                           <div className="flex items-center gap-2">
                             <FaClock className="text-blue-400 text-sm" />
@@ -458,12 +458,12 @@ const Courses = () => {
                       </div>
 
                       <div>
-                        <h3 className="text-white font-medium mb-2">Description</h3>
+                        <h3 className="text-white font-medium text-lg mb-2">Description</h3>
                         <p className="text-white/80 text-sm">{course.description}</p>
                       </div>
 
                       <div>
-                        <h3 className="text-white font-medium mb-2">What You'll Learn</h3>
+                        <h3 className="text-white font-medium text-lg mb-2">What You'll Learn</h3>
                         <ul className="space-y-2">
                           {course.content?.split("\n").map((item, index) => (
                             <li key={index} className="flex items-start gap-2">
@@ -477,7 +477,7 @@ const Courses = () => {
                   </div>
 
                   {/* Fixed Mobile Enquire Button */}
-                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#1E3A8A] via-[#1E3A8A] to-transparent">
+                  <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-[#1E3A8A] via-[#1E3A8A] to-transparent">
                     <button
                       onClick={(e) => e.stopPropagation()}
                       className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white
@@ -500,14 +500,14 @@ const Courses = () => {
   // Add click outside handler
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (!event.target.closest(".dropdown-container")) {
-        setShowSortOptions(false);
+      if (!event.target.closest('.dropdown-container')) {
         setShowCategoryDropdown(false);
+        setShowSortOptions(false);
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   // Update the sort handling
@@ -541,152 +541,192 @@ const Courses = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="pt-[160px]">
-        <div className="bg-white border-b border-gray-200 z-30">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col gap-4 py-4">
-              {/* Fixed buttons container - Always centered */}
-              <div className="flex items-center justify-center gap-3">
-                {/* Browse Categories dropdown */}
-                <div className="relative dropdown-container">
+        <div className="bg-white border-b border-gray-200">
+          <div className="container mx-auto px-2">
+            {/* Mobile buttons with dropdowns */}
+            <div className="md:hidden flex flex-col py-2 gap-2 relative">
+              <div className="flex justify-between gap-2">
+                <div className="flex-1 relative dropdown-container">
                   <button
-                    onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                    className="w-[180px] h-11 px-6 rounded-xl 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowCategoryDropdown(!showCategoryDropdown);
+                      setShowSortOptions(false); // Close other dropdown
+                    }}
+                    className="w-full h-8 px-3 rounded-lg text-[11px]
                              bg-gradient-to-r from-purple-600 to-indigo-600
-                             hover:from-purple-700 hover:to-indigo-700
-                             transition-all duration-300
-                             flex items-center justify-between
-                             text-white shadow-lg"
+                             text-white shadow-md flex items-center justify-between"
                   >
-                    <span className="font-medium text-sm">Browse Categories</span>
-                    <svg 
-                      className={`w-4 h-4 transition-transform duration-200 
-                                 ${showCategoryDropdown ? 'rotate-180' : ''}`} 
-                      fill="none" 
-                      viewBox="0 0 24 24" 
-                      stroke="currentColor"
-                    >
+                    <span className="font-medium">Browse Categories</span>
+                    <svg className={`w-3 h-3 transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} 
+                         fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
 
+                  {/* Categories Dropdown */}
                   {showCategoryDropdown && (
-                    <div className="fixed sm:absolute left-0 right-0 sm:left-auto sm:right-0 
-                                  mx-4 sm:mx-0 mt-2 sm:w-72 bg-white rounded-xl shadow-xl z-50
-                                  border border-gray-100">
-                      <div className="p-3">
-                        <h3 className="text-sm font-semibold text-gray-800 mb-2">Select Category</h3>
-                        
-                        <div className="relative">
-                          <div className="space-y-1 max-h-[220px] overflow-y-auto custom-scrollbar pr-1">
-                            {categories.map((category) => (
-                              <button
-                                key={category.id}
-                                onClick={() => {
-                                  handleCategoryChange(category.id);
-                                  setShowCategoryDropdown(false);
-                                }}
-                                className={`
-                                  w-full text-left px-3 py-2 rounded-lg transition-all duration-200
-                                  flex items-center justify-between whitespace-nowrap
-                                  ${selectedCategory === category.id
-                                    ? "bg-blue-50 text-blue-600"
-                                    : "hover:bg-gray-50"
-                                  }
-                                `}
-                              >
-                                <span className="truncate mr-2 text-sm">{category.name}</span>
-                                <span className="text-xs bg-gray-100 px-2 py-1 rounded-full flex-shrink-0">
-                                  {getCategoryCount(category.id)}
-                                </span>
-                              </button>
-                            ))}
-                          </div>
-                          
-                          <div className="absolute bottom-0 left-0 right-1 h-8 bg-gradient-to-t from-white pointer-events-none
-                                        flex items-center justify-center">
-                            <div className="animate-bounce text-gray-400 text-xs flex items-center gap-1">
-                              <span>Scroll for more</span>
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                              </svg>
-                            </div>
-                          </div>
-                        </div>
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl z-[9999] 
+                                  border border-gray-100 max-h-[60vh] overflow-y-auto">
+                      <div className="p-2">
+                        {categories.map((category) => (
+                          <button
+                            key={category.id}
+                            onClick={() => {
+                              handleCategoryChange(category.id);
+                              setShowCategoryDropdown(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded-lg text-[11px]
+                                      flex items-center justify-between
+                                      ${selectedCategory === category.id 
+                                        ? "bg-blue-50 text-blue-600" 
+                                        : "hover:bg-gray-50"}`}
+                          >
+                            <span>{category.name}</span>
+                            <span className="bg-gray-100 px-2 py-1 rounded-full">
+                              {getCategoryCount(category.id)}
+                            </span>
+                          </button>
+                        ))}
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* Sort By dropdown */}
-                <div className="relative dropdown-container">
+                <div className="flex-1 relative dropdown-container">
                   <button
-                    onClick={() => setShowSortOptions(!showSortOptions)}
-                    className="w-[180px] h-11 px-6 rounded-xl 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowSortOptions(!showSortOptions);
+                      setShowCategoryDropdown(false); // Close other dropdown
+                    }}
+                    className="w-full h-8 px-3 rounded-lg text-[11px]
                              bg-gradient-to-r from-purple-600 to-indigo-600
-                             hover:from-purple-700 hover:to-indigo-700
-                             transition-all duration-300
-                             flex items-center justify-between
-                             text-white shadow-lg"
+                             text-white shadow-md flex items-center justify-between"
                   >
-                    <span className="font-medium text-sm">Sort By</span>
-                    <svg 
-                      className={`w-4 h-4 transition-transform duration-200 
-                                 ${showSortOptions ? 'rotate-180' : ''}`} 
-                      fill="none" 
-                      viewBox="0 0 24 24" 
-                      stroke="currentColor"
-                    >
+                    <span className="font-medium">Sort By</span>
+                    <svg className={`w-3 h-3 transition-transform ${showSortOptions ? 'rotate-180' : ''}`} 
+                         fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
 
+                  {/* Sort Dropdown */}
                   {showSortOptions && (
-                    <div className="fixed md:absolute left-0 right-0 md:left-auto md:right-0 
-                                  mx-4 md:mx-0 mt-2 md:w-64 bg-white rounded-xl shadow-lg z-50">
-                      <div className="p-4">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Sort By</h3>
-                        <div className="space-y-2">
-                          {[
-                            { id: "default", label: "Default" },
-                            { id: "price-low-high", label: "Price: Low to High" },
-                            { id: "price-high-low", label: "Price: High to Low" },
-                            { id: "duration-low-high", label: "Duration: Shortest First" },
-                            { id: "duration-high-low", label: "Duration: Longest First" },
-                          ].map((option) => (
-                            <button
-                              key={option.id}
-                              onClick={() => handleSort(option.id)}
-                              className={`
-                                w-full text-left px-4 py-3 rounded-lg transition-all duration-200
-                                ${sortOption === option.id
-                                  ? "bg-blue-50 text-blue-600"
-                                  : "hover:bg-gray-50"
-                                }
-                              `}
-                            >
-                              {option.label}
-                            </button>
-                          ))}
-                        </div>
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl z-[9999] 
+                                  border border-gray-100">
+                      <div className="p-2">
+                        {[
+                          { id: "default", label: "Default" },
+                          { id: "price-low-high", label: "Price: Low to High" },
+                          { id: "price-high-low", label: "Price: High to Low" },
+                          { id: "duration-low-high", label: "Duration: Shortest First" },
+                          { id: "duration-high-low", label: "Duration: Longest First" },
+                        ].map((option) => (
+                          <button
+                            key={option.id}
+                            onClick={() => {
+                              handleSort(option.id);
+                              setShowSortOptions(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded-lg text-[11px]
+                                      ${sortOption === option.id 
+                                        ? "bg-blue-50 text-blue-600" 
+                                        : "hover:bg-gray-50"}`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   )}
                 </div>
               </div>
+            </div>
 
-              {/* Category Buttons Container */}
-              <div className="hidden md:block relative">
+            {/* Desktop navigation remains unchanged */}
+            <div className="hidden md:flex relative items-center justify-center py-4">
+              {/* Browse Categories dropdown - Left side */}
+              <div className="absolute left-4 z-50 dropdown-container">
+                <button
+                  onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                  className="w-[180px] h-11 px-6 rounded-xl 
+                           bg-gradient-to-r from-purple-600 to-indigo-600
+                           hover:from-purple-700 hover:to-indigo-700
+                           transition-all duration-300
+                           flex items-center justify-between
+                           text-white shadow-lg"
+                >
+                  <span className="font-medium text-sm">Browse Categories</span>
+                  <svg 
+                    className={`w-4 h-4 transition-transform duration-200 
+                               ${showCategoryDropdown ? 'rotate-180' : ''}`} 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {showCategoryDropdown && (
+                  <div className="absolute mt-2 w-[180px] bg-white rounded-xl shadow-xl z-50 border border-gray-100">
+                    <div className="p-3">
+                      <h3 className="text-sm font-semibold text-gray-800 mb-2">Select Category</h3>
+                      
+                      <div className="relative">
+                        <div className="space-y-1 max-h-[220px] overflow-y-auto custom-scrollbar pr-1">
+                          {categories.map((category) => (
+                            <button
+                              key={category.id}
+                              onClick={() => {
+                                handleCategoryChange(category.id);
+                                setShowCategoryDropdown(false);
+                              }}
+                              className={`
+                                w-full text-left px-3 py-2 rounded-lg transition-all duration-200
+                                flex items-center justify-between whitespace-nowrap
+                                ${selectedCategory === category.id
+                                  ? "bg-blue-50 text-blue-600"
+                                  : "hover:bg-gray-50"
+                                }
+                              `}
+                            >
+                              <span className="truncate mr-2 text-sm">{category.name}</span>
+                              <span className="text-xs bg-gray-100 px-2 py-1 rounded-full flex-shrink-0">
+                                {getCategoryCount(category.id)}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                        
+                        <div className="absolute bottom-0 left-0 right-1 h-8 bg-gradient-to-t from-white pointer-events-none
+                                      flex items-center justify-center">
+                          <div className="animate-bounce text-gray-400 text-xs flex items-center gap-1">
+                            <span>Scroll for more</span>
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Category Buttons Container - Center */}
+              <div className="hidden md:block relative max-w-3xl mx-auto px-[120px]">
                 <div 
                   ref={categoryContainerRef}
                   className="overflow-x-auto hide-scrollbar relative scroll-smooth"
                 >
-                  <div className="flex items-center gap-3 pb-2 px-20">
+                  <div className="flex items-center gap-2">
                     {categories.map((category) => (
                       <button
                         key={category.id}
                         data-category-id={category.id}
                         onClick={() => handleCategoryChange(category.id)}
-                        className={`flex-shrink-0 h-11 px-6 rounded-xl transition-all duration-300
+                        className={`flex-shrink-0 h-10 px-4 rounded-lg transition-all duration-300 z-30 
                           ${selectedCategory === category.id
                             ? "bg-gradient-to-r from-[#4338ca] to-[#5b21b6] text-white shadow-lg"
                             : "bg-gray-100 text-gray-800 hover:bg-gray-200"
@@ -698,72 +738,118 @@ const Courses = () => {
                   </div>
                 </div>
 
-                {/* Navigation Arrows with Solid Backgrounds */}
-                <div className="absolute left-0 top-0 bottom-2 flex items-center z-20">
-                  <div className="h-full w-16 bg-white flex items-center justify-center">
-                    <button
-                      onClick={() => handleScroll('left')}
-                      className="group flex items-center justify-center
-                                w-10 h-10
-                                bg-gradient-to-br from-indigo-500/95 to-purple-600/95
-                                hover:from-indigo-600 hover:to-purple-700
-                                rounded-xl
-                                transform transition-all duration-300 ease-out
-                                hover:scale-110 hover:shadow-lg hover:shadow-indigo-500/25"
+                {/* Navigation Arrows - Closer positioning */}
+                <div className="absolute left-0 top-0 bottom-0 flex items-center z-40">
+                  <button
+                    onClick={() => handleScroll('left')}
+                    className="flex items-center justify-center w-8 h-8
+                              bg-gradient-to-br from-indigo-500/95 to-purple-600/95
+                              hover:from-indigo-600 hover:to-purple-700 rounded-lg
+                              transform transition-all duration-300 ease-out
+                              hover:scale-110 hover:shadow-lg hover:shadow-indigo-500/25"
+                  >
+                    <svg 
+                      className="w-5 h-5 text-white"
+                      viewBox="0 0 24 24" 
+                      fill="none" 
                     >
-                      <svg 
-                        className="w-5 h-5 text-white"
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                      >
-                        <path 
-                          d="M14.5 17l-5-5 5-5"
-                          stroke="currentColor" 
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
+                      <path 
+                        d="M14.5 17l-5-5 5-5"
+                        stroke="currentColor" 
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
                 </div>
 
-                <div className="absolute right-0 top-0 bottom-2 flex items-center z-20">
-                  <div className="h-full w-16 bg-white flex items-center justify-center">
-                    <button
-                      onClick={() => handleScroll('right')}
-                      className="group flex items-center justify-center
-                                w-10 h-10
-                                bg-gradient-to-br from-indigo-500/95 to-purple-600/95
-                                hover:from-indigo-600 hover:to-purple-700
-                                rounded-xl
-                                transform transition-all duration-300 ease-out
-                                hover:scale-110 hover:shadow-lg hover:shadow-indigo-500/25"
+                <div className="absolute right-0 top-0 bottom-0 flex items-center z-40">
+                  <button
+                    onClick={() => handleScroll('right')}
+                    className="flex items-center justify-center w-8 h-8
+                              bg-gradient-to-br from-indigo-500/95 to-purple-600/95
+                              hover:from-indigo-600 hover:to-purple-700 rounded-lg
+                              transform transition-all duration-300 ease-out
+                              hover:scale-110 hover:shadow-lg hover:shadow-indigo-500/25"
+                  >
+                    <svg 
+                      className="w-5 h-5 text-white"
+                      viewBox="0 0 24 24" 
+                      fill="none" 
                     >
-                      <svg 
-                        className="w-5 h-5 text-white"
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                      >
-                        <path 
-                          d="M9.5 17l5-5-5-5"
-                          stroke="currentColor" 
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
+                      <path 
+                        d="M9.5 17l5-5-5-5"
+                        stroke="currentColor" 
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
                 </div>
 
-                {/* Refined Gradient Overlays */}
-                <div className="absolute left-16 top-0 bottom-0 w-16 
-                                bg-gradient-to-r from-white via-white/95 to-transparent 
-                                pointer-events-none z-10" />
-                <div className="absolute right-16 top-0 bottom-0 w-16 
-                                bg-gradient-to-l from-white via-white/95 to-transparent 
-                                pointer-events-none z-10" />
+                {/* Gradient overlays - Adjusted width */}
+                <div className="absolute left-[120px] top-0 bottom-0 w-12 
+                              bg-gradient-to-r from-white via-white/95 to-transparent 
+                              pointer-events-none z-20" />
+                <div className="absolute right-[120px] top-0 bottom-0 w-12 
+                              bg-gradient-to-l from-white via-white/95 to-transparent 
+                              pointer-events-none z-20" />
+              </div>
+
+              {/* Sort By dropdown - Right side */}
+              <div className="absolute right-4 z-50 dropdown-container">
+                <button
+                  onClick={() => setShowSortOptions(!showSortOptions)}
+                  className="w-[180px] h-11 px-6 rounded-xl 
+                           bg-gradient-to-r from-purple-600 to-indigo-600
+                           hover:from-purple-700 hover:to-indigo-700
+                           transition-all duration-300
+                           flex items-center justify-between
+                           text-white shadow-lg"
+                >
+                  <span className="font-medium text-sm">Sort By</span>
+                  <svg 
+                    className={`w-4 h-4 transition-transform duration-200 
+                               ${showSortOptions ? 'rotate-180' : ''}`} 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {showSortOptions && (
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl z-50 border border-gray-100">
+                    <div className="p-4">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">Sort By</h3>
+                      <div className="space-y-2">
+                        {[
+                          { id: "default", label: "Default" },
+                          { id: "price-low-high", label: "Price: Low to High" },
+                          { id: "price-high-low", label: "Price: High to Low" },
+                          { id: "duration-low-high", label: "Duration: Shortest First" },
+                          { id: "duration-high-low", label: "Duration: Longest First" },
+                        ].map((option) => (
+                          <button
+                            key={option.id}
+                            onClick={() => handleSort(option.id)}
+                            className={`
+                              w-full text-left px-4 py-3 rounded-lg transition-all duration-200
+                              ${sortOption === option.id
+                                ? "bg-blue-50 text-blue-600"
+                                : "hover:bg-gray-50"
+                              }
+                            `}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
