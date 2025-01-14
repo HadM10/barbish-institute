@@ -527,13 +527,15 @@ const Courses = () => {
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowCategoryDropdown(!showCategoryDropdown);
-                      setShowSortOptions(false); // Close other dropdown
+                      setShowSortOptions(false);
                     }}
                     className="w-full h-8 px-3 rounded-lg text-[11px]
                              bg-gradient-to-r from-purple-600 to-indigo-600
                              text-white shadow-md flex items-center justify-between"
                   >
-                    <span className="font-medium">Browse Categories</span>
+                    <span className="font-medium truncate">
+                      {categories.find(cat => cat.id === selectedCategory)?.name || "Browse Categories"}
+                    </span>
                     <svg className={`w-3 h-3 transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} 
                          fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -545,23 +547,6 @@ const Courses = () => {
                     <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl z-[9999] 
                                   border border-gray-100 max-h-[60vh] overflow-y-auto">
                       <div className="p-2">
-                        <button
-                          onClick={() => {
-                            handleCategoryChange('all');
-                            setShowCategoryDropdown(false);
-                          }}
-                          className={`w-full text-left px-3 py-2 rounded-lg text-[11px]
-                                    flex items-center justify-between
-                                    ${selectedCategory === 'all' 
-                                      ? "bg-blue-50 text-blue-600" 
-                                      : "hover:bg-gray-50"}`}
-                        >
-                          <span>All Courses</span>
-                          <span className="bg-gray-100 px-2 py-1 rounded-full">
-                            {courses.filter(c => !c.isArchived).length}
-                          </span>
-                        </button>
-                        
                         {categories.map((category) => (
                           <button
                             key={category.id}
@@ -577,10 +562,7 @@ const Courses = () => {
                           >
                             <span>{category.name}</span>
                             <span className="bg-gray-100 px-2 py-1 rounded-full">
-                              {courses.filter(c => 
-                                (c.categoryId === category.id || c.category_id === category.id) && 
-                                !c.isArchived
-                              ).length}
+                              {getCategoryCount(category.id)}
                             </span>
                           </button>
                         ))}
@@ -653,9 +635,11 @@ const Courses = () => {
                            flex items-center justify-between
                            text-white shadow-lg"
                 >
-                  <span className="font-medium text-sm">Browse Categories</span>
+                  <span className="font-medium text-sm truncate">
+                    {categories.find(cat => cat.id === selectedCategory)?.name || "Browse Categories"}
+                  </span>
                   <svg 
-                    className={`w-4 h-4 transition-transform duration-200 
+                    className={`w-4 h-4 transition-transform duration-200 flex-shrink-0 ml-2
                                ${showCategoryDropdown ? 'rotate-180' : ''}`} 
                     fill="none" 
                     viewBox="0 0 24 24" 
