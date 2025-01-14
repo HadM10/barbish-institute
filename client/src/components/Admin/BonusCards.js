@@ -9,6 +9,8 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   MagnifyingGlassIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
 } from "@heroicons/react/24/outline";
 
 // Import your API functions
@@ -60,6 +62,7 @@ const BonusCard = () => {
     expiredDate: "",
   });
   const [searchTerm, setSearchTerm] = useState("");
+  const [expandedRows, setExpandedRows] = useState(new Set());
 
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
@@ -207,6 +210,18 @@ const BonusCard = () => {
     card.price.toString().includes(searchTerm)
   );
 
+  const toggleRowExpansion = (id) => {
+    setExpandedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-50 p-8">
       <AnimatePresence>
@@ -264,58 +279,117 @@ const BonusCard = () => {
               <thead className="bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700">
                 <tr>
                   <th className="px-6 py-4 text-left text-white font-semibold">Title</th>
-                  <th className="px-6 py-4 text-left text-white font-semibold">Description</th>
-                  <th className="px-6 py-4 text-center text-white font-semibold">Price</th>
-                  <th className="px-6 py-4 text-center text-white font-semibold">Expiry Date</th>
-                  <th className="px-6 py-4 text-center text-white font-semibold">Link</th>
+                  <th className="hidden md:table-cell px-6 py-4 text-left text-white font-semibold">Description</th>
+                  <th className="hidden sm:table-cell px-6 py-4 text-center text-white font-semibold">Price</th>
+                  <th className="hidden lg:table-cell px-6 py-4 text-center text-white font-semibold">Expiry Date</th>
+                  <th className="hidden md:table-cell px-6 py-4 text-center text-white font-semibold">Link</th>
                   <th className="px-6 py-4 text-center text-white font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredBonCards.map((bonCard) => (
-                  <tr key={bonCard.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={bonCard.image}
-                          alt={bonCard.title}
-                          className="w-10 h-10 rounded-lg object-cover"
-                        />
-                        <span className="font-medium">{bonCard.title}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-gray-600">{bonCard.description}</td>
-                    <td className="px-6 py-4 text-center">${bonCard.price.toFixed(2)}</td>
-                    <td className="px-6 py-4 text-center">
-                      {new Date(bonCard.expiredDate).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <a
-                        href={bonCard.link || '#'}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 hover:underline"
-                      >
-                        {bonCard.link ? 'View Link' : 'No link available'}
-                      </a>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => handleEdit(bonCard)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  <React.Fragment key={bonCard.id}>
+                    <tr className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={bonCard.image}
+                            alt={bonCard.title}
+                            className="w-10 h-10 rounded-lg object-cover"
+                          />
+                          <div className="flex flex-col">
+                            <span className="font-medium">{bonCard.title}</span>
+                            <button
+                              onClick={() => toggleRowExpansion(bonCard.id)}
+                              className="md:hidden text-blue-600 text-sm flex items-center gap-1"
+                            >
+                              {expandedRows.has(bonCard.id) ? (
+                                <>
+                                  <span>Show less</span>
+                                  <ChevronUpIcon className="w-4 h-4" />
+                                </>
+                              ) : (
+                                <>
+                                  <span>Show more</span>
+                                  <ChevronDownIcon className="w-4 h-4" />
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="hidden md:table-cell px-6 py-4 text-gray-600">
+                        <div className="max-w-xs lg:max-w-md xl:max-w-lg">
+                          <div className="line-clamp-2">{bonCard.description}</div>
+                        </div>
+                      </td>
+                      <td className="hidden sm:table-cell px-6 py-4 text-center">
+                        ${bonCard.price.toFixed(2)}
+                      </td>
+                      <td className="hidden lg:table-cell px-6 py-4 text-center">
+                        {new Date(bonCard.expiredDate).toLocaleDateString()}
+                      </td>
+                      <td className="hidden md:table-cell px-6 py-4 text-center">
+                        <a
+                          href={bonCard.link || '#'}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 hover:underline"
                         >
-                          <PencilIcon className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => deleteBonCardHandler(bonCard.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <TrashIcon className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                          {bonCard.link ? 'View Link' : 'No link available'}
+                        </a>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleEdit(bonCard)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          >
+                            <PencilIcon className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => deleteBonCardHandler(bonCard.id)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <TrashIcon className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    {expandedRows.has(bonCard.id) && (
+                      <tr className="md:hidden bg-gray-50">
+                        <td colSpan="6" className="px-6 py-4">
+                          <div className="space-y-3">
+                            <div>
+                              <span className="font-medium">Description:</span>
+                              <p className="mt-1 text-gray-600">{bonCard.description}</p>
+                            </div>
+                            <div>
+                              <span className="font-medium">Price:</span>
+                              <p className="mt-1">${bonCard.price.toFixed(2)}</p>
+                            </div>
+                            <div>
+                              <span className="font-medium">Expiry Date:</span>
+                              <p className="mt-1">
+                                {new Date(bonCard.expiredDate).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="font-medium">Link:</span>
+                              <a
+                                href={bonCard.link || '#'}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-1 block text-blue-500 hover:underline"
+                              >
+                                {bonCard.link ? 'View Link' : 'No link available'}
+                              </a>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>

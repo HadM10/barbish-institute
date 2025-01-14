@@ -94,7 +94,7 @@ const Courses = () => {
         const categoryResult = await CategoryAPI.getAllCategories();
         if (categoryResult.success) {
           setCategories([
-            { id: "all", name: "All Courses" },
+            { id: "all", name: "All Courses", icon: "📚" },
             ...categoryResult.data.data,
           ]);
         }
@@ -205,7 +205,7 @@ const Courses = () => {
         const categoryResult = await CategoryAPI.getAllCategories();
         if (categoryResult.success) {
           setCategories([
-            { id: "all", name: "All Courses" },
+            { id: "all", name: "All Courses", icon: "📚" },
             ...categoryResult.data.data,
           ]);
         }
@@ -238,67 +238,62 @@ const Courses = () => {
     const [isExpanded, setIsExpanded] = useState(false);
 
     return (
-      <div className="relative group animate-fadeIn">
-        <div
-          className="bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transform 
-                     transition-all duration-300 hover:shadow-2xl hover:-translate-y-1
-                     border border-gray-100"
+      <div className="relative group animate-fadeIn w-full h-full">
+        <div 
+          className="bg-white rounded-lg shadow-sm hover:shadow-md 
+                    overflow-hidden cursor-pointer transform transition-all duration-300 
+                    hover:-translate-y-1 border border-gray-100 h-full flex flex-col"
           onClick={() => setIsExpanded(true)}
         >
-          <div className="relative h-[280px] overflow-hidden">
+          {/* Fixed aspect ratio for card image */}
+          <div className="relative w-full aspect-square">
             <img
               src={englishCourseImg}
               alt={course.title}
-              className="w-full h-full object-cover transform 
-                       group-hover:scale-105 transition-transform duration-700"
+              className="w-full h-full object-contain bg-gray-100"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent" />
-
-            <div
-              className="absolute bottom-0 right-0 bg-gradient-to-r from-purple-600 to-blue-600
-                           px-4 py-2 rounded-tl-lg shadow-lg"
-            >
-              <span className="text-white font-bold text-lg">
-                ${course.price}
-              </span>
+            <div className="absolute bottom-2 right-2 lg:bottom-4 lg:right-4 bg-gradient-to-r from-purple-600 to-blue-600
+                         px-2 py-1 lg:px-4 lg:py-2 rounded-lg shadow-lg">
+              <span className="text-white font-bold text-xs sm:text-sm lg:text-lg">${course.price}</span>
             </div>
           </div>
 
-          <div className="p-6">
-            <h3
-              className="text-xl font-bold text-gray-800 mb-3 line-clamp-1 group-hover:text-blue-600
-                           transition-colors duration-300"
-            >
-              {course.title}
-            </h3>
+          {/* Fixed height content container */}
+          <div className="p-2 sm:p-3 lg:p-6 flex flex-col flex-1">
+            <div className="flex-1">
+              <h3 className="text-xs sm:text-sm lg:text-xl font-bold text-gray-800 mb-1 sm:mb-2 lg:mb-4 line-clamp-2">
+                {course.title}
+              </h3>
+              <p className="text-gray-600 text-xs lg:text-base mb-2 lg:mb-6 line-clamp-2">
+                {course.description}
+              </p>
+            </div>
 
-            <p className="text-gray-600 text-sm mb-5 line-clamp-2">
-              {course.description}
-            </p>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-full"> 
-                <FaClock className="text-blue-600 text-sm" />
-                <span className="text-sm text-blue-600 font-medium">
-                  {course.duration} hours
+            <div className="flex items-center justify-between gap-2 lg:gap-4 mt-auto">
+              <div className="flex items-center gap-1 lg:gap-2 bg-blue-50 px-2 py-1 lg:px-5 lg:py-3 rounded-full"> 
+                <FaClock className="text-blue-600 text-xs lg:text-lg" />
+                <span className="text-xs lg:text-lg text-blue-600 font-medium">
+                  {course.duration}h
                 </span>
               </div>
               <button
-                className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white 
-                         font-medium rounded-full hover:shadow-xl hover:shadow-blue-600/20
-                         transition-all duration-300 transform hover:scale-105
-                         flex items-center gap-2"
+                className="px-2 py-1 lg:px-6 lg:py-3 bg-gradient-to-r from-blue-600 to-purple-600 
+                         text-white text-xs lg:text-lg font-medium rounded-full
+                         transition-all duration-300 flex items-center gap-1 lg:gap-2"
                 onClick={(e) => {
                   e.stopPropagation();
+                  setIsExpanded(true);
                 }}
               >
-                <FaWhatsapp className="text-lg" />
-                <span>Enquire Now</span>
+                <FaWhatsapp className="text-xs lg:text-lg" />
+                <span className="hidden sm:inline">Enquire</span>
               </button>
             </div>
           </div>
         </div>
 
+        {/* Popup with uncropped image */}
         {isExpanded && (
           <div className="fixed inset-0 bg-black/80 z-[99999] flex items-center justify-center p-4">
             <motion.div
@@ -306,33 +301,91 @@ const Courses = () => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ type: "spring", duration: 0.5 }}
-              className="bg-white rounded-[2rem] shadow-2xl relative overflow-hidden
-                 w-[95%] md:w-[90%] max-w-[1200px] h-[90vh]"
+              className="bg-white rounded-xl shadow-2xl relative overflow-hidden 
+                w-[85%] max-w-[400px] md:w-[90%] md:max-w-[1400px]"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Desktop Layout */}
-              <div className="hidden md:flex h-full">
-                {/* Image Section */}
-                <div className="w-1/2 h-full">
-                  <div className="h-full">
+              {/* Mobile popup remains unchanged */}
+              <div className="md:hidden flex flex-col h-full">
+                <div className="relative h-[25vh]">
+                  <img
+                    src={englishCourseImg}
+                    alt={course.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    onClick={() => setIsExpanded(false)}
+                    className="absolute top-2 right-2 p-1.5 bg-black/20 rounded-full"
+                  >
+                    <FaTimes className="text-white text-base" />
+                  </button>
+                </div>
+
+                <div className="flex-1 bg-[#1E3A8A] p-3 overflow-y-auto">
+                  <h2 className="text-base font-bold text-white mb-2">{course.title}</h2>
+                  
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-white/10 rounded-lg p-2">
+                        <p className="text-white/70 text-xs">Duration</p>
+                        <p className="text-white text-sm font-medium">{course.duration}h</p>
+                      </div>
+                      <div className="bg-white/10 rounded-lg p-2">
+                        <p className="text-white/70 text-xs">Price</p>
+                        <p className="text-white text-sm font-medium">${course.price}</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-white text-xs font-medium mb-1">Description</h3>
+                      <p className="text-white/80 text-xs">{course.description}</p>
+                    </div>
+
+                    <div>
+                      <h3 className="text-white text-xs font-medium mb-1">What You'll Learn</h3>
+                      <ul className="space-y-1.5">
+                        {course.content?.split("\n").map((item, index) => (
+                          <li key={index} className="flex items-start gap-2">
+                            <div className="w-1 h-1 rounded-full bg-blue-400 mt-1.5" />
+                            <span className="text-white/80 text-xs">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="sticky bottom-0 pt-3 mt-3 border-t border-white/10">
+                    <button className="w-full py-2 bg-gradient-to-r from-blue-500 to-purple-500 
+                                     rounded-lg text-white text-xs font-medium 
+                                     flex items-center justify-center gap-1.5">
+                      <FaWhatsapp className="text-sm" />
+                      <span>Enquire Now</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Desktop popup with perfect square image */}
+              <div className="hidden md:flex aspect-[2/1]">
+                <div className="w-1/2 bg-gray-100">
+                  <div className="relative w-full h-full">
                     <img
                       src={englishCourseImg}
                       alt={course.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                     />
                   </div>
                 </div>
 
-                {/* Content Section */}
-                <div className="w-1/2 bg-[#1E3A8A] flex flex-col h-full">
+                <div className="w-1/2 bg-[#1E3A8A] flex flex-col">
                   <div className="p-8 border-b border-white/10 flex items-start justify-between">
                     <div>
-                      <h2 className="text-2xl font-bold text-white leading-tight mb-3">
+                      <h2 className="text-3xl font-bold text-white leading-tight mb-4">
                         {course.title}
                       </h2>
                       <div className="inline-flex bg-gradient-to-r from-blue-600 to-purple-600 
-                                  px-4 py-1.5 rounded-full shadow-lg">
-                        <span className="text-white font-bold">${course.price}</span>
+                                  px-6 py-3 rounded-full shadow-lg">
+                        <span className="text-white font-bold text-xl">${course.price}</span>
                       </div>
                     </div>
                     <button
@@ -344,131 +397,41 @@ const Courses = () => {
                   </div>
 
                   <div className="flex-1 overflow-y-auto custom-scrollbar">
-                    <div className="p-8 space-y-8 pb-24">
+                    <div className="p-8 space-y-8">
                       {/* Course Info Grid */}
                       <div className="grid grid-cols-2 gap-6">
-                        <div className="bg-white/10 rounded-xl p-4">
-                          <div className="flex items-center gap-3">
-                            <FaClock className="text-blue-400 text-lg" />
+                        <div className="bg-white/10 rounded-xl p-6">
+                          <div className="flex items-center gap-4">
+                            <FaClock className="text-blue-400 text-2xl" />
                             <div>
-                              <p className="text-white/70 text-sm">Duration</p>
-                              <p className="text-white font-medium">{course.duration} hours</p>
+                              <p className="text-white/70 text-lg">Duration</p>
+                              <p className="text-white font-medium text-xl">{course.duration} hours</p>
                             </div>
                           </div>
                         </div>
-                        <div className="bg-white/10 rounded-xl p-4">
-                          <div className="flex items-center gap-3">
-                            <FaUser className="text-blue-400 text-lg" />
+                        <div className="bg-white/10 rounded-xl p-6">
+                          <div className="flex items-center gap-4">
+                            <FaUser className="text-blue-400 text-2xl" />
                             <div>
-                              <p className="text-white/70 text-sm">Instructor</p>
-                              <p className="text-white font-medium">{course.instructor || "Expert Tutor"}</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-6">
-                        <div>
-                          <h3 className="text-white font-medium text-lg mb-3">Description</h3>
-                          <p className="text-white/80 leading-relaxed">{course.description}</p>
-                        </div>
-
-                        <div>
-                          <h3 className="text-white font-medium text-lg mb-3">What You'll Learn</h3>
-                          <ul className="space-y-3">
-                            {course.content?.split("\n").map((item, index) => (
-                              <li key={index} className="flex items-start gap-3">
-                                <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2" />
-                                <span className="text-white/80">{item}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Fixed Enquire Button */}
-                  <div className="absolute bottom-0 left-1/2 right-0 p-8 bg-gradient-to-t from-[#1E3A8A] via-[#1E3A8A] to-transparent">
-                    <button
-                      onClick={(e) => e.stopPropagation()}
-                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white
-                               py-4 rounded-xl font-medium flex items-center justify-center gap-2
-                               hover:shadow-lg transition-all duration-300"
-                    >
-                      <FaWhatsapp className="text-xl" />
-                      <span>Enquire Now</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Mobile Layout */}
-              <div className="md:hidden flex flex-col h-full">
-                {/* Image Section */}
-                <div className="w-full h-[40vh]">
-                  <div className="h-full relative">
-                    <img
-                      src={englishCourseImg}
-                      alt={course.title}
-                      className="w-full h-full object-cover"
-                    />
-                    <button
-                      onClick={() => setIsExpanded(false)}
-                      className="absolute top-4 right-4 p-2.5 bg-black/20 hover:bg-black/30 
-                               rounded-full backdrop-blur-sm transition-colors"
-                    >
-                      <FaTimes className="text-white text-xl" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Content Section */}
-                <div className="flex-1 bg-[#1E3A8A] flex flex-col min-h-0">
-                  <div className="p-6 border-b border-white/10">
-                    <h2 className="text-xl font-bold text-white mb-2">{course.title}</h2>
-                    <div className="inline-flex bg-gradient-to-r from-blue-600 to-purple-600 
-                                 px-3 py-1.5 rounded-full shadow-lg">
-                      <span className="text-white font-bold">${course.price}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex-1 overflow-y-auto custom-scrollbar">
-                    <div className="p-6 space-y-6 pb-20">
-                      {/* Mobile content - same structure as desktop */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-white/10 rounded-xl p-3">
-                          <div className="flex items-center gap-2">
-                            <FaClock className="text-blue-400 text-sm" />
-                            <div>
-                              <p className="text-white/70 text-xs">Duration</p>
-                              <p className="text-white text-sm">{course.duration} hours</p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="bg-white/10 rounded-xl p-3">
-                          <div className="flex items-center gap-2">
-                            <FaUser className="text-blue-400 text-sm" />
-                            <div>
-                              <p className="text-white/70 text-xs">Instructor</p>
-                              <p className="text-white text-sm">{course.instructor || "Expert Tutor"}</p>
+                              <p className="text-white/70 text-lg">Instructor</p>
+                              <p className="text-white font-medium text-xl">Expert Tutor</p>
                             </div>
                           </div>
                         </div>
                       </div>
 
                       <div>
-                        <h3 className="text-white font-medium text-lg mb-2">Description</h3>
-                        <p className="text-white/80 text-sm">{course.description}</p>
+                        <h3 className="text-white font-medium text-2xl mb-4">Description</h3>
+                        <p className="text-white/80 leading-relaxed text-lg">{course.description}</p>
                       </div>
 
                       <div>
-                        <h3 className="text-white font-medium text-lg mb-2">What You'll Learn</h3>
-                        <ul className="space-y-2">
+                        <h3 className="text-white font-medium text-2xl mb-4">What You'll Learn</h3>
+                        <ul className="space-y-4">
                           {course.content?.split("\n").map((item, index) => (
-                            <li key={index} className="flex items-start gap-2">
-                              <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5" />
-                              <span className="text-white/80 text-sm">{item}</span>
+                            <li key={index} className="flex items-start gap-4">
+                              <div className="w-2 h-2 rounded-full bg-blue-400 mt-2.5" />
+                              <span className="text-white/80 text-lg">{item}</span>
                             </li>
                           ))}
                         </ul>
@@ -476,15 +439,11 @@ const Courses = () => {
                     </div>
                   </div>
 
-                  {/* Fixed Mobile Enquire Button */}
-                  <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-[#1E3A8A] via-[#1E3A8A] to-transparent">
-                    <button
-                      onClick={(e) => e.stopPropagation()}
-                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white
-                               py-3.5 rounded-xl font-medium flex items-center justify-center gap-2
-                               hover:shadow-lg transition-all duration-300"
-                    >
-                      <FaWhatsapp className="text-lg" />
+                  <div className="p-8 bg-gradient-to-t from-[#1E3A8A] via-[#1E3A8A] to-transparent">
+                    <button className="w-full py-5 bg-gradient-to-r from-blue-600 to-purple-600 
+                           rounded-xl text-white text-xl font-medium flex items-center 
+                           justify-center gap-3 hover:shadow-lg transition-all duration-300">
+                      <FaWhatsapp className="text-2xl" />
                       <span>Enquire Now</span>
                     </button>
                   </div>
@@ -932,9 +891,10 @@ const Courses = () => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 
+                          gap-2 sm:gap-3 md:gap-4 lg:gap-6">
               {sortedAndFilteredCourses.map((course) => (
-                <div key={course.id}>
+                <div key={course.id} className="w-full">
                   <CourseCard course={course} />
                 </div>
               ))}

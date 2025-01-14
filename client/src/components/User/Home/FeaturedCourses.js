@@ -16,27 +16,24 @@ const CourseCard = ({ course, index }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="w-full max-w-[450px] mx-auto h-full"
+      className="w-full max-w-[400px] mx-auto h-full"
     >
       <div className="group relative bg-gradient-to-br from-white/10 to-white/5 
-                    backdrop-blur-sm rounded-3xl p-0.5 
+                    backdrop-blur-sm rounded-2xl p-0.5 
                     hover:shadow-2xl hover:shadow-blue-500/20 
                     transition-all duration-500 transform scale-[1]
                     h-full flex flex-col">
-        <div className="relative overflow-hidden rounded-[24px] bg-[#1a1d2d] h-full flex flex-col">
-          {/* Image Container with increased height */}
-          <div className="relative w-full h-[280px] overflow-hidden">
+        <div className="relative overflow-hidden rounded-2xl bg-[#1a1d2d] h-full flex flex-col">
+          <div className="relative w-full">
             <img
               src={englishCourseImg}
               alt={course.title}
-              className="w-full h-full object-cover transform 
-                       group-hover:scale-105 transition-transform duration-700
-                       rendering-crisp-edges"
+              className="w-full object-cover"
+              style={{ aspectRatio: '4/3' }}
             />
             <div className="absolute inset-0 bg-gradient-to-t 
                          from-[#1a1d2d] via-[#1a1d2d]/50 to-transparent" />
 
-            {/* Most Popular Badge with improved text rendering */}
             {index === 0 && (
               <div className="absolute top-4 left-4">
                 <div className="flex items-center gap-2 px-4 py-2 
@@ -48,55 +45,52 @@ const CourseCard = ({ course, index }) => {
               </div>
             )}
 
-            {/* Price Tag with improved text rendering */}
             <div className="absolute bottom-0 right-0 bg-gradient-to-r from-purple-600 to-blue-600
                            px-4 py-2 rounded-tl-lg shadow-lg">
               <span className="text-white font-bold text-lg antialiased">${course.price}</span>
             </div>
           </div>
 
-          {/* Content Section with increased padding */}
-          <div className="p-7 space-y-4 flex-grow flex flex-col">
-            <div className="space-y-3 flex-grow">
-              <h3 className="text-2xl font-bold text-white leading-tight antialiased
+          <div className="p-5 space-y-3 flex-grow flex flex-col">
+            <div className="space-y-2 flex-grow">
+              <h3 className="text-xl font-bold text-white leading-tight antialiased
                           group-hover:text-blue-400 transition-colors duration-300
                           line-clamp-1"
               >
                 {course.title}
               </h3>
               
-              <p className="text-white/70 text-base leading-relaxed antialiased
+              <p className="text-white/70 text-sm leading-relaxed antialiased
                           line-clamp-2"
               >
                 {course.description}
               </p>
             </div>
 
-            {/* Course Stats with increased padding */}
-            <div className="grid grid-cols-2 gap-4 mt-auto">
-              <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm
+            <div className="grid grid-cols-2 gap-3 mt-auto">
+              <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm
                           hover:bg-white/15 transition-colors duration-300">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-blue-500/20 rounded-lg">
-                    <FaClock className="text-blue-400 text-xl" />
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-blue-500/20 rounded-lg">
+                    <FaClock className="text-blue-400 text-base" />
                   </div>
                   <div>
-                    <p className="text-white/60 text-sm font-medium mb-0.5 antialiased">Duration</p>
-                    <p className="text-white text-lg font-semibold antialiased">
+                    <p className="text-white/60 text-xs font-medium mb-0.5 antialiased">Duration</p>
+                    <p className="text-white text-base font-semibold antialiased">
                       {course.duration}h
                     </p>
                   </div>
                 </div>
               </div>
-              <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm
+              <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm
                           hover:bg-white/15 transition-colors duration-300">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-purple-500/20 rounded-lg">
-                    <FaGraduationCap className="text-purple-400 text-xl" />
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-purple-500/20 rounded-lg">
+                    <FaGraduationCap className="text-purple-400 text-base" />
                   </div>
                   <div>
-                    <p className="text-white/60 text-sm font-medium mb-0.5 antialiased">Students</p>
-                    <p className="text-white text-lg font-semibold antialiased">
+                    <p className="text-white/60 text-xs font-medium mb-0.5 antialiased">Students</p>
+                    <p className="text-white text-base font-semibold antialiased">
                       Active
                     </p>
                   </div>
@@ -104,16 +98,15 @@ const CourseCard = ({ course, index }) => {
               </div>
             </div>
 
-            {/* Button with increased padding */}
             <button
-              className="w-full flex items-center justify-center gap-3 px-6 py-4 
-                      rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 
-                      text-white text-lg font-semibold tracking-wide antialiased
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 
+                      rounded-lg bg-gradient-to-r from-blue-500 to-violet-500 
+                      text-white text-base font-semibold tracking-wide antialiased
                       shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 
                       transform hover:scale-[1.02] transition-all duration-300
                       hover:from-blue-600 hover:to-violet-600"
             >
-              <FaWhatsapp className="text-xl" />
+              <FaWhatsapp className="text-lg" />
               <span>Enquire Now</span>
             </button>
           </div>
@@ -144,12 +137,11 @@ const FeaturedCourses = () => {
 
   return (
     <section className="relative py-12 bg-white">
-      {/* Animated Border Line */}
       <div className="absolute inset-0">
         <motion.div
           className="absolute"
           style={{
-            width: '6px', // Thick line
+            width: '6px',
             height: '6px',
             background: 'linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899)',
             boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)',
@@ -185,9 +177,7 @@ const FeaturedCourses = () => {
         </motion.div>
       </div>
 
-      {/* Container with padding to avoid overlap with border */}
       <div className="container mx-auto px-8 py-4 relative z-10">
-        {/* Section Header */}
         <div className="text-center mb-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -222,9 +212,8 @@ const FeaturedCourses = () => {
           </motion.p>
         </div>
 
-        {/* Cards Grid with adjusted gap for larger cards */}
         <div className="relative max-w-7xl mx-auto mb-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {courses.slice(0, 3).map((course, index) => (
               <motion.div
                 key={course.id}
@@ -239,7 +228,6 @@ const FeaturedCourses = () => {
           </div>
         </div>
 
-        {/* Improved CTA Button */}
         <motion.div 
           className="text-center mt-8"
           initial={{ opacity: 0, y: 20 }}
@@ -253,7 +241,6 @@ const FeaturedCourses = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            {/* Button Background */}
             <motion.div
               className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600"
               initial={{ x: "100%" }}
@@ -261,10 +248,8 @@ const FeaturedCourses = () => {
               transition={{ duration: 0.3 }}
             />
             
-            {/* Static Background */}
             <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600" />
             
-            {/* Button Content */}
             <span className="relative z-10 text-white font-semibold">
               Explore All Courses
             </span>
