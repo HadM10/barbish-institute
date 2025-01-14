@@ -18,7 +18,9 @@ const Courses = () => {
 
   // Initialize with "all" by default
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState([
+    { id: "all", name: "All Courses", icon: "��" }
+  ]);
   const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -93,30 +95,15 @@ const Courses = () => {
       try {
         const categoryResult = await CategoryAPI.getAllCategories();
         if (categoryResult.success) {
-          setCategories([
-            { id: "all", name: "All Courses", icon: "📚" },
-            ...categoryResult.data.data,
+          setCategories(prevCategories => [
+            prevCategories[0], // Keep "All Courses"
+            ...categoryResult.data.data
           ]);
         }
 
         const courseResult = await getAllCourses();
         if (courseResult.success) {
-          const coursesData = courseResult.data.data || courseResult.data || [];
-          setCourses(coursesData);
-
-          if (location.state?.searchTerm && location.state?.courseId) {
-            const exactCourse = coursesData.find(
-              (course) => course.id === location.state.courseId
-            );
-            if (exactCourse) {
-              setSearchedCourse(exactCourse);
-              setSelectedCategory(
-                exactCourse.categoryId || exactCourse.category_id
-              );
-            }
-          } else if (!location.state?.categoryId) {
-            setSelectedCategory("all");
-          }
+          setCourses(courseResult.data.data || courseResult.data || []);
         }
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -127,14 +114,13 @@ const Courses = () => {
     };
 
     fetchData();
-  }, [location.state]);
+  }, []);
 
   // Handle category change
-  const handleCategoryChange = (categoryId) => {
+  const handleCategoryChange = useCallback((categoryId) => {
     setSelectedCategory(categoryId);
     setSearchedCourse(null);
     
-    // Find the selected category button and scroll it into view smoothly
     if (categoryContainerRef.current) {
       const selectedButton = categoryContainerRef.current.querySelector(`[data-category-id="${categoryId}"]`);
       if (selectedButton) {
@@ -149,14 +135,13 @@ const Courses = () => {
         });
       }
     }
-  };
+  }, []);
 
   // Update filtered courses logic
   const filteredCourses = useMemo(() => {
     // First filter out archived courses
     let filtered = courses.filter(course => !course.isArchived);
     
-    // If there's a searched course, show it in its category
     if (searchedCourse) {
       const courseCategory = searchedCourse.categoryId || searchedCourse.category_id;
       if ((selectedCategory === courseCategory || selectedCategory === "all") && !searchedCourse.isArchived) {
@@ -165,15 +150,14 @@ const Courses = () => {
       return [];
     }
 
-    // Normal category filtering when not searching
+    // Always show all courses when "all" is selected
     if (selectedCategory === "all") {
       return filtered;
     }
 
-    return filtered.filter(
-      (course) =>
-        course.categoryId === selectedCategory ||
-        course.category_id === selectedCategory
+    return filtered.filter(course =>
+      course.categoryId === selectedCategory ||
+      course.category_id === selectedCategory
     );
   }, [courses, selectedCategory, searchedCourse]);
 
@@ -505,19 +489,21 @@ const Courses = () => {
       ]);
 
       if (categoriesRes.success && coursesRes.success) {
-        // Get all courses
         const allCourses = coursesRes.data.data || coursesRes.data;
         
-        // Filter categories that have at least one active course
-        const categoriesWithActiveCourses = categoriesRes.data.data.filter(category => {
-          const categoryCourses = allCourses.filter(course => 
-            (course.categoryId === category.id || course.category_id === category.id) && 
-            !course.isArchived
-          );
-          return categoryCourses.length > 0;
-        });
+        // Always include "All Courses" and filter other categories
+        const activeCategories = [
+          { id: "all", name: "All Courses", icon: "📚" },
+          ...categoriesRes.data.data.filter(category => {
+            const categoryCourses = allCourses.filter(course => 
+              (course.categoryId === category.id || course.category_id === category.id) && 
+              !course.isArchived
+            );
+            return categoryCourses.length > 0;
+          })
+        ];
 
-        setCategories(categoriesWithActiveCourses);
+        setCategories(activeCategories);
       }
     } catch (error) {
       console.error('Error fetching active categories:', error);
