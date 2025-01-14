@@ -254,23 +254,23 @@ const Courses = () => {
               </p>
             </div>
 
-            <div className="flex items-center justify-between gap-2 lg:gap-4 mt-auto">
-              <div className="flex items-center gap-1 lg:gap-2 bg-blue-50 px-2 py-1 lg:px-5 lg:py-3 rounded-full"> 
-                <FaClock className="text-blue-600 text-xs lg:text-lg" />
-                <span className="text-xs lg:text-lg text-blue-600 font-medium">
+            <div className="flex items-center justify-between gap-2 lg:gap-3 mt-auto">
+              <div className="flex items-center gap-1 lg:gap-2 bg-blue-50 px-2 py-1 lg:px-4 lg:py-2 rounded-full"> 
+                <FaClock className="text-blue-600 text-xs lg:text-base" />
+                <span className="text-xs lg:text-base text-blue-600 font-medium">
                   {course.duration}h
                 </span>
               </div>
               <button
-                className="px-2 py-1 lg:px-6 lg:py-3 bg-gradient-to-r from-blue-600 to-purple-600 
-                         text-white text-xs lg:text-lg font-medium rounded-full
+                className="px-2 py-1 lg:px-4 lg:py-2 bg-gradient-to-r from-blue-600 to-purple-600 
+                         text-white text-xs lg:text-base font-medium rounded-full
                          transition-all duration-300 flex items-center gap-1 lg:gap-2"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsExpanded(true);
                 }}
               >
-                <FaWhatsapp className="text-xs lg:text-lg" />
+                <FaWhatsapp className="text-xs lg:text-base" />
                 <span className="hidden sm:inline">Enquire</span>
               </button>
             </div>
@@ -623,9 +623,9 @@ const Courses = () => {
             </div>
 
             {/* Desktop navigation remains unchanged */}
-            <div className="hidden md:flex relative items-center justify-center py-4">
+            <div className="hidden md:flex relative items-center justify-between py-4 px-4 max-w-7xl mx-auto">
               {/* Browse Categories dropdown - Left side */}
-              <div className="absolute left-4 z-50 dropdown-container">
+              <div className="relative z-50 dropdown-container">
                 <button
                   onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
                   className="w-[180px] h-11 px-6 rounded-xl 
@@ -652,50 +652,34 @@ const Courses = () => {
                   <div className="absolute mt-2 w-[180px] bg-white rounded-xl shadow-xl z-50 border border-gray-100">
                     <div className="p-3">
                       <h3 className="text-sm font-semibold text-gray-800 mb-2">Select Category</h3>
-                      
-                      <div className="relative">
-                        <div className="space-y-1 max-h-[220px] overflow-y-auto custom-scrollbar pr-1">
-                          {categories.map((category) => (
-                            <button
-                              key={category.id}
-                              onClick={() => {
-                                handleCategoryChange(category.id);
-                                setShowCategoryDropdown(false);
-                              }}
-                              className={`
-                                w-full text-left px-3 py-2 rounded-lg transition-all duration-200
-                                flex items-center justify-between whitespace-nowrap
-                                ${selectedCategory === category.id
-                                  ? "bg-blue-50 text-blue-600"
-                                  : "hover:bg-gray-50"
-                                }
-                              `}
-                            >
-                              <span className="truncate mr-2 text-sm">{category.name}</span>
-                              <span className="text-xs bg-gray-100 px-2 py-1 rounded-full flex-shrink-0">
-                                {getCategoryCount(category.id)}
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                        
-                        <div className="absolute bottom-0 left-0 right-1 h-8 bg-gradient-to-t from-white pointer-events-none
-                                      flex items-center justify-center">
-                          <div className="animate-bounce text-gray-400 text-xs flex items-center gap-1">
-                            <span>Scroll for more</span>
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </div>
-                        </div>
+                      <div className="space-y-1 max-h-[220px] overflow-y-auto custom-scrollbar">
+                        {categories.map((category) => (
+                          <button
+                            key={category.id}
+                            onClick={() => {
+                              handleCategoryChange(category.id);
+                              setShowCategoryDropdown(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded-lg transition-all duration-200
+                                      flex items-center justify-between
+                                      ${selectedCategory === category.id
+                                        ? "bg-blue-50 text-blue-600"
+                                        : "hover:bg-gray-50"}`}
+                          >
+                            <span className="truncate mr-2 text-sm">{category.name}</span>
+                            <span className="text-xs bg-gray-100 px-2 py-1 rounded-full">
+                              {getCategoryCount(category.id)}
+                            </span>
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Category Buttons Container - Center */}
-              <div className="hidden md:block relative max-w-3xl mx-auto px-[120px]">
+              {/* Category Buttons Container - Center with reduced padding */}
+              <div className="relative max-w-3xl mx-auto px-[80px]">
                 <div 
                   ref={categoryContainerRef}
                   className="overflow-x-auto hide-scrollbar relative scroll-smooth"
@@ -779,7 +763,7 @@ const Courses = () => {
               </div>
 
               {/* Sort By dropdown - Right side */}
-              <div className="absolute right-4 z-50 dropdown-container">
+              <div className="relative z-50 dropdown-container">
                 <button
                   onClick={() => setShowSortOptions(!showSortOptions)}
                   className="w-[180px] h-11 px-6 rounded-xl 

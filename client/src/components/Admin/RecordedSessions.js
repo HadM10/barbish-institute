@@ -95,9 +95,17 @@ const RecordedSessions = () => {
           isActive: session.isActive ? "active" : "inactive",
           createdAt: session.createdAt || new Date(),
         }));
-        const sortedSessions = adapted.sort((a, b) => 
-          new Date(b.createdAt) - new Date(a.createdAt)
-        );
+
+        // Sort by createdAt in ascending order (oldest first)
+        const sortedSessions = adapted.sort((a, b) => {
+          // First sort by course
+          if (a.courseName !== b.courseName) {
+            return a.courseName.localeCompare(b.courseName);
+          }
+          // Then sort by creation date (ascending - oldest first)
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        });
+
         setSessions(sortedSessions);
       } else {
         showNotification("Failed to fetch sessions: " + res.message, "error");
@@ -208,7 +216,7 @@ const RecordedSessions = () => {
             isActive: newSession.isActive ? "active" : "inactive",
             createdAt: new Date(),
           };
-          setSessions((prev) => [adapted, ...prev]);
+          setSessions((prev) => [...prev, adapted]);
           showNotification('Session added successfully!');
         } else {
           showNotification('Failed to add session: ' + (res.message || 'Unknown error'), 'error');
@@ -291,7 +299,7 @@ const RecordedSessions = () => {
   };
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="p-2 md:p-6 w-full overflow-hidden">
       <AnimatePresence>
         {notification && (
           <Notification
@@ -303,21 +311,21 @@ const RecordedSessions = () => {
       </AnimatePresence>
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-900 to-purple-700 rounded-3xl p-8 text-white">
-        <div className="flex items-center gap-4 mb-4">
-          <VideoCameraIcon className="w-8 h-8" />
-          <h1 className="text-3xl font-bold">Recorded Sessions</h1>
+      <div className="bg-gradient-to-r from-purple-900 to-purple-700 rounded-xl md:rounded-3xl p-4 md:p-8 text-white">
+        <div className="flex items-center gap-2 md:gap-4 mb-2 md:mb-4">
+          <VideoCameraIcon className="w-6 h-6 md:w-8 md:h-8" />
+          <h1 className="text-xl md:text-3xl font-bold">Recorded Sessions</h1>
         </div>
-        <p className="text-purple-100 mb-6">
+        <p className="text-purple-100 text-sm md:text-base mb-4 md:mb-6">
           Manage and organize your recorded sessions
         </p>
       </div>
 
       {/* Main content */}
-      <div className="bg-white rounded-2xl p-6 shadow-lg">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+      <div className="bg-white rounded-xl md:rounded-2xl p-3 md:p-6 shadow-lg mt-4 md:mt-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4 md:mb-6">
           {/* Search Box */}
-          <div className="relative flex-1 max-w-md">
+          <div className="relative flex-1 w-full max-w-md">
             <input
               type="text"
               placeholder="Search sessions or courses..."
@@ -358,103 +366,123 @@ const RecordedSessions = () => {
         )}
 
         {/* Sessions Table */}
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Session Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Course
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Chapter
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Duration (min)
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Video Link
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredSessions.map((session) => (
-                <tr
-                  key={session.id}
-                  className="hover:bg-gray-50 transition-colors duration-150"
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {session.title}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {session.courseName}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {session.description}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {session.duration}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {session.videoUrl && (
-                      <a
-                        href={session.videoUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 hover:text-blue-600 transition-colors duration-150"
-                        title="Watch Session"
-                      >
-                        <LinkIcon className="w-5 h-5 transform hover:scale-110 transition-transform duration-150" />
-                      </a>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <button
-                      onClick={() => handleStatusToggle(session.id)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        session.isActive === "active"
-                          ? "bg-green-100 text-green-800 hover:bg-green-200"
-                          : "bg-red-100 text-red-800 hover:bg-red-200"
-                      } transition-colors duration-200`}
-                    >
-                      {session.isActive ? "Active" : "Inactive"}
-                    </button>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => handleEdit(session)}
-                        className="text-indigo-600 hover:text-indigo-900 transition-colors duration-150"
-                      >
-                        <PencilIcon className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(session.id)}
-                        className="text-red-600 hover:text-red-900 transition-colors duration-150"
-                      >
-                        <TrashIcon className="w-5 h-5" />
-                      </button>
+        <div className="overflow-x-auto -mx-3 md:mx-0">
+          <div className="inline-block min-w-full align-middle">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Session Name
+                  </th>
+                  <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Course
+                  </th>
+                  <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <div className="max-w-[150px] md:max-w-[200px]">
+                      Chapter
                     </div>
-                  </td>
+                  </th>
+                  <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Duration (min)
+                  </th>
+                  <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Video Link
+                  </th>
+                  <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredSessions.map((session, index) => {
+                  // Get the session number within its course
+                  const courseSessionIndex = filteredSessions
+                    .filter(s => s.courseName === session.courseName)
+                    .findIndex(s => s.id === session.id) + 1;
 
-          {/* No Results Message */}
-          {filteredSessions.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              No sessions found matching your search.
-            </div>
-          )}
+                  return (
+                    <tr
+                      key={session.id}
+                      className="hover:bg-gray-50 transition-colors duration-150"
+                    >
+                      <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-sm">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center justify-center w-6 h-6 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
+                            {courseSessionIndex}
+                          </span>
+                          {session.title}
+                        </div>
+                      </td>
+                      <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-sm">
+                        {session.courseName}
+                      </td>
+                      <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap">
+                        <div className="max-w-[150px] md:max-w-[200px]">
+                          <p className="text-sm text-gray-900 truncate" title={session.description}>
+                            {session.description}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-sm">
+                        {session.duration}
+                      </td>
+                      <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-sm">
+                        {session.videoUrl && (
+                          <a
+                            href={session.videoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 hover:text-blue-600 transition-colors duration-150"
+                            title="Watch Session"
+                          >
+                            <LinkIcon className="w-5 h-5 transform hover:scale-110 transition-transform duration-150" />
+                          </a>
+                        )}
+                      </td>
+                      <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-sm">
+                        <button
+                          onClick={() => handleStatusToggle(session.id)}
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            session.isActive === "active"
+                              ? "bg-green-100 text-green-800 hover:bg-green-200"
+                              : "bg-red-100 text-red-800 hover:bg-red-200"
+                          } transition-colors duration-200`}
+                        >
+                          {session.isActive ? "Active" : "Inactive"}
+                        </button>
+                      </td>
+                      <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-sm">
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => handleEdit(session)}
+                            className="text-indigo-600 hover:text-indigo-900 transition-colors duration-150"
+                          >
+                            <PencilIcon className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(session.id)}
+                            className="text-red-600 hover:text-red-900 transition-colors duration-150"
+                          >
+                            <TrashIcon className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+
+            {/* No Results Message */}
+            {filteredSessions.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                No sessions found matching your search.
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

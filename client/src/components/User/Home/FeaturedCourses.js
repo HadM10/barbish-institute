@@ -16,14 +16,13 @@ const CourseCard = ({ course, index }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="w-full max-w-[400px] mx-auto h-full"
+      className="w-full max-w-[328px] mx-auto h-full"
     >
       <div className="group relative bg-gradient-to-br from-white/10 to-white/5 
-                    backdrop-blur-sm rounded-2xl p-0.5 
-                    hover:shadow-2xl hover:shadow-blue-500/20 
-                    transition-all duration-500 transform scale-[1]
-                    h-full flex flex-col">
-        <div className="relative overflow-hidden rounded-2xl bg-[#1a1d2d] h-full flex flex-col">
+                    backdrop-blur-sm rounded-xl p-0.5 
+                    hover:shadow-xl hover:shadow-blue-500/20 
+                    transition-all duration-300 flex flex-col">
+        <div className="relative overflow-hidden rounded-xl bg-[#1a1d2d] h-full flex flex-col">
           <div className="relative w-full">
             <img
               src={englishCourseImg}
@@ -35,62 +34,60 @@ const CourseCard = ({ course, index }) => {
                          from-[#1a1d2d] via-[#1a1d2d]/50 to-transparent" />
 
             {index === 0 && (
-              <div className="absolute top-4 left-4">
-                <div className="flex items-center gap-2 px-4 py-2 
+              <div className="absolute top-3 left-3">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 
                              rounded-full bg-gradient-to-r from-amber-500 to-orange-600 
                              backdrop-blur-sm shadow-lg">
-                  <FaTrophy className="text-white text-sm antialiased" />
-                  <span className="text-white text-sm font-semibold antialiased">Most Popular</span>
+                  <FaTrophy className="text-white text-xs" />
+                  <span className="text-white text-xs font-semibold">Most Popular</span>
                 </div>
               </div>
             )}
 
             <div className="absolute bottom-0 right-0 bg-gradient-to-r from-purple-600 to-blue-600
-                           px-4 py-2 rounded-tl-lg shadow-lg">
-              <span className="text-white font-bold text-lg antialiased">${course.price}</span>
+                           px-3 py-1.5 rounded-tl-lg shadow-lg">
+              <span className="text-white font-bold text-sm">${course.price}</span>
             </div>
           </div>
 
-          <div className="p-5 space-y-3 flex-grow flex flex-col">
-            <div className="space-y-2 flex-grow">
-              <h3 className="text-xl font-bold text-white leading-tight antialiased
+          <div className="p-4 space-y-2.5 flex-grow flex flex-col">
+            <div className="space-y-1.5 flex-grow">
+              <h3 className="text-base font-bold text-white leading-tight
                           group-hover:text-blue-400 transition-colors duration-300
-                          line-clamp-1"
-              >
+                          line-clamp-1">
                 {course.title}
               </h3>
               
-              <p className="text-white/70 text-sm leading-relaxed antialiased
-                          line-clamp-2"
-              >
+              <p className="text-white/70 text-xs leading-relaxed
+                          line-clamp-2">
                 {course.description}
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 mt-auto">
-              <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm
+            <div className="grid grid-cols-2 gap-2.5 mt-auto">
+              <div className="bg-white/10 rounded-lg p-2.5 backdrop-blur-sm
                           hover:bg-white/15 transition-colors duration-300">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 bg-blue-500/20 rounded-lg">
-                    <FaClock className="text-blue-400 text-base" />
+                <div className="flex items-center gap-1.5">
+                  <div className="p-1.5 bg-blue-500/20 rounded-lg">
+                    <FaClock className="text-blue-400 text-sm" />
                   </div>
                   <div>
-                    <p className="text-white/60 text-xs font-medium mb-0.5 antialiased">Duration</p>
-                    <p className="text-white text-base font-semibold antialiased">
+                    <p className="text-white/60 text-[10px] font-medium">Duration</p>
+                    <p className="text-white text-sm font-semibold">
                       {course.duration}h
                     </p>
                   </div>
                 </div>
               </div>
-              <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm
+              <div className="bg-white/10 rounded-lg p-2.5 backdrop-blur-sm
                           hover:bg-white/15 transition-colors duration-300">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 bg-purple-500/20 rounded-lg">
-                    <FaGraduationCap className="text-purple-400 text-base" />
+                <div className="flex items-center gap-1.5">
+                  <div className="p-1.5 bg-purple-500/20 rounded-lg">
+                    <FaGraduationCap className="text-purple-400 text-sm" />
                   </div>
                   <div>
-                    <p className="text-white/60 text-xs font-medium mb-0.5 antialiased">Students</p>
-                    <p className="text-white text-base font-semibold antialiased">
+                    <p className="text-white/60 text-[10px] font-medium">Students</p>
+                    <p className="text-white text-sm font-semibold">
                       Active
                     </p>
                   </div>
@@ -98,15 +95,12 @@ const CourseCard = ({ course, index }) => {
               </div>
             </div>
 
-            <button
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 
-                      rounded-lg bg-gradient-to-r from-blue-500 to-violet-500 
-                      text-white text-base font-semibold tracking-wide antialiased
-                      shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 
-                      transform hover:scale-[1.02] transition-all duration-300
-                      hover:from-blue-600 hover:to-violet-600"
-            >
-              <FaWhatsapp className="text-lg" />
+            <button className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 
+                           rounded-lg bg-gradient-to-r from-blue-500 to-violet-500 
+                           text-white text-sm font-semibold
+                           shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 
+                           transform hover:scale-[1.02] transition-all duration-300">
+              <FaWhatsapp className="text-base" />
               <span>Enquire Now</span>
             </button>
           </div>
