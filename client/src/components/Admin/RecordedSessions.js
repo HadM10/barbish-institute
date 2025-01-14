@@ -57,8 +57,8 @@ const RecordedSessions = () => {
     description: "",
     content: "",
     duration: "",
-    videoUrl: "",
-    courseName: "", // Store courseName to display in the form
+    videoFile: null,
+    courseName: "",
     isActive: "active",
   });
 
@@ -93,8 +93,12 @@ const RecordedSessions = () => {
           duration: session.duration || "Unknown Duration",
           videoUrl: session.videoUrl || "No Video URL",
           isActive: session.isActive ? "active" : "inactive",
+          createdAt: session.createdAt || new Date(),
         }));
-        setSessions(adapted);
+        const sortedSessions = adapted.sort((a, b) => 
+          new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setSessions(sortedSessions);
       } else {
         showNotification("Failed to fetch sessions: " + res.message, "error");
       }
@@ -117,21 +121,27 @@ const RecordedSessions = () => {
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, files } = e.target;
 
-    if (name === "courseName") {
+    if (type === 'file') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: files[0],
+        videoUrl: '' // Clear the videoUrl when a file is selected
+      }));
+    } else if (name === "courseName") {
       courses.find(
         (course) => course.courseName === value
       );
-      setFormData({
-        ...formData,
+      setFormData(prev => ({
+        ...prev,
         [name]: value,
-      });
+      }));
     } else {
-      setFormData({
-        ...formData,
+      setFormData(prev => ({
+        ...prev,
         [name]: value,
-      });
+      }));
     }
   };
 
@@ -194,10 +204,11 @@ const RecordedSessions = () => {
             content: newSession.content || "No content",
             duration: newSession.duration || "Unknown Duration",
             videoUrl: newSession.videoUrl || "No Video URL",
-            courseName: selectedCourse.title,  // Adapted to include the course title
+            courseName: selectedCourse.title,
             isActive: newSession.isActive ? "active" : "inactive",
+            createdAt: new Date(),
           };
-          setSessions((prev) => [...prev, adapted]);
+          setSessions((prev) => [adapted, ...prev]);
           showNotification('Session added successfully!');
         } else {
           showNotification('Failed to add session: ' + (res.message || 'Unknown error'), 'error');
@@ -270,8 +281,8 @@ const RecordedSessions = () => {
       description: "",
       content: "",
       duration: "",
-      videoUrl: "",
-      courseName: "", // Reset courseName
+      videoFile: null,
+      courseName: "",
       isActive: true,
     });
     setIsEditing(false);
@@ -524,18 +535,39 @@ const RecordedSessions = () => {
                   />
                 </div>
 
-                {/* Video URL */}
+                {/* Video Upload */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Video URL
+                    Video File *
                   </label>
-                  <input
-                    type="url"
-                    name="videoUrl"
-                    value={formData.videoUrl}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-150"
-                  />
+                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-purple-500 transition-all duration-200">
+                    <div className="space-y-1 text-center">
+                      <VideoCameraIcon className="mx-auto h-12 w-12 text-gray-400" />
+                      <div className="flex text-sm text-gray-600">
+                        <label htmlFor="video-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-purple-500">
+                          <span>Upload a video</span>
+                          <input
+                            id="video-upload"
+                            name="videoFile"
+                            type="file"
+                            accept="video/*"
+                            onChange={handleInputChange}
+                            className="sr-only"
+                            required={!isEditing}
+                          />
+                        </label>
+                        <p className="pl-1">or drag and drop</p>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        MP4, WebM up to 2GB
+                      </p>
+                      {formData.videoFile && (
+                        <p className="text-sm text-gray-600 truncate">
+                          Selected: {formData.videoFile.name}
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Course Selection */}

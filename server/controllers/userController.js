@@ -42,10 +42,34 @@ exports.updateUser = async (req, res) => {
     const user = await User.findByPk(req.params.id);
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    const updatedUser = await user.update(req.body);
-    res.status(200).json(updatedUser);
+    // Create update object from request body
+    const updateData = { ...req.body };
+
+    // If password is included in the update, hash it
+    if (updateData.password) {
+      const salt = await bcrypt.genSalt(10);
+      updateData.password = await bcrypt.hash(updateData.password, salt);
+    } else {
+      // If no new password provided, remove password field to prevent overwrite
+      delete updateData.password;
+    }
+
+    const updatedUser = await user.update(updateData);
+
+    // Remove password from response
+    const userResponse = updatedUser.toJSON();
+    delete userResponse.password;
+
+    res.status(200).json({
+      success: true,
+      data: userResponse
+    });
   } catch (error) {
-    res.status(500).json({ error: "Error updating user", details: error.message });
+    res.status(500).json({ 
+      success: false,
+      error: "Error updating user", 
+      message: error.message 
+    });
   }
 };
 

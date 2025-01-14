@@ -16,15 +16,16 @@ const CourseCard = ({ course, index }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="w-full max-w-[407px] mx-auto"
+      className="w-full max-w-[450px] mx-auto h-full"
     >
       <div className="group relative bg-gradient-to-br from-white/10 to-white/5 
                     backdrop-blur-sm rounded-3xl p-0.5 
                     hover:shadow-2xl hover:shadow-blue-500/20 
-                    transition-all duration-500 transform scale-[1]">
-        <div className="relative overflow-hidden rounded-[24px] bg-[#1a1d2d]">
-          {/* Image Container with improved resolution */}
-          <div className="relative aspect-[4/3] w-full overflow-hidden">
+                    transition-all duration-500 transform scale-[1]
+                    h-full flex flex-col">
+        <div className="relative overflow-hidden rounded-[24px] bg-[#1a1d2d] h-full flex flex-col">
+          {/* Image Container with increased height */}
+          <div className="relative w-full h-[280px] overflow-hidden">
             <img
               src={englishCourseImg}
               alt={course.title}
@@ -54,44 +55,48 @@ const CourseCard = ({ course, index }) => {
             </div>
           </div>
 
-          {/* Content Section with improved text rendering */}
-          <div className="p-5 space-y-3.5">
-            <div className="space-y-2.5">
-              <h3 className="text-xl font-bold text-white leading-tight antialiased
-                          group-hover:text-blue-400 transition-colors duration-300">
+          {/* Content Section with increased padding */}
+          <div className="p-7 space-y-4 flex-grow flex flex-col">
+            <div className="space-y-3 flex-grow">
+              <h3 className="text-2xl font-bold text-white leading-tight antialiased
+                          group-hover:text-blue-400 transition-colors duration-300
+                          line-clamp-1"
+              >
                 {course.title}
               </h3>
               
-              <p className="text-white/70 text-sm leading-relaxed antialiased">
+              <p className="text-white/70 text-base leading-relaxed antialiased
+                          line-clamp-2"
+              >
                 {course.description}
               </p>
             </div>
 
-            {/* Course Stats with improved rendering */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white/10 rounded-xl p-3.5 backdrop-blur-sm
+            {/* Course Stats with increased padding */}
+            <div className="grid grid-cols-2 gap-4 mt-auto">
+              <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm
                           hover:bg-white/15 transition-colors duration-300">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 bg-blue-500/20 rounded-lg">
-                    <FaClock className="text-blue-400 text-lg antialiased" />
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-blue-500/20 rounded-lg">
+                    <FaClock className="text-blue-400 text-xl" />
                   </div>
                   <div>
-                    <p className="text-white/60 text-xs font-medium mb-0.5 antialiased">Duration</p>
-                    <p className="text-white text-base font-semibold antialiased">
+                    <p className="text-white/60 text-sm font-medium mb-0.5 antialiased">Duration</p>
+                    <p className="text-white text-lg font-semibold antialiased">
                       {course.duration}h
                     </p>
                   </div>
                 </div>
               </div>
-              <div className="bg-white/10 rounded-xl p-3.5 backdrop-blur-sm
+              <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm
                           hover:bg-white/15 transition-colors duration-300">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 bg-purple-500/20 rounded-lg">
-                    <FaGraduationCap className="text-purple-400 text-lg antialiased" />
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-purple-500/20 rounded-lg">
+                    <FaGraduationCap className="text-purple-400 text-xl" />
                   </div>
                   <div>
-                    <p className="text-white/60 text-xs font-medium mb-0.5 antialiased">Students</p>
-                    <p className="text-white text-base font-semibold antialiased">
+                    <p className="text-white/60 text-sm font-medium mb-0.5 antialiased">Students</p>
+                    <p className="text-white text-lg font-semibold antialiased">
                       Active
                     </p>
                   </div>
@@ -99,16 +104,16 @@ const CourseCard = ({ course, index }) => {
               </div>
             </div>
 
-            {/* Enquire Button with improved rendering */}
+            {/* Button with increased padding */}
             <button
-              className="w-full flex items-center justify-center gap-2.5 px-5 py-3.5 
+              className="w-full flex items-center justify-center gap-3 px-6 py-4 
                       rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 
-                      text-white text-base font-semibold tracking-wide antialiased
+                      text-white text-lg font-semibold tracking-wide antialiased
                       shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 
                       transform hover:scale-[1.02] transition-all duration-300
                       hover:from-blue-600 hover:to-violet-600"
             >
-              <FaWhatsapp className="text-lg" />
+              <FaWhatsapp className="text-xl" />
               <span>Enquire Now</span>
             </button>
           </div>
