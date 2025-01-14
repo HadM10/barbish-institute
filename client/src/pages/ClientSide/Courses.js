@@ -538,6 +538,37 @@ const Courses = () => {
     });
   }, []);
 
+  const getActiveCategories = async () => {
+    try {
+      const [categoriesRes, coursesRes] = await Promise.all([
+        CategoryAPI.getAllCategories(),
+        getAllCourses()
+      ]);
+
+      if (categoriesRes.success && coursesRes.success) {
+        // Get all courses
+        const allCourses = coursesRes.data.data || coursesRes.data;
+        
+        // Filter categories that have at least one active course
+        const categoriesWithActiveCourses = categoriesRes.data.data.filter(category => {
+          const categoryCourses = allCourses.filter(course => 
+            (course.categoryId === category.id || course.category_id === category.id) && 
+            !course.isArchived
+          );
+          return categoryCourses.length > 0;
+        });
+
+        setCategories(categoriesWithActiveCourses);
+      }
+    } catch (error) {
+      console.error('Error fetching active categories:', error);
+    }
+  };
+
+  useEffect(() => {
+    getActiveCategories();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="pt-[160px]">
@@ -565,10 +596,27 @@ const Courses = () => {
                   </button>
 
                   {/* Categories Dropdown */}
-                  {showCategoryDropdown && (
+                  {showCategoryDropdown && categories.length > 0 && (
                     <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl z-[9999] 
                                   border border-gray-100 max-h-[60vh] overflow-y-auto">
                       <div className="p-2">
+                        <button
+                          onClick={() => {
+                            handleCategoryChange('all');
+                            setShowCategoryDropdown(false);
+                          }}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-[11px]
+                                    flex items-center justify-between
+                                    ${selectedCategory === 'all' 
+                                      ? "bg-blue-50 text-blue-600" 
+                                      : "hover:bg-gray-50"}`}
+                        >
+                          <span>All Courses</span>
+                          <span className="bg-gray-100 px-2 py-1 rounded-full">
+                            {courses.filter(c => !c.isArchived).length}
+                          </span>
+                        </button>
+                        
                         {categories.map((category) => (
                           <button
                             key={category.id}
@@ -584,7 +632,10 @@ const Courses = () => {
                           >
                             <span>{category.name}</span>
                             <span className="bg-gray-100 px-2 py-1 rounded-full">
-                              {getCategoryCount(category.id)}
+                              {courses.filter(c => 
+                                (c.categoryId === category.id || c.category_id === category.id) && 
+                                !c.isArchived
+                              ).length}
                             </span>
                           </button>
                         ))}
