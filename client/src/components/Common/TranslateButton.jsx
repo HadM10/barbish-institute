@@ -6,7 +6,7 @@ const TranslateButton = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Add notranslate class to the button on mount
+    // Add notranslate class to prevent translation of the button
     const button = document.getElementById('lang-switch-button');
     if (button) {
       button.classList.add('notranslate');
@@ -68,13 +68,13 @@ const TranslateButton = () => {
                  hover:scale-105 disabled:opacity-75 disabled:scale-100"
       >
         <span className={`font-medium ${currentLang === 'en' ? 'opacity-100' : 'opacity-50'}`}>
-          EN
+          English
         </span>
         <div className={`relative ${isLoading ? 'animate-spin' : ''}`}>
           <FaExchangeAlt className="text-lg" />
         </div>
         <span className={`font-medium ${currentLang === 'ar' ? 'opacity-100' : 'opacity-50'}`}>
-          ع
+          Arabic
         </span>
       </button>
     </>
