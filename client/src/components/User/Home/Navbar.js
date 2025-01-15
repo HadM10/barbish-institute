@@ -7,6 +7,7 @@ import Login from "../../../components/Common/Login";
 import { AuthContext } from "../../../context/AuthContext";
 import CategoryAPI from '../../../api/categoryAPI';
 import { motion, AnimatePresence } from "framer-motion";
+import TranslateButton from '../../Common/TranslateButton';
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -290,6 +291,9 @@ const Navbar = () => {
                 </AnimatePresence>
               </div>
 
+              {/* Add TranslateButton before Login/Logout */}
+              <TranslateButton />
+              
               {/* Login/Logout Button */}
               {auth ? (
                 <button onClick={logout} className="px-8 py-3 rounded-full bg-highlight text-white
@@ -491,26 +495,29 @@ const Navbar = () => {
             ))}
             {/* Add Login/Logout to Mobile Menu */}
             <li className="lg:hidden">
-              {auth ? (
-                <button
-                  onClick={logout}
-                  className="px-8 py-3 rounded-full bg-highlight text-white
-                  hover:scale-105 hover:tracking-wider transition-all duration-500"
-                >
-                  Logout
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    setIsLoginOpen(true);
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="px-8 py-3 rounded-full bg-highlight text-white
-                  hover:scale-105 hover:tracking-wider transition-all duration-500"
-                >
-                  Login
-                </button>
-              )}
+              <div className="flex items-center gap-3">
+                <TranslateButton />
+                {auth ? (
+                  <button
+                    onClick={logout}
+                    className="px-8 py-3 rounded-full bg-highlight text-white
+                    hover:scale-105 hover:tracking-wider transition-all duration-500"
+                  >
+                    Logout
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setIsLoginOpen(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="px-8 py-3 rounded-full bg-highlight text-white
+                    hover:scale-105 hover:tracking-wider transition-all duration-500"
+                  >
+                    Login
+                  </button>
+                )}
+              </div>
             </li>
           </ul>
         </div>
