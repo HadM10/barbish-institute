@@ -69,7 +69,7 @@ const Testimonials = () => {
           animate={controls}
           className="text-center mb-20"
         >
-          <h2 className="text-5xl font-bold text-white mb-6">
+          <h2 className="text-4xl font-bold text-white mb-6">
             Our Impact in Numbers
           </h2>
           <div className="flex items-center justify-center gap-4">
@@ -94,16 +94,16 @@ const Testimonials = () => {
                             border border-white/20 hover:border-white/40 transition-all duration-500
                             transform hover:-translate-y-2">
                 <div className="flex flex-col items-center">
-                  <stat.icon className="text-4xl text-blue-400 mb-4" />
+                  <stat.icon className="text-3xl text-blue-400 mb-4" />
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: index * 0.3, type: "spring" }}
-                    className="text-4xl font-bold text-white mb-2"
+                    className="text-3xl font-bold text-white mb-2"
                   >
                     {stat.number}
                   </motion.div>
-                  <p className="text-blue-200 text-lg text-center">{stat.label}</p>
+                  <p className="text-blue-200 text-base text-center">{stat.label}</p>
                 </div>
               </div>
             </motion.div>
@@ -118,8 +118,8 @@ const Testimonials = () => {
           className="mt-16 bg-white/10 backdrop-blur-lg rounded-2xl p-8 max-w-3xl mx-auto
                     border border-white/20 hover:border-white/40 transition-all duration-500"
         >
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-2xl font-bold text-white">Level Advancement</h3>
+          <div className="flex flex-col items-center justify-between mb-8 sm:flex-row">
+            <h3 className="text-xl font-bold text-white">Level Advancement</h3>
             <div className="flex items-center gap-4">
               <span className="text-blue-300">B1</span>
               <div className="h-0.5 w-16 bg-gradient-to-r from-blue-500 to-purple-500"></div>

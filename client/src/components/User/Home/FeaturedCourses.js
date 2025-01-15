@@ -16,7 +16,7 @@ const CourseCard = ({ course, index }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="w-full max-w-[328px] mx-auto h-full"
+      className="w-full max-w-[350px] mx-auto h-full"
     >
       <div className="group relative bg-gradient-to-br from-white/10 to-white/5 
                     backdrop-blur-sm rounded-xl p-0.5 
@@ -38,15 +38,15 @@ const CourseCard = ({ course, index }) => {
                 <div className="flex items-center gap-1.5 px-3 py-1.5 
                              rounded-full bg-gradient-to-r from-amber-500 to-orange-600 
                              backdrop-blur-sm shadow-lg">
-                  <FaTrophy className="text-white text-xs" />
-                  <span className="text-white text-xs font-semibold">Most Popular</span>
+                  <FaTrophy className="text-white text-base" />
+                  <span className="text-white text-base font-semibold">Most Popular</span>
                 </div>
               </div>
             )}
 
             <div className="absolute bottom-0 right-0 bg-gradient-to-r from-purple-600 to-blue-600
                            px-3 py-1.5 rounded-tl-lg shadow-lg">
-              <span className="text-white font-bold text-sm">${course.price}</span>
+              <span className="text-white font-bold text-base lg:text-lg">${course.price}</span>
             </div>
           </div>
 
@@ -54,12 +54,12 @@ const CourseCard = ({ course, index }) => {
             <div className="space-y-1.5 flex-grow">
               <h3 className="text-base font-bold text-white leading-tight
                           group-hover:text-blue-400 transition-colors duration-300
-                          line-clamp-1">
+                          line-clamp-1 lg:text-lg">
                 {course.title}
               </h3>
               
-              <p className="text-white/70 text-xs leading-relaxed
-                          line-clamp-2">
+              <p className="text-white/70 text-base leading-relaxed
+                          line-clamp-2 lg:text-lg">
                 {course.description}
               </p>
             </div>
@@ -69,11 +69,11 @@ const CourseCard = ({ course, index }) => {
                           hover:bg-white/15 transition-colors duration-300">
                 <div className="flex items-center gap-1.5">
                   <div className="p-1.5 bg-blue-500/20 rounded-lg">
-                    <FaClock className="text-blue-400 text-sm" />
+                    <FaClock className="text-blue-400 text-sm lg:text-base" />
                   </div>
                   <div>
-                    <p className="text-white/60 text-[10px] font-medium">Duration</p>
-                    <p className="text-white text-sm font-semibold">
+                    <p className="text-white/60 text-sm font-medium lg:text-base">Duration</p>
+                    <p className="text-white text-sm font-semibold lg:text-base">
                       {course.duration}h
                     </p>
                   </div>
@@ -83,11 +83,11 @@ const CourseCard = ({ course, index }) => {
                           hover:bg-white/15 transition-colors duration-300">
                 <div className="flex items-center gap-1.5">
                   <div className="p-1.5 bg-purple-500/20 rounded-lg">
-                    <FaGraduationCap className="text-purple-400 text-sm" />
+                    <FaGraduationCap className="text-purple-400 text-sm lg:text-base" />
                   </div>
                   <div>
-                    <p className="text-white/60 text-[10px] font-medium">Students</p>
-                    <p className="text-white text-sm font-semibold">
+                    <p className="text-white/60 text-sm font-medium lg:text-base">Students</p>
+                    <p className="text-white text-sm font-semibold lg:text-base">
                       Active
                     </p>
                   </div>
@@ -97,9 +97,9 @@ const CourseCard = ({ course, index }) => {
 
             <button className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 
                            rounded-lg bg-gradient-to-r from-blue-500 to-violet-500 
-                           text-white text-sm font-semibold
+                           text-white text-base font-semibold
                            shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 
-                           transform hover:scale-[1.02] transition-all duration-300">
+                           transform hover:scale-[1.02] transition-all duration-300 ">
               <FaWhatsapp className="text-base" />
               <span>Enquire Now</span>
             </button>
@@ -207,7 +207,7 @@ const FeaturedCourses = () => {
         </div>
 
         <div className="relative max-w-7xl mx-auto mb-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-2">
             {courses.slice(0, 3).map((course, index) => (
               <motion.div
                 key={course.id}
