@@ -1,0 +1,28 @@
+/* Hide Google Translate widget but keep functionality */
+.goog-te-banner-frame,
+.goog-te-menu-frame {
+  display: none;
+}
+
+.goog-te-menu-value {
+  display: none !important;
+}
+
+/* Remove the top margin added by Google Translate */
+body {
+  top: 0 !important;
+}
+
+/* Hide Google Translate attribution */
+.goog-te-gadget {
+  font-size: 0 !important;
+}
+
+.goog-te-gadget span {
+  display: none !important;
+}
+
+/* Keep original layout */
+.skiptranslate {
+  display: none !important;
+} 

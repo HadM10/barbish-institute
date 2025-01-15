@@ -5,6 +5,8 @@ import AppRoutes from "./routes";
 import Navbar from "./components/User/Home/Navbar.js";
 import Footer from "./components/User/Home/Footer.js";
 import "./css/tailwind.css";
+import TranslateButton from './components/Common/TranslateButton';
+import './styles/translate.css';
 
 const App = () => {
   const location = useLocation();
@@ -57,6 +59,7 @@ const App = () => {
           )}
         </>
       )}
+      <TranslateButton />
     </div>
   );
 };
