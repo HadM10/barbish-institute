@@ -108,7 +108,7 @@ const Contact = () => {
                   <span className="text-sm md:text-base">24/7 Support Available</span>
                 </div>
               </div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-4 md:mb-8 
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-8 
                             bg-gradient-to-r from-white via-blue-100 to-indigo-200 
                             text-transparent bg-clip-text">
                 Get in Touch

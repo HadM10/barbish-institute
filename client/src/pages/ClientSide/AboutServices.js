@@ -136,7 +136,7 @@ const AboutServices = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
-              className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-8 
+              className="text-3xl sm:text-5xl md:text-6xl font-bold mb-8 
                        bg-gradient-to-r from-rose-500 via-cyan-500 to-violet-500 
                        text-transparent bg-clip-text animate-gradient"
             >

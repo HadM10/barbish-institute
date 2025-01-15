@@ -47,20 +47,6 @@ const Notification = ({ message, type, onClose }) => {
   );
 };
 
-// Function to filter categories with active courses
-const getActiveCategoriesForDropdown = (categories, courses, isEditing) => {
-  if (isEditing) {
-    return categories; // Show all categories when editing
-  }
-  return categories.filter(category => {
-    const hasActiveCourses = courses.some(course => 
-      (course.categoryId === category.id || course.category_id === category.id) && 
-      !course.isArchived
-    );
-    return hasActiveCourses;
-  });
-};
-
 const CourseTable = ({ courses, categories, onEdit, onDelete, onArchive, searchTerm, showArchived }) => {
   const [expandedRows, setExpandedRows] = useState({});
 
@@ -564,8 +550,8 @@ useEffect(() => {
                                    rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                         required
                       >
-                        <option value="">Select Category</option>
-                        {getActiveCategoriesForDropdown(categories, courses, isEditing).map((category) => (
+                         <option value="">Select Category</option>
+                        {categories.map((category) => (
                           <option key={category.id} value={category.name}>
                             {category.name}
                           </option>

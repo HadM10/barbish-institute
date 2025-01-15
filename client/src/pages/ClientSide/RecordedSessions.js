@@ -1,23 +1,43 @@
 // pages/ClientSide/RecordedSessions.js
 import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaVideo, FaChevronRight, FaBookReader, FaChevronDown, FaCheckCircle, FaChevronUp } from "react-icons/fa";
+import {
+  FaVideo,
+  FaChevronRight,
+  FaBookReader,
+  FaChevronDown,
+  FaCheckCircle,
+  FaChevronUp,
+} from "react-icons/fa";
 import { MdSubscriptions, MdOndemandVideo } from "react-icons/md";
 import Navbar from "../../components/User/Home/Navbar";
 import { getUserSubscribedCourses } from "../../api/userAPI";
-import { markSessionAsWatched, getSessionProgress } from "../../api/userSessionAPI";
+import {
+  markSessionAsWatched,
+  getSessionProgress,
+} from "../../api/userSessionAPI";
 import { AnimatePresence, motion } from "framer-motion";
+import Login from "../../components/Common/Login";
 
-// EmptyState Component
-const EmptyState = ({ type, courseName }) => {
+const RecordedSessions = () => {
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [courses, setCourses] = useState([]);
+  const [expandedCourses, setExpandedCourses] = useState({});
+  const [sessionsProgress, setSessionsProgress] = useState({});
+  const navigate = useNavigate();
+  const token = localStorage.getItem("token");
+
+  // EmptyState Component
+  // EmptyState Component
+const EmptyState = ({ type, courseName, setIsLoginOpen }) => {
   const content = {
     notLoggedIn: {
       icon: <MdSubscriptions className="text-6xl text-blue-500 mb-4" />,
       title: "Login Required",
-      description: "Please login to access your courses and learning materials.",
+      description:
+        "Please login to access your courses and learning materials.",
       actionText: "Login Now",
-      actionLink: "/login",
-      showAction: true
+      showAction: true,
     },
     noSubscription: {
       icon: <FaBookReader className="text-6xl text-blue-500 mb-4" />,
@@ -25,53 +45,75 @@ const EmptyState = ({ type, courseName }) => {
       description: "Subscribe to our courses to start your learning journey!",
       actionText: "Browse Courses",
       actionLink: "/courses",
-      showAction: true
+      showAction: true,
     },
     noSessions: {
       icon: <FaVideo className="text-6xl text-gray-400 mb-4" />,
       title: "Coming Soon",
       description: `We're currently preparing the recorded sessions for ${courseName}. Our team is working hard to create high-quality content that meets our standards. You'll be notified as soon as new content becomes available.`,
-      showAction: false
+      showAction: false,
     },
   };
 
-  const { icon, title, description, actionText, actionLink, showAction } = content[type];
+  const currentContent = content[type];
+
+  const handleAction = () => {
+    if (type === 'notLoggedIn') {
+      setIsLoginOpen(true);
+    }
+  };
+
+  const renderAction = () => {
+    if (!currentContent.showAction) return null;
+
+    if (type === 'notLoggedIn') {
+      return (
+        <button
+          onClick={handleAction}
+          className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-xl 
+                    hover:bg-blue-700 transition-all duration-200 transform hover:scale-105"
+        >
+          {currentContent.actionText}
+          <FaChevronRight className="ml-2" />
+        </button>
+      );
+    }
+
+    return (
+      <Link
+        to={currentContent.actionLink}
+        className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-xl 
+                  hover:bg-blue-700 transition-all duration-200 transform hover:scale-105"
+      >
+        {currentContent.actionText}
+        <FaChevronRight className="ml-2" />
+      </Link>
+    );
+  };
 
   return (
     <div className="bg-white/50 backdrop-blur-sm rounded-xl shadow-sm p-8 text-center">
-      <div className="flex justify-center">{icon}</div>
-      <h2 className="text-2xl font-bold text-gray-800 mt-4 mb-2">{title}</h2>
-      <p className="text-gray-600 text-base mb-6">{description}</p>
-      {showAction && (
-        <Link
-          to={actionLink}
-          className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-xl 
-                   hover:bg-blue-700 transition-all duration-200 transform hover:scale-105"
-        >
-          {actionText}
-          <FaChevronRight className="ml-2" />
-        </Link>
-      )}
+      <div className="flex justify-center">{currentContent.icon}</div>
+      <h2 className="text-2xl font-bold text-gray-800 mt-4 mb-2">
+        {currentContent.title}
+      </h2>
+      <p className="text-gray-600 text-base mb-6">{currentContent.description}</p>
+      {renderAction()}
     </div>
   );
 };
 
-const RecordedSessions = () => {
-  const [courses, setCourses] = useState([]);
-  const [expandedCourses, setExpandedCourses] = useState({});
-  const [sessionsProgress, setSessionsProgress] = useState({});
-  const navigate = useNavigate();
-  const token = localStorage.getItem("token");
+  
 
   // Fetch progress for a specific course
   const fetchCourseProgress = useCallback(async (courseId) => {
     try {
-      console.log('Fetching progress for course:', courseId);
+      console.log("Fetching progress for course:", courseId);
       const response = await getSessionProgress(courseId);
-      if (response.status === 'success') {
-        setSessionsProgress(prev => ({
+      if (response.status === "success") {
+        setSessionsProgress((prev) => ({
           ...prev,
-          [courseId]: response.data
+          [courseId]: response.data,
         }));
       }
     } catch (error) {
@@ -83,15 +125,20 @@ const RecordedSessions = () => {
   const handleWatchStatusUpdate = async (courseId, sessionId) => {
     try {
       const currentProgress = sessionsProgress[courseId];
-      const sessionProgress = currentProgress?.sessions?.find(s => s.sessionId === sessionId);
+      const sessionProgress = currentProgress?.sessions?.find(
+        (s) => s.sessionId === sessionId
+      );
       const newWatchStatus = !sessionProgress?.isWatched;
 
-      const response = await markSessionAsWatched(sessionId,  newWatchStatus
-      );
-      
-      if (response.status === 'success') {
+      const response = await markSessionAsWatched(sessionId, newWatchStatus);
+
+      if (response.status === "success") {
         await fetchCourseProgress(courseId);
-        console.log(`Successfully ${newWatchStatus ? 'marked as watched' : 'marked as unwatched'}`);
+        console.log(
+          `Successfully ${
+            newWatchStatus ? "marked as watched" : "marked as unwatched"
+          }`
+        );
       }
     } catch (error) {
       console.error("Error updating watch status:", error);
@@ -106,9 +153,9 @@ const RecordedSessions = () => {
 
   // Toggle course expansion
   const toggleCourse = (courseId) => {
-    setExpandedCourses(prev => ({
+    setExpandedCourses((prev) => ({
       ...prev,
-      [courseId]: !prev[courseId]
+      [courseId]: !prev[courseId],
     }));
   };
 
@@ -117,9 +164,9 @@ const RecordedSessions = () => {
     try {
       const response = await getUserSubscribedCourses();
       setCourses(response.data);
-      
+
       const initialExpandedState = {};
-      response.data.forEach(course => {
+      response.data.forEach((course) => {
         initialExpandedState[course.id] = false;
         fetchCourseProgress(course.id);
       });
@@ -136,23 +183,30 @@ const RecordedSessions = () => {
   }, [fetchCourses, token]);
 
   // Session Item Component
-  const SessionItem = ({ session, index, isWatched, onToggleWatch, onWatch }) => {
+  const SessionItem = ({
+    session,
+    index,
+    isWatched,
+    onToggleWatch,
+    onWatch,
+  }) => {
     const [isHovered, setIsHovered] = useState(false);
-    
+
     const parseContent = (content) => {
       if (!content) return [];
-      return content.split('\n')
-        .filter(line => line.trim().length > 0)
-        .map(line => line.trim());
+      return content
+        .split("\n")
+        .filter((line) => line.trim().length > 0)
+        .map((line) => line.trim());
     };
 
     return (
-      <div 
+      <div
         className="bg-white border-b border-gray-100 transition-all duration-200"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <div className={`p-3 md:p-4 ${isHovered ? 'bg-blue-50/50' : ''}`}>
+        <div className={`p-3 md:p-4 ${isHovered ? "bg-blue-50/50" : ""}`}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-start sm:items-center gap-3 flex-1">
               <div className="flex-shrink-0 mt-1 sm:mt-0">
@@ -169,13 +223,19 @@ const RecordedSessions = () => {
                       Session {index + 1}: {session.title}
                     </h3>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-xs ${isWatched ? 'text-green-600' : 'text-gray-500'}`}>
-                        {isWatched ? 'Completed' : 'Not started'}
+                      <span
+                        className={`text-xs ${
+                          isWatched ? "text-green-600" : "text-gray-500"
+                        }`}
+                      >
+                        {isWatched ? "Completed" : "Not started"}
                       </span>
                       {session.duration && (
                         <>
                           <span className="text-xs text-gray-400">•</span>
-                          <span className="text-xs text-gray-500">{session.duration} min</span>
+                          <span className="text-xs text-gray-500">
+                            {session.duration} min
+                          </span>
                         </>
                       )}
                     </div>
@@ -188,17 +248,19 @@ const RecordedSessions = () => {
               <button
                 onClick={onToggleWatch}
                 className={`flex items-center px-2 py-1 sm:px-3 sm:py-1.5 rounded text-xs sm:text-sm font-medium
-                  ${isWatched 
-                    ? 'text-red-600 hover:text-red-700 hover:bg-red-50' 
-                    : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'} 
+                  ${
+                    isWatched
+                      ? "text-red-600 hover:text-red-700 hover:bg-red-50"
+                      : "text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                  } 
                   transition-all duration-200`}
               >
                 <MdOndemandVideo className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="hidden sm:inline">
-                  {isWatched ? 'Mark as Unwatched' : 'Mark as Watched'}
+                  {isWatched ? "Mark as Unwatched" : "Mark as Watched"}
                 </span>
                 <span className="sm:hidden">
-                  {isWatched ? 'Unwatch' : 'Watch'}
+                  {isWatched ? "Unwatch" : "Watch"}
                 </span>
               </button>
               <button
@@ -217,7 +279,7 @@ const RecordedSessions = () => {
             {isHovered && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
+                animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 className="mt-4 pl-8"
               >
@@ -242,11 +304,18 @@ const RecordedSessions = () => {
                       </h4>
                       <div className="space-y-2">
                         {parseContent(session.content).map((item, idx) => (
-                          <div key={idx} className="flex items-start gap-2 group">
-                            <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 flex-shrink-0 
-                                          group-hover:bg-blue-500 transition-colors duration-200" />
-                            <p className="text-sm text-gray-600 group-hover:text-gray-900 
-                                        transition-colors duration-200">
+                          <div
+                            key={idx}
+                            className="flex items-start gap-2 group"
+                          >
+                            <div
+                              className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 flex-shrink-0 
+                                          group-hover:bg-blue-500 transition-colors duration-200"
+                            />
+                            <p
+                              className="text-sm text-gray-600 group-hover:text-gray-900 
+                                        transition-colors duration-200"
+                            >
                               {item}
                             </p>
                           </div>
@@ -265,11 +334,12 @@ const RecordedSessions = () => {
 
   // Course Card Component
   const CourseCard = ({ course, progress, isExpanded, onToggle }) => {
-    console.log('Session data:', course.Sessions);
+    console.log("Session data:", course.Sessions);
 
     const watchedCount = progress?.watchedSessions || 0;
     const totalCount = course.Sessions?.length || 0;
-    const percentage = totalCount > 0 ? Math.round((watchedCount / totalCount) * 100) : 0;
+    const percentage =
+      totalCount > 0 ? Math.round((watchedCount / totalCount) * 100) : 0;
 
     return (
       <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
@@ -289,9 +359,11 @@ const RecordedSessions = () => {
             </div>
             <div className="flex items-center gap-3">
               <div className="hidden sm:block text-right">
-                <span className="text-blue-100 text-sm">{percentage}% Complete</span>
+                <span className="text-blue-100 text-sm">
+                  {percentage}% Complete
+                </span>
                 <div className="w-24 h-1.5 bg-blue-800/50 rounded-full mt-1">
-                  <div 
+                  <div
                     className="h-full bg-blue-100 rounded-full transition-all duration-300"
                     style={{ width: `${percentage}%` }}
                   />
@@ -310,11 +382,15 @@ const RecordedSessions = () => {
           <div>
             <div className="sm:hidden p-3 border-b border-gray-200">
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-sm font-medium text-gray-700">Progress</span>
-                <span className="text-sm font-medium text-blue-600">{percentage}%</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Progress
+                </span>
+                <span className="text-sm font-medium text-blue-600">
+                  {percentage}%
+                </span>
               </div>
               <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-green-500 transition-all duration-300"
                   style={{ width: `${percentage}%` }}
                 />
@@ -327,8 +403,13 @@ const RecordedSessions = () => {
                   key={session.id}
                   session={session}
                   index={index}
-                  isWatched={progress?.sessions?.find(s => s.sessionId === session.id)?.isWatched}
-                  onToggleWatch={() => handleWatchStatusUpdate(course.id, session.id)}
+                  isWatched={
+                    progress?.sessions?.find((s) => s.sessionId === session.id)
+                      ?.isWatched
+                  }
+                  onToggleWatch={() =>
+                    handleWatchStatusUpdate(course.id, session.id)
+                  }
                   onWatch={() => handleWatchClick(session.id)}
                 />
               ))}
@@ -345,8 +426,15 @@ const RecordedSessions = () => {
       <div className="min-h-screen bg-gray-100">
         <Navbar />
         <div className="pt-40 pb-20">
-          <EmptyState type="notLoggedIn" />
+          <EmptyState 
+            type="notLoggedIn" 
+            setIsLoginOpen={setIsLoginOpen}
+          />
         </div>
+        <Login 
+          isOpen={isLoginOpen} 
+          onClose={() => setIsLoginOpen(false)}
+        />
       </div>
     );
   }
@@ -366,7 +454,7 @@ const RecordedSessions = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="pt-20 pb-20">
+      <div className="pt-56 pb-20">
         <div className="max-w-5xl mx-auto px-4">
           <div className="mb-10 pb-6 border-b border-gray-200">
             <h1 className="text-3xl font-bold text-gray-900 mb-3">
@@ -386,21 +474,23 @@ const RecordedSessions = () => {
                   isExpanded={expandedCourses[course.id]}
                   onToggle={() => toggleCourse(course.id)}
                 />
-                
-                {expandedCourses[course.id] && course.Sessions?.length === 0 && (
-                  <div className="mt-4 bg-white rounded-lg shadow-sm p-6">
-                    <EmptyState 
-                      type="noSessions" 
-                      courseName={course.title} 
-                    />
-                  </div>
-                )}
+
+                {expandedCourses[course.id] &&
+                  course.Sessions?.length === 0 && (
+                    <div className="mt-4 bg-white rounded-lg shadow-sm p-6">
+                      <EmptyState type="noSessions" courseName={course.title} />
+                    </div>
+                  )}
               </div>
             ))}
           </div>
 
           {courses.length === 0 && (
             <div className="mt-8">
+              <Login
+                isOpen={isLoginOpen}
+                onClose={() => setIsLoginOpen(false)}
+              />
               <EmptyState type="noSubscription" />
             </div>
           )}
