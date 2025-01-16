@@ -18,6 +18,7 @@ module.exports = {
         slideUp: 'slideUp 0.5s ease-out',
         float: 'float 6s ease-in-out infinite',
         blob: "blob 7s infinite",
+        'spin-slow': 'spin 3s linear infinite',
       },
       keyframes: {
         fadeIn: {

@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+} from "react";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -18,7 +24,9 @@ const Courses = () => {
 
   // Initialize with "all" by default
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState([
+    { id: "all", name: "All Courses", icon: "��" },
+  ]);
   const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -26,16 +34,18 @@ const Courses = () => {
   const [sortOption, setSortOption] = useState("default");
   const [showSortOptions, setShowSortOptions] = useState(false);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
-  const [selectedCategoryName, setSelectedCategoryName] = useState("Categories");
+  const categoryContainerRef = useRef(null);
 
-  // Add effect to handle scroll on navigation
-  useEffect(() => {
-    // Scroll to top when component mounts or when navigating to courses
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  }, [location.pathname]); // Add location.pathname as dependency
+  const getSortOptionLabel = (option) => {
+    const sortOptions = {
+      default: "Sort By",
+      "price-low-high": "Price: Low to High",
+      "price-high-low": "Price: High to Low",
+      "duration-low-high": "Duration: Shortest First",
+      "duration-high-low": "Duration: Longest First",
+    };
+    return sortOptions[option] || "Sort By";
+  };
 
   // Update initialization effect
   useEffect(() => {
@@ -86,37 +96,35 @@ const Courses = () => {
     }
   }, [location.state, courses]);
 
-  // Update fetchData
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const categoryResult = await CategoryAPI.getAllCategories();
-        if (categoryResult.success) {
-          setCategories([
-            { id: "all", name: "All Courses" },
-            ...categoryResult.data.data,
-          ]);
-        }
+        const [categoryResult, courseResult] = await Promise.all([
+          CategoryAPI.getAllCategories(),
+          getAllCourses(),
+        ]);
 
-        const courseResult = await getAllCourses();
-        if (courseResult.success) {
+        if (categoryResult.success && courseResult.success) {
           const coursesData = courseResult.data.data || courseResult.data || [];
+
+          // Set courses first
           setCourses(coursesData);
 
-          if (location.state?.searchTerm && location.state?.courseId) {
-            const exactCourse = coursesData.find(
-              (course) => course.id === location.state.courseId
-            );
-            if (exactCourse) {
-              setSearchedCourse(exactCourse);
-              setSelectedCategory(
-                exactCourse.categoryId || exactCourse.category_id
+          // Then set categories, including only active ones
+          const activeCategories = [
+            { id: "all", name: "All Courses", icon: "📚" },
+            ...categoryResult.data.data.filter((category) => {
+              const categoryCourses = coursesData.filter(
+                (course) =>
+                  (course.categoryId === category.id ||
+                    course.category_id === category.id) &&
+                  !course.isArchived
               );
-            }
-          } else if (!location.state?.categoryId) {
-            setSelectedCategory("all");
-          }
+              return categoryCourses.length > 0;
+            }),
+          ];
+          setCategories(activeCategories);
         }
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -127,43 +135,59 @@ const Courses = () => {
     };
 
     fetchData();
-  }, [location.state]);
+
+    // Set initial states
+    setSelectedCategory("all");
+    setSortOption("default");
+  }, []); // Run once on mount
 
   // Handle category change
-  const handleCategoryChange = (categoryId) => {
+  const handleCategoryChange = useCallback((categoryId) => {
     setSelectedCategory(categoryId);
     setSearchedCourse(null);
-    // Update the category button text
-    const selectedCat = categories.find(cat => cat.id === categoryId);
-    setSelectedCategoryName(selectedCat ? selectedCat.name : "Categories");
-  };
 
-  // Initialize category name when categories are loaded
-  useEffect(() => {
-    if (categories.length > 0 && selectedCategory) {
-      const currentCategory = categories.find(cat => cat.id === selectedCategory);
-      setSelectedCategoryName(currentCategory ? currentCategory.name : "Categories");
+    if (categoryContainerRef.current) {
+      const selectedButton = categoryContainerRef.current.querySelector(
+        `[data-category-id="${categoryId}"]`
+      );
+      if (selectedButton) {
+        const container = categoryContainerRef.current;
+        const buttonLeft = selectedButton.offsetLeft;
+        const containerWidth = container.clientWidth;
+        const scrollPosition =
+          buttonLeft - containerWidth / 2 + selectedButton.offsetWidth / 2;
+
+        container.scrollTo({
+          left: Math.max(0, scrollPosition),
+          behavior: "smooth",
+        });
+      }
     }
-  }, [categories, selectedCategory]);
+  }, []);
 
   // Update filtered courses logic
   const filteredCourses = useMemo(() => {
-    // If there's a searched course, show it in its category
+    // First filter out archived courses
+    let filtered = courses.filter((course) => !course.isArchived);
+
     if (searchedCourse) {
       const courseCategory =
         searchedCourse.categoryId || searchedCourse.category_id;
-      if (selectedCategory === courseCategory || selectedCategory === "all") {
+      if (
+        (selectedCategory === courseCategory || selectedCategory === "all") &&
+        !searchedCourse.isArchived
+      ) {
         return [searchedCourse];
       }
       return [];
     }
 
-    // Normal category filtering when not searching
+    // Always show all courses when "all" is selected
     if (selectedCategory === "all") {
-      return courses;
+      return filtered;
     }
 
-    return courses.filter(
+    return filtered.filter(
       (course) =>
         course.categoryId === selectedCategory ||
         course.category_id === selectedCategory
@@ -191,34 +215,6 @@ const Courses = () => {
     }
   }, [filteredCourses, sortOption]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const categoryResult = await CategoryAPI.getAllCategories();
-        if (categoryResult.success) {
-          setCategories([
-            { id: "all", name: "All Courses" },
-            ...categoryResult.data.data,
-          ]);
-        }
-
-        const courseResult = await getAllCourses();
-        if (courseResult.success) {
-          const coursesData = courseResult.data.data || courseResult.data || [];
-          setCourses(coursesData);
-        }
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setError(`Failed to fetch data: ${err.message}`);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
   const getCategoryCount = (categoryId) => {
     if (categoryId === "all") return courses.length;
     return courses.filter(
@@ -229,70 +225,69 @@ const Courses = () => {
 
   const CourseCard = ({ course }) => {
     const [isExpanded, setIsExpanded] = useState(false);
-    const isLargeScreen = window.innerWidth >= 1024;
 
     return (
-      <div className="relative group animate-fadeIn">
+      <div className="relative group animate-fadeIn w-full h-full">
         <div
-          className="bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transform 
-                     transition-all duration-300 hover:shadow-2xl hover:-translate-y-1
-                     border border-gray-100"
+          className="bg-white rounded-lg shadow-sm hover:shadow-md 
+                    overflow-hidden cursor-pointer transform transition-all duration-300 
+                    hover:-translate-y-1 border border-gray-100 h-full flex flex-col"
           onClick={() => setIsExpanded(true)}
         >
-          <div className="relative h-[280px] overflow-hidden">
+          {/* Fixed aspect ratio for card image */}
+          <div className="relative w-full aspect-square">
             <img
               src={englishCourseImg}
               alt={course.title}
-              className="w-full h-full object-cover transform 
-                       group-hover:scale-105 transition-transform duration-700"
+              className="w-full h-full object-contain bg-gray-100"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent" />
-
             <div
-              className="absolute bottom-0 right-0 bg-gradient-to-r from-purple-600 to-blue-600
-                           px-4 py-2 rounded-tl-lg shadow-lg"
+              className="absolute bottom-2 right-2 lg:bottom-4 lg:right-4 bg-gradient-to-r from-purple-600 to-blue-600
+                         px-2 py-1 lg:px-4 lg:py-2 rounded-lg shadow-lg"
             >
-              <span className="text-white font-bold text-lg">
+              <span className="text-white font-bold text-xs sm:text-sm lg:text-lg">
                 ${course.price}
               </span>
             </div>
           </div>
 
-          <div className="p-6">
-            <h3
-              className="text-xl font-bold text-gray-800 mb-3 line-clamp-1 group-hover:text-blue-600
-                           transition-colors duration-300"
-            >
-              {course.title}
-            </h3>
+          {/* Fixed height content container */}
+          <div className="p-2 sm:p-3 lg:p-6 flex flex-col flex-1">
+            <div className="flex-1">
+              <h3 className="text-xs sm:text-sm lg:text-xl font-bold text-gray-800 mb-1 sm:mb-2 lg:mb-4 line-clamp-2">
+                {course.title}
+              </h3>
+              <p className="text-gray-600 text-xs lg:text-base mb-2 lg:mb-6 line-clamp-2">
+                {course.description}
+              </p>
+            </div>
 
-            <p className="text-gray-600 text-sm mb-5 line-clamp-2">
-              {course.description}
-            </p>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-full">
-                <FaClock className="text-blue-600 text-sm" />
-                <span className="text-sm text-blue-600 font-medium">
-                  {course.duration} hours
+            <div className="flex items-center justify-between gap-2 lg:gap-3 mt-auto">
+              <div className="flex items-center gap-1 lg:gap-2 bg-blue-50 px-2 py-1 lg:px-4 lg:py-2 rounded-full">
+                <FaClock className="text-blue-600 text-xs lg:text-base" />
+                <span className="text-xs lg:text-base text-blue-600 font-medium">
+                  {course.duration}h
                 </span>
               </div>
               <button
-                className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white 
-                         font-medium rounded-full hover:shadow-xl hover:shadow-blue-600/20
-                         transition-all duration-300 transform hover:scale-105
-                         flex items-center gap-2"
+                className="px-2 py-1 lg:px-4 lg:py-2 bg-gradient-to-r from-blue-600 to-purple-600 
+                         text-white text-xs lg:text-base font-medium rounded-full
+                         transition-all duration-300 flex items-center gap-1 lg:gap-2"
                 onClick={(e) => {
                   e.stopPropagation();
+                  setIsExpanded(true);
                 }}
               >
-                <FaWhatsapp className="text-lg" />
-                <span>Enquire Now</span>
+                <FaWhatsapp className="text-xs lg:text-base" />
+                <span className="hidden sm:inline">Enquire</span>
               </button>
             </div>
           </div>
         </div>
 
+        {/* Popup with uncropped image */}
+        {/* Popup with uncropped image */}
         {isExpanded && (
           <div className="fixed inset-0 bg-black/80 z-[99999] flex items-center justify-center p-4">
             <motion.div
@@ -300,193 +295,215 @@ const Courses = () => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ type: "spring", duration: 0.5 }}
-              className={`
-                bg-white rounded-xl overflow-hidden shadow-2xl relative
-                ${
-                  isLargeScreen
-                    ? "w-[70%] max-w-[1000px] flex flex-col"
-                    : "w-[90%] max-w-[500px]"
-                }
-                max-h-[90vh]
-              `}
+              className="bg-white rounded-xl shadow-2xl relative overflow-hidden 
+        w-[80%] max-w-[300px] md:w-[85%] md:max-w-[1200px]" // Reduced width
               onClick={(e) => e.stopPropagation()}
             >
-              {isLargeScreen ? (
-                <div className="grid grid-cols-2 h-full">
-                  <div className="relative h-full">
-                    <img
-                      src={englishCourseImg}
-                      alt={course.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+              {/* Mobile popup remains unchanged */}
+              <div className="md:hidden flex flex-col h-full">
+                <div className="relative h-[30vh]">
+                  <img
+                    src={englishCourseImg}
+                    alt={course.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    onClick={() => setIsExpanded(false)}
+                    className="absolute top-2 right-2 p-1.5 bg-black/20 rounded-full"
+                  >
+                    <FaTimes className="text-white text-sm" />{" "}
+                    {/* Smaller close icon */}
+                  </button>
+                </div>
 
-                  <div className="bg-[#1E3A8A] flex flex-col h-full">
-                    <div className="p-8 flex-1 overflow-y-auto">
-                      <div className="relative mb-6">
-                        <button
-                          onClick={() => setIsExpanded(false)}
-                          className="absolute -top-2 right-0 p-2 bg-black/20 hover:bg-black/30 
-                                   rounded-full backdrop-blur-sm transition-colors"
-                        >
-                          <FaTimes className="text-white text-xl" />
-                        </button>
-
-                        <div className="flex items-center gap-3">
-                          <h2 className="text-2xl font-bold text-white">
-                            {course.title}
-                          </h2>
-                          <div
-                            className="bg-gradient-to-r from-blue-600 to-purple-600 
-                    px-4 py-2 rounded-full"
-                          >
-                            <span className="text-white font-bold">
-                              ${course.price}
-                            </span>
-                          </div>
-                        </div>
+                <div className="flex-1 bg-[#1E3A8A] p-3 overflow-y-auto">
+                  <h2 className="text-sm font-bold text-white mb-2">
+                    {course.title}
+                  </h2>{" "}
+                  {/* Smaller font size */}
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-white/10 rounded-lg p-2">
+                        <p className="text-white/70 text-xs">Duration</p>
+                        <p className="text-white text-sm font-medium">
+                          {course.duration}h
+                        </p>
                       </div>
-
-                      <div className="grid grid-cols-2 gap-4 mb-8">
-                        <div className="bg-white/10 rounded-xl p-4">
-                          <div className="flex items-center gap-3">
-                            <FaClock className="text-blue-400 text-lg" />
-                            <div>
-                              <p className="text-white/70 text-sm">Duration</p>
-                              <p className="text-white font-semibold">
-                                {course.duration} hours
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="bg-white/10 rounded-xl p-4">
-                          <div className="flex items-center gap-3">
-                            <FaUser className="text-blue-400 text-lg" />
-                            <div>
-                              <p className="text-white/70 text-sm">
-                                Instructor
-                              </p>
-                              <p className="text-white font-semibold">
-                                {course.instructor || "Mahdi"}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-8">
-                        <div>
-                          <h3 className="text-lg font-semibold text-white mb-3">
-                            Description
-                          </h3>
-                          <p className="text-gray-300 leading-relaxed">
-                            {course.description}
-                          </p>
-                        </div>
-
-                        <div>
-                          <h3 className="text-lg font-semibold text-white mb-3">
-                            What You'll Learn
-                          </h3>
-                          <ul className="space-y-2">
-                            {course.content?.split("\n").map((item, index) => (
-                              <li
-                                key={index}
-                                className="flex items-start gap-3"
-                              >
-                                <div className="w-2 h-2 rounded-full bg-blue-400 mt-2" />
-                                <span className="text-gray-300">{item}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        <div className="pt-6">
-                          <button
-                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white
-                                     px-6 py-4 rounded-xl transition-all duration-300
-                                     hover:shadow-xl hover:shadow-blue-600/20
-                                     flex items-center justify-center gap-2 text-lg font-semibold"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Add your enquire logic here
-                            }}
-                          >
-                            <FaWhatsapp className="text-xl" />
-                            <span>Enquire Now</span>
-                          </button>
-                        </div>
+                      <div className="bg-white/10 rounded-lg p-2">
+                        <p className="text-white/70 text-xs">Price</p>
+                        <p className="text-white text-sm font-medium">
+                          ${course.price}
+                        </p>
                       </div>
                     </div>
+
+                    <div>
+                      <h3 className="text-white text-xs font-medium mb-1">
+                        Description
+                      </h3>
+                      <p className="text-white/80 text-xs">
+                        {course.description}
+                      </p>
+                    </div>
+
+                    <div>
+                      <h3 className="text-white text-xs font-medium mb-1">
+                        What You'll Learn
+                      </h3>
+                      <ul className="space-y-1.5">
+                        {course.content?.split("\n").map((item, index) => (
+                          <li key={index} className="flex items-start gap-2">
+                            <div className="w-1 h-1 rounded-full bg-blue-400 mt-1.5" />
+                            <span className="text-white/80 text-xs">
+                              {item}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                  <div className="sticky bottom-0 pt-3 mt-3 border-t border-white/10">
+                    <button
+                      className="w-full py-2 bg-gradient-to-r from-blue-500 to-purple-500 
+                                 rounded-lg text-white text-xs font-medium 
+                                 flex items-center justify-center gap-1.5"
+                    >
+                      <FaWhatsapp className="text-sm" />
+                      <span>Enquire Now</span>
+                    </button>
                   </div>
                 </div>
-              ) : (
-                <div className="flex flex-col">
-                  <div className="relative h-[300px]">
+              </div>
+
+              {/* Desktop popup with perfect square image */}
+              <div className="hidden md:flex aspect-[2/1]">
+                <div className="w-1/2 bg-gray-100">
+                  <div className="relative w-full h-full">
                     <img
                       src={englishCourseImg}
                       alt={course.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                     />
+                  </div>
+                </div>
+
+                <div className="w-1/2 bg-[#1E3A8A] flex flex-col">
+                  <div className="p-6 border-b border-white/10 flex items-start justify-between">
+                    {" "}
+                    {/* Reduced padding */}
+                    <div className="mt-4">
+                      <h2 className="text-xl font-bold text-white leading-tight mb-4">
+                        {" "}
+                        {/* Reduced font size */}
+                        {course.title}
+                      </h2>
+                      <div
+                        className="inline-flex bg-gradient-to-r from-blue-600 to-purple-600 
+                              px-4 py-2 rounded-full shadow-lg"
+                      >
+                        {" "}
+                        {/* Reduced padding */}
+                        <span className="text-white font-bold text-lg">
+                          ${course.price}
+                        </span>{" "}
+                        {/* Reduced font size */}
+                      </div>
+                    </div>
                     <button
                       onClick={() => setIsExpanded(false)}
-                      className="absolute top-4 right-4 z-50 p-2 bg-black/20 hover:bg-black/30 
-                               rounded-full backdrop-blur-sm transition-colors"
+                      className="p-2 hover:bg-white/10 rounded-full transition-colors"
                     >
                       <FaTimes className="text-white text-xl" />
                     </button>
                   </div>
 
-                  <div className="p-6 bg-[#1E3A8A]">
-                    <div className="flex items-center mb-4 gap-3">
-                      <h2 className="text-xl font-bold text-white">
-                        {course.title}
-                      </h2>
-                      <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-3 py-1.5 rounded-full">
-                        <span className="text-white font-bold">
-                          ${course.price}
-                        </span>
+                  <div className="flex-1 overflow-y-auto custom-scrollbar">
+                    <div className="p-6 space-y-6">
+                      {" "}
+                      {/* Reduced padding */}
+                      {/* Course Info Grid */}
+                      <div className="grid grid-cols-2 gap-4">
+                        {" "}
+                        {/* Reduced gap */}
+                        <div className="bg-white/10 rounded-xl p-4">
+                          {" "}
+                          {/* Reduced padding */}
+                          <div className="flex items-center gap-4">
+                            <FaClock className="text-blue-400 text-xl" />{" "}
+                            {/* Smaller icon */}
+                            <div>
+                              <p className="text-white/70 text-sm">Duration</p>{" "}
+                              {/* Smaller font size */}
+                              <p className="text-white font-medium text-lg">
+                                {course.duration} hours
+                              </p>{" "}
+                              {/* Smaller font size */}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="bg-white/10 rounded-xl p-4">
+                          {" "}
+                          {/* Reduced padding */}
+                          <div className="flex items-center gap-4">
+                            <FaUser className="text-blue-400 text-xl" />{" "}
+                            {/* Smaller icon */}
+                            <div>
+                              <p className="text-white/70 text-sm">
+                                Instructor
+                              </p>{" "}
+                              {/* Smaller font size */}
+                              <p className="text-white font-medium text-lg">
+                                Expert Tutor
+                              </p>{" "}
+                              {/* Smaller font size */}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 mb-6">
                       <div>
-                        <h3 className="text-white font-semibold mb-2">
+                        <h3 className="text-white font-medium text-xl mb-4">
                           Description
-                        </h3>
-                        <p className="text-white/90 text-sm">
+                        </h3>{" "}
+                        {/* Smaller font size */}
+                        <p className="text-white/80 leading-relaxed text-lg">
                           {course.description}
-                        </p>
+                        </p>{" "}
+                        {/* Smaller font size */}
                       </div>
-
                       <div>
-                        <h3 className="text-white font-semibold mb-2">
+                        <h3 className="text-white font-medium text-xl mb-4">
                           What You'll Learn
-                        </h3>
-                        <ul className="space-y-1">
+                        </h3>{" "}
+                        {/* Smaller font size */}
+                        <ul className="space-y-3">
                           {course.content?.split("\n").map((item, index) => (
-                            <li
-                              key={index}
-                              className="flex items-start gap-2 text-white/90 text-sm"
-                            >
-                              <div className="w-1.5 h-1.5 rounded-full bg-white/70 mt-1.5" />
-                              <span>{item}</span>
+                            <li key={index} className="flex items-start gap-4">
+                              <div className="w-2 h-2 rounded-full bg-blue-400 mt-2.5" />
+                              <span className="text-white/80 text-lg">
+                                {item}
+                              </span>{" "}
+                              {/* Smaller font size */}
                             </li>
                           ))}
                         </ul>
                       </div>
                     </div>
+                  </div>
 
+                  <div className="p-6 bg-gradient-to-t from-[#1E3A8A] via-[#1E3A8A] to-transparent">
                     <button
-                      className="w-full bg-white text-indigo-600 px-6 py-3 rounded-xl
-                                   flex items-center justify-center gap-2 font-semibold"
+                      className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 
+                               rounded-xl text-white text-lg font-medium flex items-center 
+                               justify-center gap-3 hover:shadow-lg transition-all duration-300"
                     >
-                      <FaWhatsapp className="text-lg" />
+                      {" "}
+                      {/* Smaller button padding */}
+                      <FaWhatsapp className="text-xl" /> {/* Smaller icon */}
                       <span>Enquire Now</span>
                     </button>
                   </div>
                 </div>
-              )}
+              </div>
             </motion.div>
           </div>
         )}
@@ -498,153 +515,412 @@ const Courses = () => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (!event.target.closest(".dropdown-container")) {
-        setShowSortOptions(false);
         setShowCategoryDropdown(false);
+        setShowSortOptions(false);
       }
     };
-
+  
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Update the sort handling
-  const handleSort = (option) => {
+  const handleSort = useCallback((option) => {
     setSortOption(option);
     setShowSortOptions(false);
-    // No page refresh needed as sortedAndFilteredCourses will handle the sorting
-  };
+  }, []);
 
-  // Add effect to reset to "All Courses" on page load/refresh
-  useEffect(() => {
-    setSelectedCategory("all");
-    setSelectedCategoryName("All Courses");
-    setSortOption("default");
-  }, []); // Empty dependency array means this runs once on mount
+  // Update the scroll handler to prevent re-renders
+  const handleScroll = useCallback((direction) => {
+    const container = categoryContainerRef.current;
+    if (!container) return;
+
+    const scrollAmount = 300;
+    const newPosition =
+      direction === "left"
+        ? Math.max(0, container.scrollLeft - scrollAmount)
+        : container.scrollLeft + scrollAmount;
+
+    container.scrollTo({
+      left: newPosition,
+      behavior: "smooth",
+    });
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="pt-[160px]">
-        <div className="bg-white border-b border-gray-200 z-30">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col md:flex-row md:items-center justify-between py-4 gap-4">
-              {/* Category Buttons - Hidden on mobile, visible on md and up */}
-              <div className="hidden md:block md:flex-1">
-                <div className="flex items-center gap-3 overflow-x-auto hide-scrollbar">
-                  {categories.map((category) => (
-                    <button
-                      key={category.id}
-                      onClick={() => handleCategoryChange(category.id)}
-                      className={`flex-shrink-0 px-5 py-2.5 rounded-full transition-all duration-300
-                        ${selectedCategory === category.id
-                          ? "bg-gradient-to-r from-[#4338ca] to-[#5b21b6] text-white shadow-lg"
-                          : "bg-white/10 text-gray-800 hover:bg-gray-100"
-                        }`}
-                    >
-                      <span className="font-medium text-sm">{category.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Right side buttons - Centered on mobile */}
-              <div className="flex items-center justify-between w-full md:w-auto md:gap-4">
-                {/* Category Dropdown */}
-                <div className="relative dropdown-container">
+        <div className="bg-white border-b border-gray-200 mt-4">
+          <div className="container mx-auto px-2">
+            {/* Mobile buttons with dropdowns */}
+            <div className="lg:hidden flex flex-col py-2 gap-2 relative">
+              <div className="flex justify-between gap-2">
+                <div className="flex-1 relative dropdown-container">
                   <button
-                    onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                    className="px-5 py-2.5 rounded-xl bg-white border border-gray-200 
-                             hover:border-blue-400 transition-all duration-300
-                             flex items-center gap-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowCategoryDropdown(!showCategoryDropdown);
+                      setShowSortOptions(false);
+                    }}
+                    className="w-full h-8 px-3 rounded-lg text-[11px]
+                             bg-gradient-to-r from-purple-600 to-indigo-600
+                             text-white shadow-md flex items-center justify-between"
                   >
-                    <span className="font-medium">{selectedCategoryName}</span>
-                    <span className="text-sm bg-blue-50 px-2 py-1 rounded-full text-blue-600">
-                      {getCategoryCount(selectedCategory)}
+                    <span className="font-medium truncate">
+                      {categories.find((cat) => cat.id === selectedCategory)
+                        ?.name || "Browse Categories"}
                     </span>
+                    <svg
+                      className={`w-3 h-3 transition-transform ${
+                        showCategoryDropdown ? "rotate-180" : ""
+                      }`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
                   </button>
 
-                  {showCategoryDropdown && (
-                    <div className="fixed md:absolute left-0 right-0 md:left-auto md:right-0 
-                                  mx-4 md:mx-0 mt-2 md:w-72 bg-white rounded-xl shadow-lg z-50">
-                      <div className="p-4">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Categories</h3>
-                        <div className="space-y-2">
-                          {categories.map((category) => (
-                            <button
-                              key={category.id}
-                              onClick={() => {
-                                handleCategoryChange(category.id);
-                                setShowCategoryDropdown(false);
-                              }}
-                              className={`
-                                w-full text-left px-4 py-3 rounded-lg transition-all duration-200
-                                flex items-center justify-between
-                                ${selectedCategory === category.id
-                                  ? "bg-blue-50 text-blue-600"
-                                  : "hover:bg-gray-50"
-                                }
-                              `}
-                            >
-                              <span>{category.name}</span>
-                              <span className="text-sm bg-gray-100 px-2 py-1 rounded-full">
-                                {getCategoryCount(category.id)}
-                              </span>
-                            </button>
-                          ))}
-                        </div>
+                  {/* Categories Dropdown */}
+                  {showCategoryDropdown && categories.length > 0 && (
+                    <div
+                      className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl z-[9999] 
+                                  border border-gray-100 max-h-[60vh] overflow-y-auto"
+                    >
+                      <div className="p-2">
+                        {categories.map((category) => (
+                          <button
+                            key={category.id}
+                            onClick={() => {
+                              handleCategoryChange(category.id);
+                              setShowCategoryDropdown(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded-lg text-[11px]
+                                      flex items-center justify-between
+                                      ${
+                                        selectedCategory === category.id
+                                          ? "bg-blue-50 text-blue-600"
+                                          : "hover:bg-gray-50"
+                                      }`}
+                          >
+                            <span>{category.name}</span>
+                            <span className="bg-gray-100 px-2 py-1 rounded-full">
+                              {getCategoryCount(category.id)}
+                            </span>
+                          </button>
+                        ))}
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* Sort Button */}
-                <div className="relative dropdown-container">
+                <div className="flex-1 relative dropdown-container">
                   <button
-                    onClick={() => setShowSortOptions(!showSortOptions)}
-                    className="px-5 py-2.5 rounded-xl bg-white border border-gray-200 
-                             hover:border-blue-400 transition-all duration-300"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowSortOptions(!showSortOptions);
+                      setShowCategoryDropdown(false); // Close other dropdown
+                    }}
+                    className="w-full h-8 px-3 rounded-lg text-[11px]
+           bg-gradient-to-r from-purple-600 to-indigo-600
+           text-white shadow-md flex items-center justify-between"
                   >
                     <span className="font-medium">
-                      {sortOption === "default" ? "Sort By" : 
-                        sortOption === "price-low-high" ? "Price: Low to High" :
-                        sortOption === "price-high-low" ? "Price: High to Low" :
-                        sortOption === "duration-low-high" ? "Duration: Shortest First" :
-                        "Duration: Longest First"
-                      }
+                      {getSortOptionLabel(sortOption)}
                     </span>
+                    <svg
+                      className={`w-3 h-3 transition-transform ${
+                        showSortOptions ? "rotate-180" : ""
+                      }`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
                   </button>
 
+                  {/* Sort Dropdown */}
                   {showSortOptions && (
-                    <div className="fixed md:absolute left-0 right-0 md:left-auto md:right-0 
-                                  mx-4 md:mx-0 mt-2 md:w-64 bg-white rounded-xl shadow-lg z-50">
-                      <div className="p-4">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Sort By</h3>
-                        <div className="space-y-2">
-                          {[
-                            { id: "default", label: "Default" },
-                            { id: "price-low-high", label: "Price: Low to High" },
-                            { id: "price-high-low", label: "Price: High to Low" },
-                            { id: "duration-low-high", label: "Duration: Shortest First" },
-                            { id: "duration-high-low", label: "Duration: Longest First" },
-                          ].map((option) => (
-                            <button
-                              key={option.id}
-                              onClick={() => handleSort(option.id)}
-                              className={`
-                                w-full text-left px-4 py-3 rounded-lg transition-all duration-200
-                                ${sortOption === option.id
-                                  ? "bg-blue-50 text-blue-600"
-                                  : "hover:bg-gray-50"
-                                }
-                              `}
-                            >
-                              {option.label}
-                            </button>
-                          ))}
-                        </div>
+                    <div
+                      className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl z-[9999] 
+                                  border border-gray-100"
+                    >
+                      <div className="p-2">
+                        {[
+                          { id: "default", label: "Default" },
+                          { id: "price-low-high", label: "Price: Low to High" },
+                          { id: "price-high-low", label: "Price: High to Low" },
+                          {
+                            id: "duration-low-high",
+                            label: "Duration: Shortest First",
+                          },
+                          {
+                            id: "duration-high-low",
+                            label: "Duration: Longest First",
+                          },
+                        ].map((option) => (
+                          <button
+                            key={option.id}
+                            onClick={() => {
+                              handleSort(option.id);
+                              setShowSortOptions(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded-lg text-[11px]
+                                      ${
+                                        sortOption === option.id
+                                          ? "bg-blue-50 text-blue-600"
+                                          : "hover:bg-gray-50"
+                                      }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* Desktop navigation remains unchanged */}
+            <div className="hidden lg:flex relative items-center justify-between py-4 px-4 max-w-7xl mx-auto z-[1]">
+              {/* Sort By dropdown - Left side */}
+              <div className="relative z-50 dropdown-container">
+                <button
+                  onClick={() => setShowSortOptions(!showSortOptions)}
+                  className="w-fit h-11 px-6 rounded-xl 
+           bg-gradient-to-r from-purple-600 to-indigo-600
+           hover:from-purple-700 hover:to-indigo-700
+           transition-all duration-300
+           flex items-center justify-between
+           text-white shadow-lg"
+                >
+                  <span className="font-medium text-sm pr-2">
+                    {getSortOptionLabel(sortOption)}
+                  </span>
+                  <svg
+                    className={`w-4 h-4 transition-transform duration-200 
+                ${showSortOptions ? "rotate-180" : ""}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+                {showSortOptions && (
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl z-50 border border-gray-100">
+                    <div className="p-4">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                        Sort By
+                      </h3>
+                      <div className="space-y-2">
+                        {[
+                          { id: "default", label: "Default" },
+                          { id: "price-low-high", label: "Price: Low to High" },
+                          { id: "price-high-low", label: "Price: High to Low" },
+                          {
+                            id: "duration-low-high",
+                            label: "Duration: Shortest First",
+                          },
+                          {
+                            id: "duration-high-low",
+                            label: "Duration: Longest First",
+                          },
+                        ].map((option) => (
+                          <button
+                            key={option.id}
+                            onClick={() => handleSort(option.id)}
+                            className={`
+                              w-full text-left px-4 py-3 rounded-lg transition-all duration-200
+                              ${
+                                sortOption === option.id
+                                  ? "bg-blue-50 text-blue-600"
+                                  : "hover:bg-gray-50"
+                              }
+                            `}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Category Buttons Container - Center with reduced padding */}
+              <div className="relative max-w-3xl mx-auto px-[80px]">
+                <div
+                  ref={categoryContainerRef}
+                  className="overflow-x-auto hide-scrollbar relative scroll-smooth"
+                >
+                  <div className="flex items-center gap-2">
+                    {categories.map((category) => (
+                      <button
+                        key={category.id}
+                        data-category-id={category.id}
+                        onClick={() => handleCategoryChange(category.id)}
+                        className={`flex-shrink-0 h-10 px-4 rounded-lg transition-all duration-300 z-30 
+                          ${
+                            selectedCategory === category.id
+                              ? "bg-gradient-to-r from-[#4338ca] to-[#5b21b6] text-white shadow-lg"
+                              : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                          }`}
+                      >
+                        <span className="font-medium text-sm whitespace-nowrap">
+                          {category.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Navigation Arrows - Closer positioning */}
+                <div className="absolute left-0 top-0 bottom-0 flex items-center z-40">
+                  <button
+                    onClick={() => handleScroll("left")}
+                    className="flex items-center justify-center w-8 h-8
+                              bg-gradient-to-br from-indigo-500/95 to-purple-600/95
+                              hover:from-indigo-600 hover:to-purple-700 rounded-lg
+                              transform transition-all duration-300 ease-out
+                              hover:scale-110 hover:shadow-lg hover:shadow-indigo-500/25"
+                  >
+                    <svg
+                      className="w-5 h-5 text-white"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <path
+                        d="M14.5 17l-5-5 5-5"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                <div className="absolute right-0 top-0 bottom-0 flex items-center z-40">
+                  <button
+                    onClick={() => handleScroll("right")}
+                    className="flex items-center justify-center w-8 h-8
+                              bg-gradient-to-br from-indigo-500/95 to-purple-600/95
+                              hover:from-indigo-600 hover:to-purple-700 rounded-lg
+                              transform transition-all duration-300 ease-out
+                              hover:scale-110 hover:shadow-lg hover:shadow-indigo-500/25"
+                  >
+                    <svg
+                      className="w-5 h-5 text-white"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <path
+                        d="M9.5 17l5-5-5-5"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Gradient overlays - Adjusted width */}
+                <div
+                  className="absolute left-[120px] top-0 bottom-0 w-12 
+                              bg-gradient-to-r from-white via-white/95 to-transparent 
+                              pointer-events-none z-20"
+                />
+                <div
+                  className="absolute right-[120px] top-0 bottom-0 w-12 
+                              bg-gradient-to-l from-white via-white/95 to-transparent 
+                              pointer-events-none z-20"
+                />
+              </div>
+
+              {/* Browse Categories dropdown - Right side */}
+              <div className="relative z-50 dropdown-container">
+                <button
+                  onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                  className="w-fit h-11 px-6 rounded-xl 
+                           bg-gradient-to-r from-purple-600 to-indigo-600
+                           hover:from-purple-700 hover:to-indigo-700
+                           transition-all duration-300
+                           flex items-center justify-between
+                           text-white shadow-lg"
+                >
+                  <span className="font-medium text-sm truncate">
+                    {categories.find((cat) => cat.id === selectedCategory)
+                      ?.name || "Browse Categories"}
+                  </span>
+                  <svg
+                    className={`w-4 h-4 transition-transform duration-200 flex-shrink-0 ml-2
+                               ${showCategoryDropdown ? "rotate-180" : ""}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+                {showCategoryDropdown && (
+                  <div className="absolute mt-2 w-[180px] bg-white rounded-xl shadow-xl z-50 border border-gray-100">
+                    <div className="p-3">
+                      <h3 className="text-sm font-semibold text-gray-800 mb-2">
+                        Select Category
+                      </h3>
+                      <div className="space-y-1 max-h-[220px] overflow-y-auto custom-scrollbar">
+                        {categories.map((category) => (
+                          <button
+                            key={category.id}
+                            onClick={() => {
+                              handleCategoryChange(category.id);
+                              setShowCategoryDropdown(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded-lg transition-all duration-200
+                                      flex items-center justify-between
+                                      ${
+                                        selectedCategory === category.id
+                                          ? "bg-blue-50 text-blue-600"
+                                          : "hover:bg-gray-50"
+                                      }`}
+                          >
+                            <span className="truncate mr-2 text-sm">
+                              {category.name}
+                            </span>
+                            <span className="text-xs bg-gray-100 px-2 py-1 rounded-full">
+                              {getCategoryCount(category.id)}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -676,23 +952,17 @@ const Courses = () => {
               </p>
             </div>
           ) : (
-            <motion.div 
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
-              layout
+            <div
+              key={`${selectedCategory}-${sortOption}`}
+              className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 
+                          gap-2 sm:gap-3 md:gap-4 lg:gap-6"
             >
               {sortedAndFilteredCourses.map((course) => (
-                <motion.div
-                  key={course.id}
-                  layout
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
+                <div key={course.id} className="w-full">
                   <CourseCard course={course} />
-                </motion.div>
+                </div>
               ))}
-            </motion.div>
+            </div>
           )}
         </div>
 

@@ -1,380 +1,497 @@
 // pages/ClientSide/RecordedSessions.js
-import React, { useState, useEffect } from 'react';
-import { 
-  FaSearch, FaChevronRight, FaChevronLeft,
-  FaLaptopCode, FaMobileAlt, FaDatabase,
-  FaBrain, FaCloud, FaShieldAlt, 
-  FaPalette, FaServer, FaBookOpen,
-  FaPlay, FaClock, FaVideo, FaTimes
-} from 'react-icons/fa';
-import Navbar from '../../components/User/Home/Navbar';
-import CategoryAPI from '../../api/categoryAPI';
-import * as courseAPI from '../../api/courseAPI';
-import * as sessionAPI from '../../api/sessionAPI';
+import React, { useState, useEffect, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  FaVideo,
+  FaChevronRight,
+  FaBookReader,
+  FaChevronDown,
+  FaCheckCircle,
+  FaChevronUp,
+} from "react-icons/fa";
+import { MdSubscriptions, MdOndemandVideo } from "react-icons/md";
+import Navbar from "../../components/User/Home/Navbar";
+import { getUserSubscribedCourses } from "../../api/userAPI";
+import {
+  markSessionAsWatched,
+  getSessionProgress,
+} from "../../api/userSessionAPI";
+import { AnimatePresence, motion } from "framer-motion";
+import Login from "../../components/Common/Login";
 
 const RecordedSessions = () => {
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [selectedCourse, setSelectedCourse] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [courses, setCourses] = useState([]);
+  const [expandedCourses, setExpandedCourses] = useState({});
+  const [sessionsProgress, setSessionsProgress] = useState({});
+  const navigate = useNavigate();
+  const token = localStorage.getItem("token");
+
+  // EmptyState Component
+  // EmptyState Component
+const EmptyState = ({ type, courseName, setIsLoginOpen }) => {
+  const content = {
+    notLoggedIn: {
+      icon: <MdSubscriptions className="text-6xl text-blue-500 mb-4" />,
+      title: "Login Required",
+      description:
+        "Please login to access your courses and learning materials.",
+      actionText: "Login Now",
+      showAction: true,
+    },
+    noSubscription: {
+      icon: <FaBookReader className="text-6xl text-blue-500 mb-4" />,
+      title: "No Active Subscriptions",
+      description: "Subscribe to our courses to start your learning journey!",
+      actionText: "Browse Courses",
+      actionLink: "/courses",
+      showAction: true,
+    },
+    noSessions: {
+      icon: <FaVideo className="text-6xl text-gray-400 mb-4" />,
+      title: "Coming Soon",
+      description: `We're currently preparing the recorded sessions for ${courseName}. Our team is working hard to create high-quality content that meets our standards. You'll be notified as soon as new content becomes available.`,
+      showAction: false,
+    },
+  };
+
+  const currentContent = content[type];
+
+  const handleAction = () => {
+    if (type === 'notLoggedIn') {
+      setIsLoginOpen(true);
+    }
+  };
+
+  const renderAction = () => {
+    if (!currentContent.showAction) return null;
+
+    if (type === 'notLoggedIn') {
+      return (
+        <button
+          onClick={handleAction}
+          className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-xl 
+                    hover:bg-blue-700 transition-all duration-200 transform hover:scale-105"
+        >
+          {currentContent.actionText}
+          <FaChevronRight className="ml-2" />
+        </button>
+      );
+    }
+
+    return (
+      <Link
+        to={currentContent.actionLink}
+        className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-xl 
+                  hover:bg-blue-700 transition-all duration-200 transform hover:scale-105"
+      >
+        {currentContent.actionText}
+        <FaChevronRight className="ml-2" />
+      </Link>
+    );
+  };
+
+  return (
+    <div className="bg-white/50 backdrop-blur-sm rounded-xl shadow-sm p-8 text-center">
+      <div className="flex justify-center">{currentContent.icon}</div>
+      <h2 className="text-2xl font-bold text-gray-800 mt-4 mb-2">
+        {currentContent.title}
+      </h2>
+      <p className="text-gray-600 text-base mb-6">{currentContent.description}</p>
+      {renderAction()}
+    </div>
+  );
+};
+
   
-  // Organized data state
-  const [organizedData, setOrganizedData] = useState({
-    categories: [],
-    coursesByCategory: {},
-    sessionsByCourse: {}
-  });
 
-  useEffect(() => {
-    const fetchAllData = async () => {
-      setIsLoading(true);
-      try {
-        const [categoriesResult, coursesResult, sessionsResult] = await Promise.all([
-          CategoryAPI.getAllCategories(),
-          courseAPI.getAllCourses(),
-          sessionAPI.getAllSessions()
-        ]);
-
-        if (categoriesResult.success && coursesResult.success && sessionsResult.success) {
-          const categories = categoriesResult.data.data || [];
-          const courses = coursesResult.data || [];
-          const sessions = sessionsResult.data || [];
-
-          // Create a map of courses by category
-          const coursesByCategory = {};
-          courses.forEach(course => {
-            // Using 'categoryId' from the course data
-            const categoryId = course.categoryId;
-            if (categoryId) {
-              if (!coursesByCategory[categoryId]) {
-                coursesByCategory[categoryId] = [];
-              }
-              coursesByCategory[categoryId].push({
-                ...course,
-                _id: course.id, // Map id to _id for consistency
-                sessionCount: 0
-              });
-            }
-          });
-
-          // Create a map of sessions by course
-          const sessionsByCourse = {};
-          sessions.forEach(session => {
-            // Using 'courseId' from the session data
-            const courseId = session.courseId;
-            if (courseId) {
-              if (!sessionsByCourse[courseId]) {
-                sessionsByCourse[courseId] = [];
-              }
-              sessionsByCourse[courseId].push({
-                ...session,
-                _id: session.id // Map id to _id for consistency
-              });
-
-              // Update course session count
-              Object.keys(coursesByCategory).forEach(categoryId => {
-                const coursesInCategory = coursesByCategory[categoryId];
-                const courseToUpdate = coursesInCategory.find(c => c.id === courseId);
-                if (courseToUpdate) {
-                  courseToUpdate.sessionCount++;
-                }
-              });
-            }
-          });
-
-          // Filter out courses with no sessions
-          Object.keys(coursesByCategory).forEach(categoryId => {
-            coursesByCategory[categoryId] = coursesByCategory[categoryId].filter(
-              course => course.sessionCount > 0
-            );
-          });
-
-          // Update categories with course counts and map id to _id
-          const categoriesWithCounts = categories
-            .map(category => ({
-              ...category,
-              _id: category.id, // Map id to _id for consistency
-              coursesCount: (coursesByCategory[category.id] || []).length
-            }))
-            .filter(category => category.coursesCount > 0);
-
-          setOrganizedData({
-            categories: categoriesWithCounts,
-            coursesByCategory,
-            sessionsByCourse
-          });
-        } else {
-          setError('Failed to fetch some data');
-        }
-      } catch (err) {
-        console.error('Error fetching data:', err);
-        setError('Failed to fetch data');
-      } finally {
-        setIsLoading(false);
+  // Fetch progress for a specific course
+  const fetchCourseProgress = useCallback(async (courseId) => {
+    try {
+      console.log("Fetching progress for course:", courseId);
+      const response = await getSessionProgress(courseId);
+      if (response.status === "success") {
+        setSessionsProgress((prev) => ({
+          ...prev,
+          [courseId]: response.data,
+        }));
       }
-    };
-
-    fetchAllData();
+    } catch (error) {
+      console.error("Error fetching course progress:", error);
+    }
   }, []);
 
-  const getCategoryIcon = (categoryName) => {
-    const iconMap = {
-      'Web Development': <FaLaptopCode className="text-blue-400" />,
-      'Mobile Development': <FaMobileAlt className="text-purple-400" />,
-      'Data Science': <FaDatabase className="text-emerald-400" />,
-      'AI': <FaBrain className="text-indigo-400" />,
-      'Cloud Computing': <FaCloud className="text-sky-400" />,
-      'Cyber Security': <FaShieldAlt className="text-red-400" />,
-      'UI/UX': <FaPalette className="text-pink-400" />,
-      'DevOps': <FaServer className="text-teal-400" />
+  // Handle watch status updates
+  const handleWatchStatusUpdate = async (courseId, sessionId) => {
+    try {
+      const currentProgress = sessionsProgress[courseId];
+      const sessionProgress = currentProgress?.sessions?.find(
+        (s) => s.sessionId === sessionId
+      );
+      const newWatchStatus = !sessionProgress?.isWatched;
+
+      const response = await markSessionAsWatched(sessionId, newWatchStatus);
+
+      if (response.status === "success") {
+        await fetchCourseProgress(courseId);
+        console.log(
+          `Successfully ${
+            newWatchStatus ? "marked as watched" : "marked as unwatched"
+          }`
+        );
+      }
+    } catch (error) {
+      console.error("Error updating watch status:", error);
+      alert("Failed to update watch status. Please try again.");
+    }
+  };
+
+  // Handle watch click
+  const handleWatchClick = (sessionId) => {
+    navigate(`/video-player/${sessionId}`);
+  };
+
+  // Toggle course expansion
+  const toggleCourse = (courseId) => {
+    setExpandedCourses((prev) => ({
+      ...prev,
+      [courseId]: !prev[courseId],
+    }));
+  };
+
+  // Fetch all courses
+  const fetchCourses = useCallback(async () => {
+    try {
+      const response = await getUserSubscribedCourses();
+      setCourses(response.data);
+
+      const initialExpandedState = {};
+      response.data.forEach((course) => {
+        initialExpandedState[course.id] = false;
+        fetchCourseProgress(course.id);
+      });
+      setExpandedCourses(initialExpandedState);
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+    }
+  }, [fetchCourseProgress]);
+
+  useEffect(() => {
+    if (token) {
+      fetchCourses();
+    }
+  }, [fetchCourses, token]);
+
+  // Session Item Component
+  const SessionItem = ({
+    session,
+    index,
+    isWatched,
+    onToggleWatch,
+    onWatch,
+  }) => {
+    const [isHovered, setIsHovered] = useState(false);
+
+    const parseContent = (content) => {
+      if (!content) return [];
+      return content
+        .split("\n")
+        .filter((line) => line.trim().length > 0)
+        .map((line) => line.trim());
     };
-    return iconMap[categoryName] || <FaBookOpen className="text-gray-400" />;
-  };
 
-  const handleCategoryClick = (category) => {
-    setSelectedCategory(category);
-    setSelectedCourse(null);
-  };
-
-  const handleCourseClick = (course) => {
-    setSelectedCourse({
-      ...course,
-      sessions: organizedData.sessionsByCourse[course._id] || []
-    });
-  };
-
-  const handleBackToCategories = () => {
-    setSelectedCategory(null);
-    setSelectedCourse(null);
-  };
-
-  const filteredCategories = organizedData.categories.filter(category =>
-    category.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#1E1B4B] via-[#2A2665] to-[#312C7E] flex justify-center items-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+      <div
+        className="bg-white border-b border-gray-100 transition-all duration-200"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <div className={`p-3 md:p-4 ${isHovered ? "bg-blue-50/50" : ""}`}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start sm:items-center gap-3 flex-1">
+              <div className="flex-shrink-0 mt-1 sm:mt-0">
+                {isWatched ? (
+                  <FaCheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
+                ) : (
+                  <MdOndemandVideo className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 w-full text-left group">
+                  <div className="flex-1">
+                    <h3 className="text-sm font-medium text-gray-900 line-clamp-1 sm:line-clamp-none group-hover:text-blue-600">
+                      Session {index + 1}: {session.title}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span
+                        className={`text-xs ${
+                          isWatched ? "text-green-600" : "text-gray-500"
+                        }`}
+                      >
+                        {isWatched ? "Completed" : "Not started"}
+                      </span>
+                      {session.duration && (
+                        <>
+                          <span className="text-xs text-gray-400">•</span>
+                          <span className="text-xs text-gray-500">
+                            {session.duration} min
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 ml-7 sm:ml-0">
+              <button
+                onClick={onToggleWatch}
+                className={`flex items-center px-2 py-1 sm:px-3 sm:py-1.5 rounded text-xs sm:text-sm font-medium
+                  ${
+                    isWatched
+                      ? "text-red-600 hover:text-red-700 hover:bg-red-50"
+                      : "text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                  } 
+                  transition-all duration-200`}
+              >
+                <MdOndemandVideo className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">
+                  {isWatched ? "Mark as Unwatched" : "Mark as Watched"}
+                </span>
+                <span className="sm:hidden">
+                  {isWatched ? "Unwatch" : "Watch"}
+                </span>
+              </button>
+              <button
+                onClick={onWatch}
+                className="flex items-center px-3 py-1 sm:px-4 sm:py-1.5 bg-blue-600 text-white rounded
+                         hover:bg-blue-700 transition-colors duration-200 text-xs sm:text-sm"
+              >
+                <span>Watch</span>
+                <FaChevronRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Updated Hover Content Preview */}
+          <AnimatePresence>
+            {isHovered && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-4 pl-8"
+              >
+                <div className="grid md:grid-cols-2 gap-4">
+                  {/* Description Card */}
+                  {session.description && (
+                    <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
+                      <h4 className="text-sm font-medium text-gray-900 mb-2">
+                        Session Description
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        {session.description}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Content Card */}
+                  {session.content && (
+                    <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
+                      <h4 className="text-sm font-medium text-gray-900 mb-2">
+                        What you'll learn
+                      </h4>
+                      <div className="space-y-2">
+                        {parseContent(session.content).map((item, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-start gap-2 group"
+                          >
+                            <div
+                              className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 flex-shrink-0 
+                                          group-hover:bg-blue-500 transition-colors duration-200"
+                            />
+                            <p
+                              className="text-sm text-gray-600 group-hover:text-gray-900 
+                                        transition-colors duration-200"
+                            >
+                              {item}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    );
+  };
+
+  // Course Card Component
+  const CourseCard = ({ course, progress, isExpanded, onToggle }) => {
+    console.log("Session data:", course.Sessions);
+
+    const watchedCount = progress?.watchedSessions || 0;
+    const totalCount = course.Sessions?.length || 0;
+    const percentage =
+      totalCount > 0 ? Math.round((watchedCount / totalCount) * 100) : 0;
+
+    return (
+      <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
+        <div
+          onClick={onToggle}
+          className="p-4 bg-gradient-to-r from-blue-600 to-blue-700 cursor-pointer 
+                   hover:from-blue-700 hover:to-blue-800 transition-all duration-200"
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <span className="text-blue-100 text-xs sm:text-sm font-medium">
+                {course.Category?.name}
+              </span>
+              <h2 className="text-lg sm:text-xl font-bold text-white mt-1 truncate">
+                {course.title}
+              </h2>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:block text-right">
+                <span className="text-blue-100 text-sm">
+                  {percentage}% Complete
+                </span>
+                <div className="w-24 h-1.5 bg-blue-800/50 rounded-full mt-1">
+                  <div
+                    className="h-full bg-blue-100 rounded-full transition-all duration-300"
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+              </div>
+              {isExpanded ? (
+                <FaChevronUp className="text-white h-4 w-4 sm:h-5 sm:w-5" />
+              ) : (
+                <FaChevronDown className="text-white h-4 w-4 sm:h-5 sm:w-5" />
+              )}
+            </div>
+          </div>
+        </div>
+
+        {isExpanded && (
+          <div>
+            <div className="sm:hidden p-3 border-b border-gray-200">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-sm font-medium text-gray-700">
+                  Progress
+                </span>
+                <span className="text-sm font-medium text-blue-600">
+                  {percentage}%
+                </span>
+              </div>
+              <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-green-500 transition-all duration-300"
+                  style={{ width: `${percentage}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="divide-y divide-gray-100">
+              {course.Sessions?.map((session, index) => (
+                <SessionItem
+                  key={session.id}
+                  session={session}
+                  index={index}
+                  isWatched={
+                    progress?.sessions?.find((s) => s.sessionId === session.id)
+                      ?.isWatched
+                  }
+                  onToggleWatch={() =>
+                    handleWatchStatusUpdate(course.id, session.id)
+                  }
+                  onWatch={() => handleWatchClick(session.id)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Render empty states if needed
+  if (!token) {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <Navbar />
+        <div className="pt-40 pb-20">
+          <EmptyState 
+            type="notLoggedIn" 
+            setIsLoginOpen={setIsLoginOpen}
+          />
+        </div>
+        <Login 
+          isOpen={isLoginOpen} 
+          onClose={() => setIsLoginOpen(false)}
+        />
       </div>
     );
   }
 
+  if (courses.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <Navbar />
+        <div className="pt-40 pb-20">
+          <EmptyState type="noSubscription" />
+        </div>
+      </div>
+    );
+  }
+
+  // Main render
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1E1B4B] via-[#2A2665] to-[#312C7E]">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
-      
-      <div className="pt-48 pb-24">
-        <div className="container mx-auto px-6 max-w-7xl">
-          {error ? (
-            <div className="text-center text-red-500 bg-red-100/10 p-8 rounded-xl backdrop-blur-lg">
-              <FaTimes className="text-4xl mx-auto mb-4" />
-              <p className="text-xl mb-4">{error}</p>
-              <button 
-                onClick={() => window.location.reload()}
-                className="px-6 py-2 bg-white/10 rounded-lg hover:bg-white/20 text-white
-                         transition-all duration-300"
-              >
-                Try Again
-              </button>
-            </div>
-          ) : !selectedCategory && !selectedCourse ? (
-            <>
-              <div className="max-w-4xl mx-auto text-center mb-20">
-                <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-                  Professional Learning Hub
-                </h1>
-                <p className="text-xl text-gray-300 mb-12">
-                  Access enterprise-level courses curated by industry experts
-                </p>
-                
-                <div className="max-w-2xl mx-auto mb-20">
-                  <div className="flex items-center bg-white/10 rounded-xl px-6 py-4">
-                    <FaSearch className="text-white/50 text-xl mr-4" />
-                    <input
-                      type="text"
-                      placeholder="Search categories..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="bg-transparent w-full text-white placeholder-white/50 
-                               focus:outline-none text-lg"
-                    />
-                  </div>
-                </div>
-              </div>
+      <div className="pt-56 pb-20">
+        <div className="max-w-5xl mx-auto px-4">
+          <div className="mb-10 pb-6 border-b border-gray-200">
+            <h1 className="text-3xl font-bold text-gray-900 mb-3">
+              Recorded Sessions
+            </h1>
+            <p className="text-lg text-gray-600">
+              Track your progress and access your course materials
+            </p>
+          </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                {filteredCategories.map((category) => (
-                  <button
-                    key={category._id}
-                    onClick={() => handleCategoryClick(category)}
-                    className="bg-white/10 rounded-xl p-8 text-left
-                             hover:bg-white/15 transition-colors duration-300"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="text-3xl mb-6">
-                        {getCategoryIcon(category.name)}
-                      </div>
-                      <FaChevronRight className="text-white/30" />
+          <div className="space-y-6">
+            {courses.map((course) => (
+              <div key={course.id} className="relative">
+                <CourseCard
+                  course={course}
+                  progress={sessionsProgress[course.id]}
+                  isExpanded={expandedCourses[course.id]}
+                  onToggle={() => toggleCourse(course.id)}
+                />
+
+                {expandedCourses[course.id] &&
+                  course.Sessions?.length === 0 && (
+                    <div className="mt-4 bg-white rounded-lg shadow-sm p-6">
+                      <EmptyState type="noSessions" courseName={course.title} />
                     </div>
-
-                    <div>
-                      <h3 className="text-2xl font-semibold text-white mb-3">
-                        {category.name}
-                      </h3>
-                      
-                      <div className="flex items-center text-gray-300">
-                        <FaBookOpen className="mr-2" />
-                        <span>
-                          {category.coursesCount} {category.coursesCount === 1 ? 'Course' : 'Courses'}
-                        </span>
-                      </div>
-                    </div>
-                  </button>
-                ))}
+                  )}
               </div>
-            </>
-          ) : selectedCategory && !selectedCourse ? (
-            <>
-              <div className="mb-16">
-                <button 
-                  onClick={handleBackToCategories}
-                  className="text-white flex items-center gap-3 hover:text-gray-300 
-                           transition-all duration-300 text-lg group
-                           px-10 py-5 rounded-full bg-white/10 hover:bg-white/20"
-                >
-                  <FaChevronLeft className="transform group-hover:-translate-x-1 transition-transform" />
-                  Back to Categories
-                </button>
-              </div>
+            ))}
+          </div>
 
-              <div className="mt-12 mb-16">
-                <div className="flex items-center gap-8 p-10 bg-white/10 rounded-xl backdrop-blur-lg mb-16">
-                  <span className="text-7xl">{getCategoryIcon(selectedCategory.name)}</span>
-                  <div>
-                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                      {selectedCategory.name}
-                    </h2>
-                    <p className="text-xl text-gray-300 flex items-center gap-3">
-                      <FaVideo />
-                      {organizedData.coursesByCategory[selectedCategory._id]?.length || 0} available courses
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 mt-20">
-                  {organizedData.coursesByCategory[selectedCategory._id]?.map((course) => (
-                    <div
-                      key={course._id}
-                      onClick={() => handleCourseClick(course)}
-                      className="group bg-white/10 backdrop-blur-lg rounded-xl overflow-hidden
-                               hover:bg-white/15 transition-all duration-300 cursor-pointer
-                               border border-white/10 transform hover:scale-105"
-                    >
-                      {course.image && (
-                        <div className="h-56 overflow-hidden">
-                          <img 
-                            src={course.image} 
-                            alt={course.title}
-                            className="w-full h-full object-cover transform group-hover:scale-110
-                                     transition-transform duration-500"
-                          />
-                        </div>
-                      )}
-                      <div className="p-8">
-                        <div className="flex items-start justify-between mb-4">
-                          <div>
-                            <h3 className="text-xl font-semibold text-white mb-2">
-                              {course.title}
-                            </h3>
-                            <p className="text-gray-300 line-clamp-2">{course.description}</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center justify-between text-sm mt-4">
-                          <div className="flex items-center gap-4">
-                            <span className="text-gray-300 flex items-center gap-2">
-                              <FaVideo className="text-primary" />
-                              {course.sessionCount} sessions
-                            </span>
-                          </div>
-                          <div className="bg-primary/20 px-4 py-2 rounded-full">
-                            <FaPlay className="text-primary" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="w-full">
-              <div className="mb-16">
-                <button 
-                  onClick={() => setSelectedCourse(null)}
-                  className="text-white flex items-center gap-3 hover:text-gray-300 
-                           transition-all duration-300 text-lg group
-                           px-8 py-4 rounded-full bg-white/10 hover:bg-white/20"
-                >
-                  <FaChevronLeft className="transform group-hover:-translate-x-1 transition-transform" />
-                  Back to Courses
-                </button>
-              </div>
-
-              <div className="bg-white/10 backdrop-blur-lg rounded-xl overflow-hidden mb-8">
-                <div className="bg-gradient-to-r from-primary to-secondary p-6 md:p-8">
-                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
-                    {selectedCourse.title}
-                  </h2>
-                  <p className="text-white/80 text-base md:text-lg">
-                    {selectedCourse.description}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                {selectedCourse.sessions.map((session, index) => (
-                  <div
-                    key={session._id}
-                    className="bg-white/10 backdrop-blur-lg rounded-xl p-4 md:p-6
-                             hover:bg-white/15 transition-all duration-300"
-                  >
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="flex items-start md:items-center gap-4">
-                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-full 
-                                    bg-primary/20 flex-shrink-0
-                                    flex items-center justify-center">
-                          <FaPlay className="text-primary text-lg md:text-xl" />
-                        </div>
-                        
-                        <div className="flex-grow min-w-0">
-                          <h4 className="text-lg md:text-xl font-medium text-white 
-                                     mb-2 md:mb-1 line-clamp-2">
-                            Session {index + 1}: {session.title}
-                          </h4>
-                          <p className="text-gray-300 flex items-center gap-2 text-sm md:text-base">
-                            <FaClock />
-                            <span>{session.duration} minutes</span>
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="ml-14 md:ml-0">
-                        <button className="w-full md:w-auto px-6 py-3 rounded-full 
-                                       bg-primary text-white font-medium 
-                                       hover:bg-primary/90 transition-colors duration-300
-                                       flex items-center justify-center gap-2 
-                                       whitespace-nowrap">
-                          <FaPlay className="text-sm" />
-                          <span>Watch Now</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          {courses.length === 0 && (
+            <div className="mt-8">
+              <Login
+                isOpen={isLoginOpen}
+                onClose={() => setIsLoginOpen(false)}
+              />
+              <EmptyState type="noSubscription" />
             </div>
           )}
         </div>

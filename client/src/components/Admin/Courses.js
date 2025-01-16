@@ -1,4 +1,3 @@
-
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,7 +10,8 @@ import {
   
   PencilIcon,
   CheckCircleIcon,
-  XCircleIcon
+  XCircleIcon,
+  ArchiveBoxIcon
 } from "@heroicons/react/24/outline";
 import {
   getAllCourses,
@@ -47,16 +47,17 @@ const Notification = ({ message, type, onClose }) => {
   );
 };
 
-const CourseTable = ({ courses, categories, onEdit, onDelete, searchTerm }) => {
+const CourseTable = ({ courses, categories, onEdit, onDelete, onArchive, searchTerm, showArchived }) => {
   const [expandedRows, setExpandedRows] = useState({});
 
-  // Filter courses based on search term
+  // Filter courses based on search term and archived status
   const filteredCourses = courses.filter(course => 
-    course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    course.categoryName.toLowerCase().includes(searchTerm.toLowerCase())
+    course.isArchived === showArchived && 
+    (course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     course.categoryName.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  // Group filtered courses by category
+  // Group filtered courses by category and filter out empty categories
   const groupedCourses = filteredCourses.reduce((acc, course) => {
     if (!acc[course.categoryName]) {
       acc[course.categoryName] = [];
@@ -64,6 +65,14 @@ const CourseTable = ({ courses, categories, onEdit, onDelete, searchTerm }) => {
     acc[course.categoryName].push(course);
     return acc;
   }, {});
+
+  // Filter out categories with no active courses when viewing active courses
+  const activeCategories = Object.entries(groupedCourses).filter(([category, courses]) => {
+    if (showArchived) {
+      return courses.length > 0;
+    }
+    return courses.some(course => !course.isArchived);
+  });
 
   const toggleRow = (courseId) => {
     setExpandedRows(prev => ({
@@ -74,7 +83,7 @@ const CourseTable = ({ courses, categories, onEdit, onDelete, searchTerm }) => {
 
   return (
     <div className="space-y-6">
-      {Object.entries(groupedCourses).map(([category, categoryCourses]) => (
+      {activeCategories.map(([category, categoryCourses]) => (
         <div key={category} className="bg-white rounded-xl shadow-md overflow-hidden">
           <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
             <h3 className="text-xl font-semibold text-white">{category}</h3>
@@ -136,6 +145,12 @@ const CourseTable = ({ courses, categories, onEdit, onDelete, searchTerm }) => {
                           >
                             <TrashIcon className="w-5 h-5" />
                           </button>
+                          <button
+                            onClick={() => onArchive(course.id)}
+                            className="text-yellow-400 hover:text-yellow-500"
+                          >
+                            <ArchiveBoxIcon className="w-5 h-5" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -193,6 +208,7 @@ const Courses = () => {
     categoryName: "",
   });
   const [searchTerm, setSearchTerm] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
 
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
@@ -294,6 +310,21 @@ useEffect(() => {
       } catch (error) {
         showNotification('Error deleting course: ' + error.message, 'error');
       }
+    }
+  };
+
+  const handleArchive = async (courseId) => {
+    try {
+      const course = courses.find(c => c.id === courseId);
+      const res = await updateCourseAPI(courseId, { isArchived: !course.isArchived });
+      if (res.success) {
+        setCourses(prev => prev.map(c => 
+          c.id === courseId ? { ...c, isArchived: !c.isArchived } : c
+        ));
+        showNotification(`Course ${course.isArchived ? 'unarchived' : 'archived'} successfully!`);
+      }
+    } catch (error) {
+      showNotification('Failed to archive course: ' + error.message, 'error');
     }
   };
 
@@ -420,6 +451,15 @@ useEffect(() => {
                   </svg>
                 </div>
               </div>
+              <button
+                onClick={() => setShowArchived(!showArchived)}
+                className="flex-shrink-0 flex items-center px-4 py-2 bg-gradient-to-r 
+                          from-yellow-600 to-amber-600 text-white rounded-lg 
+                          hover:shadow-lg transition-all"
+              >
+                <ArchiveBoxIcon className="w-5 h-5 mr-2" />
+                {showArchived ? 'View Active' : 'View Archived'}
+              </button>
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -452,7 +492,9 @@ useEffect(() => {
           categories={categories}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onArchive={handleArchive}
           searchTerm={searchTerm}
+          showArchived={showArchived}
         />
 
         <AnimatePresence>
@@ -504,10 +546,11 @@ useEffect(() => {
                         name="categoryName"
                         value={formData.categoryName}
                         onChange={handleInputChange}
-                        className="form-select mt-2 block w-full px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                        className="form-select mt-2 block w-full px-4 py-2 bg-white border border-gray-300 
+                                   rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                         required
                       >
-                        <option value="">Select Category</option>
+                         <option value="">Select Category</option>
                         {categories.map((category) => (
                           <option key={category.id} value={category.name}>
                             {category.name}

@@ -12,6 +12,38 @@ import { useNavigate } from 'react-router-dom';
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Optimize background animations
+const BackgroundGradients = React.memo(() => (
+  <div className="fixed inset-0 -z-10">
+    <div className="absolute inset-0 bg-gradient-to-br from-[#0B1120] via-[#1a1f35] to-[#0B1120]">
+      {[...Array(2)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full mix-blend-screen filter blur-[100px]"
+          style={{
+            background: `radial-gradient(circle, ${
+              i === 0 ? '#4d7fff' : '#9f4dff'
+            } 0%, transparent 70%)`,
+            width: '600px',
+            height: '600px',
+            top: `${Math.random() * 100}%`,
+            left: `${Math.random() * 100}%`,
+          }}
+          animate={{
+            x: [0, 50, 0],
+            y: [0, 30, 0],
+          }}
+          transition={{
+            duration: 30,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+        />
+      ))}
+    </div>
+  </div>
+));
+
 const AboutServices = () => {
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll();
@@ -55,6 +87,20 @@ const AboutServices = () => {
     { icon: <FaGraduationCap />, title: "Qualified Instructors", desc: "Expert professionals" }
   ];
 
+  // Optimize scroll animations
+  const scrollConfig = {
+    viewport: { once: true, margin: "-20%" },
+    transition: { duration: 0.5 }
+  };
+
+  // Optimize Tilt options
+  const tiltOptions = {
+    max: 10,
+    scale: 1,
+    speed: 1000,
+    glare: false,
+  };
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -77,48 +123,20 @@ const AboutServices = () => {
   return (
     <div className="min-h-screen bg-[#0B1120] text-gray-100">
       <main ref={containerRef} className="relative overflow-hidden pt-24">
-        {/* Animated Background */}
-        <div className="fixed inset-0 -z-10">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0B1120] via-[#1a1f35] to-[#0B1120]">
-            {[...Array(4)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute rounded-full mix-blend-screen filter blur-[100px]"
-                style={{
-                  background: `radial-gradient(circle, ${
-                    i === 0 ? '#ff4d4d' : i === 1 ? '#4d7fff' : i === 2 ? '#4dff77' : '#9f4dff'
-                  } 0%, transparent 70%)`,
-                  width: '600px',
-                  height: '600px',
-                  top: `${Math.random() * 100}%`,
-                  left: `${Math.random() * 100}%`,
-                }}
-                animate={{
-                  x: [0, 100, 0],
-                  y: [0, 50, 0],
-                  scale: [1, 1.2, 1],
-                }}
-                transition={{
-                  duration: 20,
-                  repeat: Infinity,
-                  delay: i * 2,
-                }}
-              />
-            ))}
-          </div>
-        </div>
+        <BackgroundGradients />
 
-        {/* Hero Section */}
+        {/* Hero Section - Optimize animations */}
         <section className="relative min-h-[90vh] flex items-center justify-center px-4 sm:px-6 lg:px-8">
           <motion.div
             style={{ y }}
+            transition={{ type: "spring", stiffness: 100 }}
             className="max-w-7xl mx-auto text-center relative z-10"
           >
             <motion.h1 
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
-              className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-8 
+              className="text-3xl sm:text-5xl md:text-6xl font-bold mb-8 
                        bg-gradient-to-r from-rose-500 via-cyan-500 to-violet-500 
                        text-transparent bg-clip-text animate-gradient"
             >
@@ -156,11 +174,9 @@ const AboutServices = () => {
         <section className="py-20 relative px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <Tilt className="transform-gpu">
+              <Tilt options={tiltOptions} className="transform-gpu">
                 <motion.div
-                  initial={{ opacity: 0, x: -50 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
+                  {...scrollConfig}
                   className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 
                            border border-white/10 hover:border-white/20 
                            transition-all duration-300 group h-full"
@@ -177,11 +193,9 @@ const AboutServices = () => {
                 </motion.div>
               </Tilt>
 
-              <Tilt className="transform-gpu">
+              <Tilt options={tiltOptions} className="transform-gpu">
                 <motion.div
-                  initial={{ opacity: 0, x: 50 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
+                  {...scrollConfig}
                   className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 
                            border border-white/10 hover:border-white/20 
                            transition-all duration-300 group h-full"
@@ -202,8 +216,8 @@ const AboutServices = () => {
           </div>
         </section>
 
-        {/* Excellence Section */}
-        <section className="py-20 relative px-4 sm:px-6 lg:px-8 overflow-hidden">
+        {/* Excellence Section - Optimize grid animations */}
+        <section className="py-20 relative px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <motion.h2
               initial={{ opacity: 0, y: 20 }}
@@ -216,12 +230,10 @@ const AboutServices = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {excellence.map((item, index) => (
-                <Tilt key={index} className="transform-gpu">
+                <Tilt key={index} options={tiltOptions} className="transform-gpu">
                   <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1 }}
+                    {...scrollConfig}
+                    transition={{ delay: index * 0.1, ...scrollConfig.transition }}
                     className="bg-white/5 backdrop-blur-sm rounded-xl p-6 
                              border border-white/10 hover:border-white/20 
                              transition-all duration-300 group h-full"
@@ -394,11 +406,9 @@ const AboutServices = () => {
         <section className="py-20 relative px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <Tilt className="transform-gpu">
+              <Tilt options={tiltOptions} className="transform-gpu">
                 <motion.div
-                  initial={{ opacity: 0, x: -50 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
+                  {...scrollConfig}
                   className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 
                            border border-white/10 hover:border-white/20 
                            transition-all duration-300 group h-full"
@@ -415,11 +425,9 @@ const AboutServices = () => {
                 </motion.div>
               </Tilt>
 
-              <Tilt className="transform-gpu">
+              <Tilt options={tiltOptions} className="transform-gpu">
                 <motion.div
-                  initial={{ opacity: 0, x: 50 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
+                  {...scrollConfig}
                   className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 
                            border border-white/10 hover:border-white/20 
                            transition-all duration-300 group h-full"
@@ -443,4 +451,5 @@ const AboutServices = () => {
   );
 };
 
-export default AboutServices;
+// Optimize component re-renders
+export default React.memo(AboutServices);

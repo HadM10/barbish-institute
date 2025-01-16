@@ -51,8 +51,9 @@ const Navbar = () => {
     if (value.trim()) {
       // Filter courses
       const filteredCourses = courses.filter(course =>
-        course.title.toLowerCase().includes(value.toLowerCase()) ||
-        course.description?.toLowerCase().includes(value.toLowerCase())
+        !course.isArchived && // Exclude archived courses
+        (course.title.toLowerCase().includes(value.toLowerCase()) ||
+         course.description?.toLowerCase().includes(value.toLowerCase()))
       );
 
       // Filter categories
@@ -128,16 +129,6 @@ const Navbar = () => {
     },
   ];
 
-  useEffect(() => {
-    if (location.pathname === '/recorded-sessions' && !auth) {
-      setIsLoginOpen(true); // Open login form
-      navigate("/"); // Prevent navigation to /recorded-sessions and go back to the previous page
-    }
-    if (location.pathname === '/recorded-sessions' && auth) {
-      setIsLoginOpen(false); 
-      navigate("/recorded-sessions");
-    }
-  }, [location.pathname, auth, navigate]);
 
   // Close mobile menu when clicking outside
   useEffect(() => {
@@ -462,22 +453,28 @@ const Navbar = () => {
                   to={item.path}
                   onClick={() => {
                     setIsMobileMenuOpen(false);
-                    if (item.path === "/login") setIsLoginOpen(true); // Open login if login item is clicked
+                    if (item.path === "/login") setIsLoginOpen(true);
                   }}
                   className={`text-white text-[15px] tracking-wide font-medium relative group py-2
                            hover:text-highlight transition-colors duration-300 flex items-center gap-2
-                           ${
-                             item.isSpecial
-                               ? "bg-highlight/20 px-4 py-2 rounded-full"
-                               : ""
+                           ${item.isSpecial
+                             ? "bg-highlight/20 px-4 py-2 rounded-full"
+                             : ""
+                           }
+                           ${location.pathname === item.path 
+                             ? "text-highlight" 
+                             : ""
                            }`}
                 >
                   {item.icon && <span className="relative">{item.icon}</span>}
                   {item.title}
                   {!item.isSpecial && (
                     <span
-                      className="absolute bottom-0 left-0 w-0 h-0.5 bg-highlight 
-                                   group-hover:w-full transition-all duration-300"
+                      className={`absolute bottom-0 left-0 h-0.5 bg-highlight transition-all duration-300
+                                ${location.pathname === item.path 
+                                  ? "w-full" 
+                                  : "w-0 group-hover:w-full"
+                                }`}
                     ></span>
                   )}
                 </Link>

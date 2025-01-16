@@ -10,22 +10,22 @@ import {
 const WhyChooseUs = () => {
   const features = [
     {
-      icon: <FaGraduationCap className="text-5xl text-highlight mb-4" />,
+      icon: <FaGraduationCap className="text-4xl text-highlight mb-4" />,
       title: "Expert Instructors",
       description: "Learn from industry professionals with years of experience"
     },
     {
-      icon: <FaLaptopCode className="text-5xl text-highlight mb-4" />,
+      icon: <FaLaptopCode className="text-4xl text-highlight mb-4" />,
       title: "Hands-on Training",
       description: "Practical experience with real-world projects"
     },
     {
-      icon: <FaHandshake className="text-5xl text-highlight mb-4" />,
+      icon: <FaHandshake className="text-4xl text-highlight mb-4" />,
       title: "Career Support",
       description: "Dedicated career guidance and placement assistance"
     },
     {
-      icon: <FaGlobe className="text-5xl text-highlight mb-4" />,
+      icon: <FaGlobe className="text-4xl text-highlight mb-4" />,
       title: "Global Recognition",
       description: "Internationally recognized certifications and programs"
     }
