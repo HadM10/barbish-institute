@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { FaExchangeAlt } from 'react-icons/fa';
 
+// Using direct CDN URLs for flags
+const FLAGS = {
+  us: 'https://flagcdn.com/w80/us.png',
+  lb: 'https://flagcdn.com/w80/lb.png'
+};
+
 const TranslateButton = () => {
   const [currentLang, setCurrentLang] = useState('en');
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Add notranslate class to prevent translation of the button
     const button = document.getElementById('lang-switch-button');
     if (button) {
       button.classList.add('notranslate');
@@ -67,15 +72,33 @@ const TranslateButton = () => {
                  shadow-lg hover:shadow-xl transition-all duration-300 
                  hover:scale-105 disabled:opacity-75 disabled:scale-100"
       >
-        <span className={`font-medium ${currentLang === 'en' ? 'opacity-100' : 'opacity-50'}`}>
-          English
-        </span>
+        <div className={`w-6 h-6 rounded-full overflow-hidden border-2 border-white/20 
+                        transition-all duration-300 transform
+                        ${currentLang === 'en' 
+                          ? 'opacity-100 scale-110 border-white' 
+                          : 'opacity-50 hover:opacity-75'}`}>
+          <img 
+            src={FLAGS.us} 
+            alt="English" 
+            className="w-full h-full object-cover"
+          />
+        </div>
+        
         <div className={`relative ${isLoading ? 'animate-spin' : ''}`}>
           <FaExchangeAlt className="text-lg" />
         </div>
-        <span className={`font-medium ${currentLang === 'ar' ? 'opacity-100' : 'opacity-50'}`}>
-          Arabic
-        </span>
+
+        <div className={`w-6 h-6 rounded-full overflow-hidden border-2 border-white/20 
+                        transition-all duration-300 transform
+                        ${currentLang === 'ar' 
+                          ? 'opacity-100 scale-110 border-white' 
+                          : 'opacity-50 hover:opacity-75'}`}>
+          <img 
+            src={FLAGS.lb} 
+            alt="Arabic" 
+            className="w-full h-full object-cover"
+          />
+        </div>
       </button>
     </>
   );
