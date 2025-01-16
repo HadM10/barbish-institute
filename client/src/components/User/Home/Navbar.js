@@ -495,13 +495,13 @@ const Navbar = () => {
             ))}
             {/* Add Login/Logout to Mobile Menu */}
             <li className="lg:hidden">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center gap-3">
                 <TranslateButton />
                 {auth ? (
                   <button
                     onClick={logout}
                     className="px-8 py-3 rounded-full bg-highlight text-white
-                    hover:scale-105 hover:tracking-wider transition-all duration-500"
+                           hover:scale-105 hover:tracking-wider transition-all duration-500"
                   >
                     Logout
                   </button>
@@ -512,7 +512,7 @@ const Navbar = () => {
                       setIsMobileMenuOpen(false);
                     }}
                     className="px-8 py-3 rounded-full bg-highlight text-white
-                    hover:scale-105 hover:tracking-wider transition-all duration-500"
+                           hover:scale-105 hover:tracking-wider transition-all duration-500"
                   >
                     Login
                   </button>
