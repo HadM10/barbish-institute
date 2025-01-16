@@ -37,14 +37,21 @@ const BonusCards = () => {
         {cards.map((card) => (
           <div key={card.id} className="bg-white p-4 rounded-lg shadow-md">
             <img
-              src={card.image}
+              src={card.image || "https://via.placeholder.com/150"}
               alt={card.name}
               className="w-full h-48 object-cover rounded"
+              onError={(e) => {
+                e.target.src = "https://via.placeholder.com/150";
+              }}
             />
             <div className="mt-4 text-center">
               <h2 className="text-lg font-semibold">{card.name}</h2>
-              <p className="text-sm text-gray-500 line-through">{card.priceBefore}</p>
-              <p className="text-lg font-bold text-secondary">{card.priceAfter}</p>
+              <p className="text-sm text-gray-500 line-through">
+                {card.priceBefore}
+              </p>
+              <p className="text-lg font-bold text-secondary">
+                {card.priceAfter}
+              </p>
               <p className="text-sm text-gray-600 mt-2">{card.location}</p>
             </div>
           </div>

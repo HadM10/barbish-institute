@@ -8,11 +8,15 @@ router.get("/", courseController.getAllCourses);
 // GET /courses/:id - Get a course by ID
 router.get("/:id", courseController.getCourseById);
 
-// POST /courses - Create a new course
-router.post("/", courseController.createCourse);
+// POST /courses - Create a new course (add uploadFields middleware)
+router.post("/", courseController.uploadFields, courseController.createCourse);
 
-// PUT /courses/:id - Update a course by ID
-router.put("/:id", courseController.updateCourse);
+// PUT /courses/:id - Update a course by ID (add uploadFields middleware)
+router.put(
+  "/:id",
+  courseController.uploadFields,
+  courseController.updateCourse
+);
 
 // DELETE /courses/:id - Delete a course by ID
 router.delete("/:id", courseController.deleteCourse);

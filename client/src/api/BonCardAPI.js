@@ -1,19 +1,16 @@
 import axios from "axios";
 
-// If your backend runs on http://localhost:5000:
 const API_BASE_URL = "http://localhost:5000";
 
 // GET all bonCards
 export async function getAllBonCards() {
   try {
-    // /api/boncards is defined in your route file
     const response = await axios.get(`${API_BASE_URL}/api/boncards`);
-    // The controller returns { success: true, data: [...] }
-    return response.data; // { success: true, data: [...] }
+    return response.data;
   } catch (error) {
     return {
       success: false,
-      message: error.message || "Failed to fetch bonCards"
+      message: error.message || "Failed to fetch bonCards",
     };
   }
 }
@@ -21,49 +18,65 @@ export async function getAllBonCards() {
 // CREATE a new bonCard
 export async function createBonCard(bonCardData) {
   try {
-    const response = await axios.post(
-      `${API_BASE_URL}/api/boncards`,
-      bonCardData
-    );
-    // The controller returns { success: true, data: newBonCard, ... }
-    return response.data; // e.g. { success: true, data: {...} }
+    const formData = new FormData();
+
+    // Add all fields to FormData
+    Object.keys(bonCardData).forEach((key) => {
+      if (key === "image" && bonCardData[key] instanceof File) {
+        formData.append("image", bonCardData[key]);
+      } else if (key !== "image") {
+        formData.append(key, bonCardData[key]);
+      }
+    });
+
+    const response = await axios.post(`${API_BASE_URL}/api/boncards`, formData);
+    return response.data;
   } catch (error) {
     return {
       success: false,
-      message: error.message || "Failed to create bonCard"
+      message: error.message || "Failed to create bonCard",
     };
   }
 }
 
-// UPDATE a bonCard by ID
+// UPDATE a bonCard
 export async function updateBonCard(bonCardId, bonCardData) {
   try {
+    const formData = new FormData();
+
+    // Add all fields to FormData
+    Object.keys(bonCardData).forEach((key) => {
+      if (key === "image" && bonCardData[key] instanceof File) {
+        formData.append("image", bonCardData[key]);
+      } else if (key !== "image") {
+        formData.append(key, bonCardData[key]);
+      }
+    });
+
     const response = await axios.put(
       `${API_BASE_URL}/api/boncards/${bonCardId}`,
-      bonCardData
+      formData
     );
-    // The controller returns { success: true, data: updatedBonCard, ... }
-    return response.data; 
+    return response.data;
   } catch (error) {
     return {
       success: false,
-      message: error.message || "Failed to update bonCard"
+      message: error.message || "Failed to update bonCard",
     };
   }
 }
 
-// DELETE a bonCard by ID
+// DELETE a bonCard
 export async function deleteBonCard(bonCardId) {
   try {
     const response = await axios.delete(
       `${API_BASE_URL}/api/boncards/${bonCardId}`
     );
-    // The controller returns { success: true, message: "BonCard deleted successfully." }
-    return response.data; 
+    return response.data;
   } catch (error) {
     return {
       success: false,
-      message: error.message || "Failed to delete bonCard"
+      message: error.message || "Failed to delete bonCard",
     };
   }
 }

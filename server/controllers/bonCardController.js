@@ -1,30 +1,37 @@
 const BonCard = require("../models/BonCard");
+const { uploadImage } = require("../utils/azureStorage");
+const upload = require("../middleware/uploadMiddleware");
+
+exports.uploadFields = upload.fields([{ name: "image", maxCount: 1 }]);
 
 // Create a new BonCard
 exports.createBonCard = async (req, res) => {
   try {
-    const { title, description, image, price, link, expiredDate } = req.body;
+    let imageUrl = null;
+    if (req.files && req.files.image) {
+      imageUrl = await uploadImage(req.files.image[0]);
+    }
+
     const newBonCard = await BonCard.create({
-      title,
-      description,
-      image,
-      price,
-      link,
-      expiredDate,
+      title: req.body.title,
+      description: req.body.description,
+      image: imageUrl || req.body.image,
+      price: req.body.price,
+      link: req.body.link,
+      expiredDate: req.body.expiredDate,
     });
+
     res.status(201).send({
       success: true,
       message: "BonCard created successfully.",
       data: newBonCard,
     });
   } catch (error) {
-    res
-      .status(500)
-      .send({
-        success: false,
-        message: "Failed to create BonCard.",
-        error: error.message,
-      });
+    res.status(500).send({
+      success: false,
+      message: "Failed to create BonCard.",
+      error: error.message,
+    });
   }
 };
 
@@ -34,13 +41,11 @@ exports.getAllBonCards = async (req, res) => {
     const bonCards = await BonCard.findAll();
     res.status(200).send({ success: true, data: bonCards });
   } catch (error) {
-    res
-      .status(500)
-      .send({
-        success: false,
-        message: "Failed to fetch BonCards.",
-        error: error.message,
-      });
+    res.status(500).send({
+      success: false,
+      message: "Failed to fetch BonCards.",
+      error: error.message,
+    });
   }
 };
 
@@ -55,13 +60,11 @@ exports.getBonCardById = async (req, res) => {
         .send({ success: false, message: "BonCard not found." });
     res.status(200).send({ success: true, data: bonCard });
   } catch (error) {
-    res
-      .status(500)
-      .send({
-        success: false,
-        message: "Failed to fetch BonCard.",
-        error: error.message,
-      });
+    res.status(500).send({
+      success: false,
+      message: "Failed to fetch BonCard.",
+      error: error.message,
+    });
   }
 };
 
@@ -69,34 +72,39 @@ exports.getBonCardById = async (req, res) => {
 exports.updateBonCard = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, image, price, link, expiredDate } = req.body;
     const bonCard = await BonCard.findByPk(id);
-    if (!bonCard)
-      return res
-        .status(404)
-        .send({ success: false, message: "BonCard not found." });
+    if (!bonCard) {
+      return res.status(404).send({
+        success: false,
+        message: "BonCard not found.",
+      });
+    }
+
+    let imageUrl = bonCard.image;
+    if (req.files && req.files.image) {
+      imageUrl = await uploadImage(req.files.image[0]);
+    }
 
     await bonCard.update({
-      title,
-      description,
-      image,
-      price,
-      link,
-      expiredDate,
+      title: req.body.title,
+      description: req.body.description,
+      image: imageUrl || req.body.image,
+      price: req.body.price,
+      link: req.body.link,
+      expiredDate: req.body.expiredDate,
     });
+
     res.status(200).send({
       success: true,
       message: "BonCard updated successfully.",
       data: bonCard,
     });
   } catch (error) {
-    res
-      .status(500)
-      .send({
-        success: false,
-        message: "Failed to update BonCard.",
-        error: error.message,
-      });
+    res.status(500).send({
+      success: false,
+      message: "Failed to update BonCard.",
+      error: error.message,
+    });
   }
 };
 
@@ -115,12 +123,10 @@ exports.deleteBonCard = async (req, res) => {
       .status(200)
       .send({ success: true, message: "BonCard deleted successfully." });
   } catch (error) {
-    res
-      .status(500)
-      .send({
-        success: false,
-        message: "Failed to delete BonCard.",
-        error: error.message,
-      });
+    res.status(500).send({
+      success: false,
+      message: "Failed to delete BonCard.",
+      error: error.message,
+    });
   }
 };
