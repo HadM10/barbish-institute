@@ -52,8 +52,9 @@ const Navbar = () => {
     if (value.trim()) {
       // Filter courses
       const filteredCourses = courses.filter(course =>
-        course.title.toLowerCase().includes(value.toLowerCase()) ||
-        course.description?.toLowerCase().includes(value.toLowerCase())
+        !course.isArchived && // Exclude archived courses
+        (course.title.toLowerCase().includes(value.toLowerCase()) ||
+         course.description?.toLowerCase().includes(value.toLowerCase()))
       );
 
       // Filter categories
@@ -128,17 +129,6 @@ const Navbar = () => {
       icon: <FaGift className="text-lg" />,
     },
   ];
-
-  useEffect(() => {
-    if (location.pathname === '/recorded-sessions' && !auth) {
-      setIsLoginOpen(true); // Open login form
-      navigate("/"); // Prevent navigation to /recorded-sessions and go back to the previous page
-    }
-    if (location.pathname === '/recorded-sessions' && auth) {
-      setIsLoginOpen(false); 
-      navigate("/recorded-sessions");
-    }
-  }, [location.pathname, auth, navigate]);
 
   // Close mobile menu when clicking outside
   useEffect(() => {
