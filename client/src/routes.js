@@ -51,7 +51,7 @@ const AppRoutes = () => (
     <Route path="/" element={<Home />} />
     <Route path="/courses" element={<Courses />} />
     <Route path="/recorded-sessions" element={<RecordedSessions />} />
-    <Route path="/video-player/:id" element={<VideoPlayer />} />
+    <Route path="/video-player/:sessionId" element={<VideoPlayer />} />
     <Route path="/services" element={<AITools />} />
     <Route path="/bonus" element={<BonusCards />} />
     <Route path="/contact" element={<Contact />} />

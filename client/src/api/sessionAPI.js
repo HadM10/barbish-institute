@@ -32,7 +32,16 @@ export const getSessionById = async (id) => {
 // Create a new session
 export const createSession = async (sessionData) => {
   try {
-    const response = await axios.post(API_BASE_URL, sessionData);
+    const formData = new FormData();
+    Object.keys(sessionData).forEach((key) => {
+      if (key === "video" && sessionData[key] instanceof File) {
+        formData.append("video", sessionData[key]);
+      } else if (key !== "video") {
+        formData.append(key, sessionData[key]);
+      }
+    });
+
+    const response = await axios.post(API_BASE_URL, formData);
     return { success: true, data: response.data };
   } catch (error) {
     return {
@@ -45,7 +54,16 @@ export const createSession = async (sessionData) => {
 // Update a session by ID
 export const updateSession = async (id, sessionData) => {
   try {
-    const response = await axios.put(`${API_BASE_URL}/${id}`, sessionData);
+    const formData = new FormData();
+    Object.keys(sessionData).forEach((key) => {
+      if (key === "video" && sessionData[key] instanceof File) {
+        formData.append("video", sessionData[key]);
+      } else if (key !== "video") {
+        formData.append(key, sessionData[key]);
+      }
+    });
+
+    const response = await axios.put(`${API_BASE_URL}/${id}`, formData);
     return { success: true, data: response.data };
   } catch (error) {
     return {

@@ -10,14 +10,6 @@ const Session = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
-    courseId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'Courses',
-        key: 'id'
-      }
-    },
     title: {
       type: DataTypes.STRING,
       allowNull: false,

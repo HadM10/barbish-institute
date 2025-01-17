@@ -7,7 +7,7 @@ import {
   PencilIcon,
   TrashIcon,
   CheckCircleIcon,
-  XCircleIcon
+  XCircleIcon,
 } from "@heroicons/react/24/outline";
 
 import {
@@ -21,9 +21,8 @@ import { getAllCourses } from "../../api/courseAPI";
 
 // Add Notification Component
 const Notification = ({ message, type, onClose }) => {
-  const bgColor = type === 'error' || type === 'delete' 
-    ? 'bg-red-500' 
-    : 'bg-emerald-500';
+  const bgColor =
+    type === "error" || type === "delete" ? "bg-red-500" : "bg-emerald-500";
 
   return (
     <motion.div
@@ -33,9 +32,9 @@ const Notification = ({ message, type, onClose }) => {
       className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-6 py-4 
                 rounded-lg shadow-lg ${bgColor}`}
     >
-      {type === 'delete' ? (
+      {type === "delete" ? (
         <TrashIcon className="w-6 h-6 text-white" />
-      ) : type === 'success' ? (
+      ) : type === "success" ? (
         <CheckCircleIcon className="w-6 h-6 text-white" />
       ) : (
         <XCircleIcon className="w-6 h-6 text-white" />
@@ -57,9 +56,10 @@ const RecordedSessions = () => {
     description: "",
     content: "",
     duration: "",
-    videoFile: null,
+    video: null,
     courseName: "",
-    isActive: "active",
+    courseId: "",
+    isActive: true,
   });
 
   // Add notification state
@@ -68,10 +68,14 @@ const RecordedSessions = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   // Add filtered sessions logic
-  const filteredSessions = sessions.filter(session => 
-    session.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    session.courseName.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredSessions = sessions.filter(
+    (session) =>
+      session.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      session.courseName.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Add loading state
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch sessions and courses on component mount
   useEffect(() => {
@@ -131,22 +135,20 @@ const RecordedSessions = () => {
   const handleInputChange = (e) => {
     const { name, value, type, files } = e.target;
 
-    if (type === 'file') {
-      setFormData(prev => ({
+    if (type === "file") {
+      setFormData((prev) => ({
         ...prev,
-        [name]: files[0],
-        videoUrl: '' // Clear the videoUrl when a file is selected
+        video: files[0],
       }));
     } else if (name === "courseName") {
-      courses.find(
-        (course) => course.courseName === value
-      );
-      setFormData(prev => ({
+      const selectedCourse = courses.find((course) => course.title === value);
+      setFormData((prev) => ({
         ...prev,
         [name]: value,
+        courseId: selectedCourse?.id,
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         [name]: value,
       }));
@@ -154,7 +156,7 @@ const RecordedSessions = () => {
   };
 
   // Add showNotification helper
-  const showNotification = (message, type = 'success') => {
+  const showNotification = (message, type = "success") => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
   };
@@ -162,71 +164,59 @@ const RecordedSessions = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.title || !formData.description || !formData.duration || !formData.courseName) {
-      showNotification('Please fill in all required fields', 'error');
+    if (!formData.title || !formData.description || !formData.courseId) {
+      showNotification("Please fill in all required fields", "error");
       return;
     }
 
-    const selectedCourse = courses.find(
-      (course) => course.title === formData.courseName
-    );
-    const isActive = formData.status === "active";
-    const courseId = selectedCourse.id;
-
-    if (!selectedCourse) {
-      showNotification("Invalid course selection", "error");
-      return;
-    }
-
-    const sessionData = {
-      title: formData.title,
-      description: formData.description,
-      content: formData.content,
-      duration: formData.duration,
-      videoUrl: formData.videoUrl,
-      courseId, // Ensure the courseId is passed correctly
-      isActive,
-    };
+    setIsSubmitting(true);
 
     try {
+      const sessionData = {
+        ...formData,
+        isActive: true,
+      };
+
       if (isEditing) {
         const res = await updateSession(editId, sessionData);
         if (res.success) {
           setSessions((prev) =>
             prev.map((session) =>
-              session.id === editId ? { ...session, ...formData, courseName: selectedCourse.title } : session
+              session.id === editId
+                ? {
+                    ...session,
+                    ...sessionData,
+                    courseName: formData.courseName,
+                  }
+                : session
             )
           );
-          showNotification('Session updated successfully!');
+          showNotification("Session updated successfully!");
         } else {
-          showNotification('Failed to update session: ' + res.message, 'error');
+          showNotification("Failed to update session: " + res.message, "error");
         }
       } else {
         const res = await createSession(sessionData);
         if (res.success) {
-          const newSession = res.data;
-          const adapted = {
-            id: newSession.id,
-            title: newSession.title,
-            description: newSession.description,
-            content: newSession.content || "No content",
-            duration: newSession.duration || "Unknown Duration",
-            videoUrl: newSession.videoUrl || "No Video URL",
-            courseName: selectedCourse.title,
-            isActive: newSession.isActive ? "active" : "inactive",
-            createdAt: new Date(),
-          };
-          setSessions((prev) => [...prev, adapted]);
-          showNotification('Session added successfully!');
+          setSessions((prev) => [
+            ...prev,
+            {
+              ...res.data,
+              courseName: formData.courseName,
+              isActive: true,
+            },
+          ]);
+          showNotification("Session added successfully!");
         } else {
-          showNotification('Failed to add session: ' + (res.message || 'Unknown error'), 'error');
+          showNotification("Failed to add session: " + res.message, "error");
         }
       }
+      resetForm();
     } catch (error) {
-      showNotification('Error creating/updating session: ' + error.message, 'error');
+      showNotification("Error: " + error.message, "error");
+    } finally {
+      setIsSubmitting(false);
     }
-  
-    resetForm();
   };
 
   const handleEdit = (session) => {
@@ -250,12 +240,12 @@ const RecordedSessions = () => {
         const res = await deleteSession(id);
         if (res.success) {
           setSessions((prev) => prev.filter((session) => session.id !== id));
-          showNotification('Session deleted successfully!', 'delete');
+          showNotification("Session deleted successfully!", "delete");
         } else {
-          showNotification('Failed to delete session: ' + res.message, 'error');
+          showNotification("Failed to delete session: " + res.message, "error");
         }
       } catch (error) {
-        showNotification('Error deleting session: ' + error.message, 'error');
+        showNotification("Error deleting session: " + error.message, "error");
       }
     }
   };
@@ -265,13 +255,13 @@ const RecordedSessions = () => {
     if (session) {
       try {
         const newStatus = session.isActive === "active" ? "inactive" : "active";
-        const res = await updateSession(id, { isActive: newStatus === "active" });
+        const res = await updateSession(id, {
+          isActive: newStatus === "active",
+        });
 
         if (res.success) {
           setSessions((prev) =>
-            prev.map((s) =>
-              s.id === id ? { ...s, isActive: newStatus } : s
-            )
+            prev.map((s) => (s.id === id ? { ...s, isActive: newStatus } : s))
           );
           showNotification(`Session status changed to ${newStatus}`);
         } else {
@@ -289,8 +279,9 @@ const RecordedSessions = () => {
       description: "",
       content: "",
       duration: "",
-      videoFile: null,
+      video: null,
       courseName: "",
+      courseId: "",
       isActive: true,
     });
     setIsEditing(false);
@@ -336,8 +327,19 @@ const RecordedSessions = () => {
                        placeholder-gray-400"
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
               </svg>
             </div>
           </div>
@@ -356,7 +358,7 @@ const RecordedSessions = () => {
         {searchTerm && (
           <div className="mb-4 text-sm text-gray-500">
             Showing results for "{searchTerm}"
-            <button 
+            <button
               onClick={() => setSearchTerm("")}
               className="ml-2 text-purple-600 hover:text-purple-700"
             >
@@ -399,9 +401,10 @@ const RecordedSessions = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredSessions.map((session, index) => {
                   // Get the session number within its course
-                  const courseSessionIndex = filteredSessions
-                    .filter(s => s.courseName === session.courseName)
-                    .findIndex(s => s.id === session.id) + 1;
+                  const courseSessionIndex =
+                    filteredSessions
+                      .filter((s) => s.courseName === session.courseName)
+                      .findIndex((s) => s.id === session.id) + 1;
 
                   return (
                     <tr
@@ -421,7 +424,10 @@ const RecordedSessions = () => {
                       </td>
                       <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap">
                         <div className="max-w-[150px] md:max-w-[200px]">
-                          <p className="text-sm text-gray-900 truncate" title={session.description}>
+                          <p
+                            className="text-sm text-gray-900 truncate"
+                            title={session.description}
+                          >
                             {session.description}
                           </p>
                         </div>
@@ -572,11 +578,14 @@ const RecordedSessions = () => {
                     <div className="space-y-1 text-center">
                       <VideoCameraIcon className="mx-auto h-12 w-12 text-gray-400" />
                       <div className="flex text-sm text-gray-600">
-                        <label htmlFor="video-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-purple-500">
+                        <label
+                          htmlFor="video-upload"
+                          className="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-purple-500"
+                        >
                           <span>Upload a video</span>
                           <input
                             id="video-upload"
-                            name="videoFile"
+                            name="video"
                             type="file"
                             accept="video/*"
                             onChange={handleInputChange}
@@ -589,9 +598,9 @@ const RecordedSessions = () => {
                       <p className="text-xs text-gray-500">
                         MP4, WebM up to 2GB
                       </p>
-                      {formData.videoFile && (
+                      {formData.video && (
                         <p className="text-sm text-gray-600 truncate">
-                          Selected: {formData.videoFile.name}
+                          Selected: {formData.video.name}
                         </p>
                       )}
                     </div>
@@ -623,9 +632,24 @@ const RecordedSessions = () => {
               <div className="mt-6 text-center">
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200"
+                  disabled={isSubmitting}
+                  className={`px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 
+                              transition-all duration-200 ${
+                                isSubmitting
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
+                              }`}
                 >
-                  {isEditing ? "Update Session" : "Add Session"}
+                  {isSubmitting ? (
+                    <div className="flex items-center justify-center">
+                      <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin mr-2"></div>
+                      {isEditing ? "Updating..." : "Adding..."}
+                    </div>
+                  ) : isEditing ? (
+                    "Update Session"
+                  ) : (
+                    "Add Session"
+                  )}
                 </button>
               </div>
             </form>
