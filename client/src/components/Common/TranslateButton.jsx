@@ -67,38 +67,37 @@ const TranslateButton = () => {
         id="lang-switch-button"
         onClick={toggleLanguage}
         disabled={isLoading}
-        className="flex items-center gap-4 px-6 py-3 
-                 bg-gradient-to-r from-highlight to-highlight/90 text-white rounded-full 
-                 shadow-lg hover:shadow-xl transition-all duration-300 
-                 hover:scale-105 disabled:opacity-75 disabled:scale-100"
+        className="flex items-center gap-2 px-4 py-2 
+                 bg-gradient-to-r from-highlight/90 to-highlight/80 text-white rounded-full 
+                 shadow-md hover:shadow-lg transition-all duration-300 
+                 hover:scale-102 disabled:opacity-75 disabled:scale-100
+                 border border-white/10"
       >
-        <div className={`w-6 h-6 rounded-full overflow-hidden border-2 border-white/20 
-                        transition-all duration-300 transform
-                        ${currentLang === 'en' 
-                          ? 'opacity-100 scale-110 border-white' 
-                          : 'opacity-50 hover:opacity-75'}`}>
-          <img 
-            src={FLAGS.us} 
-            alt="English" 
-            className="w-full h-full object-cover"
-          />
-        </div>
-        
-        <div className={`relative ${isLoading ? 'animate-spin' : ''}`}>
-          <FaExchangeAlt className="text-lg" />
-        </div>
-
-        <div className={`w-6 h-6 rounded-full overflow-hidden border-2 border-white/20 
-                        transition-all duration-300 transform
-                        ${currentLang === 'ar' 
-                          ? 'opacity-100 scale-110 border-white' 
-                          : 'opacity-50 hover:opacity-75'}`}>
-          <img 
-            src={FLAGS.lb} 
-            alt="Arabic" 
-            className="w-full h-full object-cover"
-          />
-        </div>
+        {currentLang === 'en' ? (
+          <>
+            <div className="w-5 h-5 rounded-full overflow-hidden border border-white/20">
+              <img 
+                src={FLAGS.us} 
+                alt="English" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <span className="text-sm font-medium">ENG</span>
+            <FaExchangeAlt className={`text-sm ml-1 opacity-70 ${isLoading ? 'animate-spin' : ''}`} />
+          </>
+        ) : (
+          <>
+            <div className="w-5 h-5 rounded-full overflow-hidden border border-white/20">
+              <img 
+                src={FLAGS.lb} 
+                alt="Arabic" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <span className="text-sm font-medium">عربي</span>
+            <FaExchangeAlt className={`text-sm ml-1 opacity-70 ${isLoading ? 'animate-spin' : ''}`} />
+          </>
+        )}
       </button>
     </>
   );

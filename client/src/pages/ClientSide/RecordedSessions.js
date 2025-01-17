@@ -1,6 +1,6 @@
 // pages/ClientSide/RecordedSessions.js
 import React, { useState, useEffect, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   FaVideo,
   FaChevronRight,
@@ -28,82 +28,67 @@ const RecordedSessions = () => {
   const token = localStorage.getItem("token");
 
   // EmptyState Component
-  // EmptyState Component
-const EmptyState = ({ type, courseName, setIsLoginOpen }) => {
-  const content = {
-    notLoggedIn: {
-      icon: <MdSubscriptions className="text-6xl text-blue-500 mb-4" />,
-      title: "Login Required",
-      description:
-        "Please login to access your courses and learning materials.",
-      actionText: "Login Now",
-      showAction: true,
-    },
-    noSubscription: {
-      icon: <FaBookReader className="text-6xl text-blue-500 mb-4" />,
-      title: "No Active Subscriptions",
-      description: "Subscribe to our courses to start your learning journey!",
-      actionText: "Browse Courses",
-      actionLink: "/courses",
-      showAction: true,
-    },
-    noSessions: {
-      icon: <FaVideo className="text-6xl text-gray-400 mb-4" />,
-      title: "Coming Soon",
-      description: `We're currently preparing the recorded sessions for ${courseName}. Our team is working hard to create high-quality content that meets our standards. You'll be notified as soon as new content becomes available.`,
-      showAction: false,
-    },
-  };
+  const EmptyState = ({ type, courseName, setIsLoginOpen }) => {
+    const content = {
+      notLoggedIn: {
+        icon: (
+          <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mb-6">
+            <MdSubscriptions className="w-10 h-10 text-blue-500" />
+          </div>
+        ),
+        title: "Access Your Learning Materials",
+        description: "Please sign in with your provided credentials to access your recorded sessions.",
+        primaryAction: {
+          text: "Sign In",
+          onClick: () => setIsLoginOpen(true)
+        }
+      },
+      noSubscription: {
+        icon: <FaBookReader className="text-6xl text-blue-500 mb-4" />,
+        title: "No Active Subscriptions",
+        description: "Subscribe to our courses to start your learning journey!",
+        actionText: "Browse Courses",
+        actionLink: "/courses",
+        showAction: true,
+      },
+      noSessions: {
+        icon: <FaVideo className="text-6xl text-gray-400 mb-4" />,
+        title: "Coming Soon",
+        description: `We're currently preparing the recorded sessions for ${courseName}. Our team is working hard to create high-quality content that meets our standards. You'll be notified as soon as new content becomes available.`,
+        showAction: false,
+      },
+    };
 
-  const currentContent = content[type];
-
-  const handleAction = () => {
-    if (type === 'notLoggedIn') {
-      setIsLoginOpen(true);
-    }
-  };
-
-  const renderAction = () => {
-    if (!currentContent.showAction) return null;
-
-    if (type === 'notLoggedIn') {
-      return (
-        <button
-          onClick={handleAction}
-          className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-xl 
-                    hover:bg-blue-700 transition-all duration-200 transform hover:scale-105"
-        >
-          {currentContent.actionText}
-          <FaChevronRight className="ml-2" />
-        </button>
-      );
-    }
+    const currentContent = content[type];
 
     return (
-      <Link
-        to={currentContent.actionLink}
-        className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-xl 
-                  hover:bg-blue-700 transition-all duration-200 transform hover:scale-105"
-      >
-        {currentContent.actionText}
-        <FaChevronRight className="ml-2" />
-      </Link>
+      <div className="max-w-md mx-auto px-4">
+        <div className="text-center">
+          <div className="flex justify-center">
+            {currentContent.icon}
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-3">
+            {currentContent.title}
+          </h2>
+          <p className="text-gray-600 mb-8">
+            {currentContent.description}
+          </p>
+          
+          {currentContent.primaryAction && (
+            <button
+              onClick={currentContent.primaryAction.onClick}
+              className="w-full px-6 py-3 bg-blue-600 text-white rounded-xl 
+                       hover:bg-blue-700 transition-all duration-200 
+                       transform hover:scale-[1.02] active:scale-[0.98]
+                       font-medium shadow-sm hover:shadow-md"
+            >
+              {currentContent.primaryAction.text}
+            </button>
+          )}
+        </div>
+      </div>
     );
   };
-
-  return (
-    <div className="bg-white/50 backdrop-blur-sm rounded-xl shadow-sm p-8 text-center">
-      <div className="flex justify-center">{currentContent.icon}</div>
-      <h2 className="text-2xl font-bold text-gray-800 mt-4 mb-2">
-        {currentContent.title}
-      </h2>
-      <p className="text-gray-600 text-base mb-6">{currentContent.description}</p>
-      {renderAction()}
-    </div>
-  );
-};
-
-  
 
   // Fetch progress for a specific course
   const fetchCourseProgress = useCallback(async (courseId) => {
@@ -190,7 +175,7 @@ const EmptyState = ({ type, courseName, setIsLoginOpen }) => {
     onToggleWatch,
     onWatch,
   }) => {
-    const [isHovered, setIsHovered] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
 
     const parseContent = (content) => {
       if (!content) return [];
@@ -201,13 +186,10 @@ const EmptyState = ({ type, courseName, setIsLoginOpen }) => {
     };
 
     return (
-      <div
-        className="bg-white border-b border-gray-100 transition-all duration-200"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <div className={`p-3 md:p-4 ${isHovered ? "bg-blue-50/50" : ""}`}>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="bg-white border-b border-gray-100">
+        <div className="p-3 md:p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            {/* Left side with icon and title */}
             <div className="flex items-start sm:items-center gap-3 flex-1">
               <div className="flex-shrink-0 mt-1 sm:mt-0">
                 {isWatched ? (
@@ -217,17 +199,13 @@ const EmptyState = ({ type, courseName, setIsLoginOpen }) => {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 w-full text-left group">
+                <div className="flex items-center gap-2 w-full">
                   <div className="flex-1">
-                    <h3 className="text-sm font-medium text-gray-900 line-clamp-1 sm:line-clamp-none group-hover:text-blue-600">
+                    <h3 className="text-sm font-medium text-gray-900 line-clamp-1 sm:line-clamp-none">
                       Session {index + 1}: {session.title}
                     </h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span
-                        className={`text-xs ${
-                          isWatched ? "text-green-600" : "text-gray-500"
-                        }`}
-                      >
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                      <span className={`text-xs ${isWatched ? "text-green-600" : "text-gray-500"}`}>
                         {isWatched ? "Completed" : "Not started"}
                       </span>
                       {session.duration && (
@@ -244,39 +222,71 @@ const EmptyState = ({ type, courseName, setIsLoginOpen }) => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 ml-7 sm:ml-0">
+            {/* Right side with buttons */}
+            <div className="flex flex-wrap items-center gap-3 ml-7 sm:ml-0">
               <button
                 onClick={onToggleWatch}
-                className={`flex items-center px-2 py-1 sm:px-3 sm:py-1.5 rounded text-xs sm:text-sm font-medium
+                className={`group relative flex items-center px-4 py-1.5 sm:px-5 sm:py-2 rounded-full 
+                  text-xs sm:text-sm font-medium transition-all duration-300 
+                  border-2 shadow-sm hover:shadow-md active:scale-95
                   ${
                     isWatched
-                      ? "text-red-600 hover:text-red-700 hover:bg-red-50"
-                      : "text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                  } 
-                  transition-all duration-200`}
+                      ? "border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50"
+                      : "border-blue-200 text-blue-600 hover:border-blue-300 hover:bg-blue-50"
+                  }
+                  before:absolute before:inset-0 before:rounded-full
+                  before:bg-gradient-to-r
+                  ${
+                    isWatched
+                      ? "before:from-red-100/50 before:to-red-50/50"
+                      : "before:from-blue-100/50 before:to-blue-50/50"
+                  }
+                  before:opacity-0 hover:before:opacity-100 before:transition-opacity
+                  overflow-hidden`}
               >
-                <MdOndemandVideo className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">
-                  {isWatched ? "Mark as Unwatched" : "Mark as Watched"}
-                </span>
-                <span className="sm:hidden">
-                  {isWatched ? "Unwatch" : "Watch"}
+                <MdOndemandVideo className={`mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 
+                  ${isWatched ? "text-red-500" : "text-blue-500"}`} />
+                <span className="relative">
+                  <span className="hidden sm:inline">
+                    {isWatched ? "Mark as Unwatched" : "Mark as Watched"}
+                  </span>
+                  <span className="sm:hidden">
+                    {isWatched ? "Unwatch" : "Watch"}
+                  </span>
                 </span>
               </button>
+
               <button
                 onClick={onWatch}
-                className="flex items-center px-3 py-1 sm:px-4 sm:py-1.5 bg-blue-600 text-white rounded
-                         hover:bg-blue-700 transition-colors duration-200 text-xs sm:text-sm"
+                className="group relative flex items-center px-4 py-1.5 sm:px-5 sm:py-2 
+                         bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-full
+                         hover:from-blue-700 hover:to-blue-600 transition-all duration-300
+                         shadow-md hover:shadow-lg active:scale-95 font-medium text-xs sm:text-sm"
               >
-                <span>Watch</span>
-                <FaChevronRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="mr-2">Watch Now</span>
+                <FaChevronRight className="h-3 w-3 sm:h-3.5 sm:w-3.5 
+                                       group-hover:translate-x-0.5 transition-transform" />
+              </button>
+
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="flex items-center justify-center w-8 h-8 text-gray-400 
+                         hover:text-blue-600 hover:bg-blue-50 rounded-full 
+                         transition-all duration-200 border-2 border-transparent
+                         hover:border-blue-200"
+              >
+                {isExpanded ? (
+                  <FaChevronUp className="h-4 w-4" />
+                ) : (
+                  <FaChevronDown className="h-4 w-4" />
+                )}
               </button>
             </div>
           </div>
 
-          {/* Updated Hover Content Preview */}
+          {/* Expandable Content */}
           <AnimatePresence>
-            {isHovered && (
+            {isExpanded && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
@@ -284,7 +294,6 @@ const EmptyState = ({ type, courseName, setIsLoginOpen }) => {
                 className="mt-4 pl-8"
               >
                 <div className="grid md:grid-cols-2 gap-4">
-                  {/* Description Card */}
                   {session.description && (
                     <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
                       <h4 className="text-sm font-medium text-gray-900 mb-2">
@@ -296,7 +305,6 @@ const EmptyState = ({ type, courseName, setIsLoginOpen }) => {
                     </div>
                   )}
 
-                  {/* Content Card */}
                   {session.content && (
                     <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
                       <h4 className="text-sm font-medium text-gray-900 mb-2">
@@ -304,20 +312,9 @@ const EmptyState = ({ type, courseName, setIsLoginOpen }) => {
                       </h4>
                       <div className="space-y-2">
                         {parseContent(session.content).map((item, idx) => (
-                          <div
-                            key={idx}
-                            className="flex items-start gap-2 group"
-                          >
-                            <div
-                              className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 flex-shrink-0 
-                                          group-hover:bg-blue-500 transition-colors duration-200"
-                            />
-                            <p
-                              className="text-sm text-gray-600 group-hover:text-gray-900 
-                                        transition-colors duration-200"
-                            >
-                              {item}
-                            </p>
+                          <div key={idx} className="flex items-start gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 flex-shrink-0" />
+                            <p className="text-sm text-gray-600">{item}</p>
                           </div>
                         ))}
                       </div>
@@ -423,17 +420,20 @@ const EmptyState = ({ type, courseName, setIsLoginOpen }) => {
   // Render empty states if needed
   if (!token) {
     return (
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
         <Navbar />
-        <div className="pt-40 pb-20">
-          <EmptyState 
-            type="notLoggedIn" 
-            setIsLoginOpen={setIsLoginOpen}
-          />
+        <div className="container mx-auto px-4">
+          <div className="pt-48 pb-20">
+            <EmptyState 
+              type="notLoggedIn" 
+              setIsLoginOpen={setIsLoginOpen}
+            />
+          </div>
         </div>
         <Login 
           isOpen={isLoginOpen} 
           onClose={() => setIsLoginOpen(false)}
+          redirectPath="/recorded-sessions"
         />
       </div>
     );
