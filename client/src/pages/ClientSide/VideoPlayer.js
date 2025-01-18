@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { FaArrowLeft, FaPlay, FaExpand, FaCog } from "react-icons/fa";
+import { FaArrowLeft } from "react-icons/fa";
 import Navbar from "../../components/User/Home/Navbar";
 import { getSessionById } from "../../api/sessionAPI";
 
@@ -23,6 +23,39 @@ const VideoPlayer = () => {
 
     fetchSession();
   }, [sessionId]);
+
+  const getYouTubeEmbedUrl = (url) => {
+    if (!url) return null;
+
+    let videoId = '';
+    
+    if (url.includes('youtu.be/')) {
+      videoId = url.split('youtu.be/')[1].split('?')[0];
+    } else if (url.includes('watch?v=')) {
+      videoId = url.split('watch?v=')[1].split('&')[0];
+    } else if (url.includes('embed/')) {
+      videoId = url.split('embed/')[1].split('?')[0];
+    } else {
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+      const match = url.match(regExp);
+      videoId = match && match[2].length === 11 ? match[2] : null;
+    }
+
+    if (!videoId) return null;
+
+    videoId = videoId.trim();
+    const params = new URLSearchParams({
+      rel: 0,
+      modestbranding: 1,
+      controls: 1,
+      showinfo: 0,
+      iv_load_policy: 3,
+      fs: 1,
+      playsinline: 1,
+    });
+    
+    return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -51,13 +84,58 @@ const VideoPlayer = () => {
 
             <div className="relative">
               {sessionData?.videoUrl ? (
-                <video
-                  className="w-full aspect-video"
-                  controls
-                  src={sessionData.videoUrl}
-                >
-                  Your browser does not support the video tag.
-                </video>
+                <div className="aspect-video relative">
+                  <div className="video-container relative w-full h-full">
+                    {/* Main corner overlay */}
+                    <div 
+                      className="overlay absolute top-0 right-0 z-[9999]"
+                      style={{ 
+                        width: 'clamp(120px, 25%, 170px)',
+                        height: 'clamp(120px, 25%, 170px)',
+                        background: 'rgba(0,0,0,0.01)',
+                        pointerEvents: 'auto',
+                      }}
+                      onClick={(e) => e.preventDefault()}
+                    ></div>
+                    {/* Bottom share overlay */}
+                    <div 
+                      className="overlay absolute bottom-0 right-0 z-[9999]"
+                      style={{ 
+                        width: 'clamp(120px, 25%, 170px)',
+                        height: 'clamp(40px, 8%, 48px)',
+                        background: 'rgba(0,0,0,0.01)',
+                        pointerEvents: 'auto',
+                      }}
+                      onClick={(e) => e.preventDefault()}
+                    ></div>
+                    {/* YouTube logo overlay */}
+                    <div 
+                      className="overlay absolute top-0 left-0 z-[9999]"
+                      style={{ 
+                        width: 'clamp(80px, 15%, 90px)',
+                        height: 'clamp(35px, 7%, 40px)',
+                        background: 'rgba(0,0,0,0.01)',
+                        pointerEvents: 'auto',
+                      }}
+                      onClick={(e) => e.preventDefault()}
+                    ></div>
+                    <iframe
+                      className="w-full h-full"
+                      src={getYouTubeEmbedUrl(sessionData.videoUrl)}
+                      title="Video Player"
+                      frameBorder="0"
+                      allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                      }}
+                    ></iframe>
+                  </div>
+                </div>
               ) : (
                 <div className="bg-black aspect-video w-full">
                   <div className="w-full h-full flex items-center justify-center">
