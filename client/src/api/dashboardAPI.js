@@ -1,6 +1,5 @@
 import axios from "axios";
-
-const API_URL = "http://localhost:5000/api/dashboard"; // Adjust URL as needed
+const API_URL = `${process.env.REACT_APP_API_URL}/dashboard`;
 
 class DashboardAPI {
   // Fetch all dashboard stats

@@ -44,7 +44,7 @@ const RecordedSessions = () => {
         }
       },
       noSubscription: {
-        icon: <FaBookReader className="text-6xl text-blue-500 mb-4" />,
+        icon: <FaBookReader className="text-6xl text-blue-500 mb-4 mt-20" />,
         title: "No Active Subscriptions",
         description: "Subscribe to our courses to start your learning journey!",
         actionText: "Browse Courses",

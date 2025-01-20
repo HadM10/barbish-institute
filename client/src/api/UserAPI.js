@@ -1,7 +1,6 @@
 // client/src/api/UserAPI.js
 import axios from "axios";
-
-const API_BASE_URL = "http://localhost:5000";
+const API_URL = `${process.env.REACT_APP_API_URL}`;
 
 function toFrontendUser(user) {
   return {
@@ -19,7 +18,7 @@ function toBackendPayload(userData) {
 
 export async function getAllUsers() {
   try {
-    const response = await axios.get(`${API_BASE_URL}/api/users`);
+    const response = await axios.get(`${API_URL}/users`);
     const transformedUsers = response.data.map((u) => toFrontendUser(u));
     return { success: true, data: transformedUsers };
   } catch (error) {
@@ -30,10 +29,7 @@ export async function getAllUsers() {
 export async function createUser(formData) {
   try {
     const backendPayload = toBackendPayload(formData);
-    const response = await axios.post(
-      `${API_BASE_URL}/api/users`,
-      backendPayload
-    );
+    const response = await axios.post(`${API_URL}/users`, backendPayload);
     const createdUser = toFrontendUser(response.data);
     return { success: true, data: createdUser };
   } catch (error) {
@@ -45,7 +41,7 @@ export async function updateUser(userId, formData) {
   try {
     const backendPayload = toBackendPayload(formData);
     const response = await axios.put(
-      `${API_BASE_URL}/api/users/${userId}`,
+      `${API_URL}/users/${userId}`,
       backendPayload
     );
     const updatedUser = toFrontendUser(response.data);
@@ -54,9 +50,10 @@ export async function updateUser(userId, formData) {
     return { success: false, message: error.message };
   }
 }
+
 export async function deleteUser(userId) {
   try {
-    const response = await axios.delete(`${API_BASE_URL}/api/users/${userId}`);
+    const response = await axios.delete(`${API_URL}/users/${userId}`);
     return { success: true, data: response.data };
   } catch (error) {
     return { success: false, message: error.message };
@@ -65,15 +62,13 @@ export async function deleteUser(userId) {
 
 export const getUserSubscribedCourses = async () => {
   try {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_BASE_URL}/api/auth/my-courses`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+    const token = localStorage.getItem("token");
+    const response = await axios.get(`${API_URL}/auth/my-courses`, {
+      headers: { Authorization: `Bearer ${token}` },
     });
     return response.data;
   } catch (error) {
-    console.error('Error fetching subscribed courses:', error);
+    console.error("Error fetching subscribed courses:", error);
     throw error;
   }
 };
