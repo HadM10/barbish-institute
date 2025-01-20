@@ -2,10 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   FaRobot, FaGraduationCap, FaLaptopCode, FaBrain, 
-  FaHeartbeat, FaChartLine, FaPaperPlane, FaMicrophone,
+  FaHeartbeat, FaChartLine, FaPaperPlane,
   FaBook, FaPalette, FaDumbbell, FaUserTie
 } from 'react-icons/fa';
 import Navbar from '../../components/User/Home/Navbar';
+import axios from 'axios';
 
 const AITools = () => {
   const [messages, setMessages] = useState([]);
@@ -25,27 +26,77 @@ const AITools = () => {
     { Icon: FaUserTie, title: 'Career' }
   ];
 
-  const simulateAIResponse = async (message) => {
-    setIsTyping(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Simulate different types of responses based on keywords
-    let response = "I'm here to help you with any questions about our courses, career advice, or personal development.";
-    
-    if (message.toLowerCase().includes('course')) {
-      response = "We offer various courses in technology, business, health, and personal development. What specific area interests you?";
-    } else if (message.toLowerCase().includes('career')) {
-      response = "I can help you explore career paths, improve your skills, and prepare for professional growth. What's your current goal?";
-    } else if (message.toLowerCase().includes('help')) {
-      response = "I'm your AI assistant, ready to help with course selection, study tips, career guidance, or personal development. What would you like to know?";
-    }
+  // OpenRouter API key
+  const OPENROUTER_KEY = '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';
 
-    setMessages(prev => [...prev, {
+  useEffect(() => {
+    setMessages([{
       type: 'ai',
-      content: response,
+      content: "Hello! I'm your AI assistant powered by advanced language models. I can help you with any questions, discussions, or tasks you have in mind. How can I assist you today?",
       timestamp: new Date()
     }]);
-    setIsTyping(false);
+  }, []);
+
+  const getAIResponse = async (message) => {
+    setIsTyping(true);
+    try {
+      const response = await axios.post(
+        'https://openrouter.ai/api/v1/chat/completions',
+        {
+          model: "mistralai/mistral-7b-instruct", // One of the best free models
+          messages: [
+            {
+              role: "system",
+              content: "You are a helpful, intelligent, and professional AI assistant. Provide detailed, accurate, and helpful responses."
+            },
+            {
+              role: "user",
+              content: message
+            }
+          ],
+          temperature: 0.7
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${OPENROUTER_KEY}`,
+            'HTTP-Referer': 'http://localhost:3000',
+            'X-Title': 'AI Learning Assistant',
+            'Content-Type': 'application/json',
+          }
+        }
+      );
+
+      const aiResponse = response.data.choices[0]?.message?.content || 
+        "I apologize, but I'm having trouble understanding. Could you rephrase that?";
+
+      setMessages(prev => [...prev, {
+        type: 'ai',
+        content: aiResponse,
+        timestamp: new Date()
+      }]);
+    } catch (error) {
+      console.error('Error:', error);
+      handleFallbackResponse();
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  const handleFallbackResponse = () => {
+    const fallbackResponses = [
+      "I apologize, but I'm having temporary issues. Could you please try again?",
+      "I understand this is important. Could you rephrase your question?",
+      "Let me help you with that. Could you provide more details?",
+      "I want to give you the best answer. Could you elaborate further?",
+    ];
+    
+    const randomResponse = fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+    
+    setMessages(prev => [...prev, {
+      type: 'ai',
+      content: randomResponse,
+      timestamp: new Date()
+    }]);
   };
 
   const handleSendMessage = async (e) => {
@@ -60,7 +111,7 @@ const AITools = () => {
 
     setMessages(prev => [...prev, newMessage]);
     setInputMessage('');
-    await simulateAIResponse(inputMessage);
+    await getAIResponse(inputMessage);
   };
 
   useEffect(() => {
@@ -102,20 +153,20 @@ const AITools = () => {
         ))}
       </div>
 
-      <div className="pt-48 pb-20 relative z-10">
+      <div className="pt-36 pb-20 relative z-10">
         <div className="container mx-auto px-4">
           {/* Hero Section */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-16"
+            className="text-center mb-8"
           >
-            <h1 className="text-5xl md:text-6xl font-bold text-transparent bg-clip-text 
-                         bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 mb-6">
-              AI Learning Assistant
+            <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text 
+                         bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 mb-4">
+              AI Chat Assistant
             </h1>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Your personal guide for education, career development, and life improvement
+            <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+              Ask me anything - I'm here to help!
             </p>
           </motion.div>
 
@@ -128,24 +179,14 @@ const AITools = () => {
             <div className="bg-white/10 backdrop-blur-xl rounded-2xl overflow-hidden 
                           shadow-2xl border border-white/10">
               <div className="h-[600px] flex flex-col">
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6">
+                <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4">
                   <div className="flex items-center gap-3">
                     <FaRobot className="text-2xl text-white" />
-                    <h2 className="text-xl font-bold text-white">AI Learning Assistant</h2>
+                    <h2 className="text-xl font-bold text-white">Chat Assistant</h2>
                   </div>
-                  <p className="text-white/80 text-sm mt-2">
-                    Ask me anything about courses, career advice, or personal development
-                  </p>
                 </div>
                 
                 <div ref={chatRef} className="flex-1 overflow-y-auto p-6 space-y-4">
-                  {messages.length === 0 && (
-                    <div className="text-center text-white/50 py-8">
-                      <FaRobot className="text-4xl mx-auto mb-4" />
-                      <p>Start a conversation with your AI Learning Assistant</p>
-                    </div>
-                  )}
-                  
                   {messages.map((message, index) => (
                     <motion.div
                       key={index}
@@ -184,20 +225,13 @@ const AITools = () => {
                   )}
                 </div>
 
-                <form onSubmit={handleSendMessage} className="p-6 border-t border-white/10">
+                <form onSubmit={handleSendMessage} className="p-4 border-t border-white/10">
                   <div className="flex items-center gap-4">
-                    <button
-                      type="button"
-                      className="p-3 rounded-full bg-white/5 text-white/80 hover:bg-white/10 
-                               transition-colors duration-300"
-                    >
-                      <FaMicrophone />
-                    </button>
                     <input
                       type="text"
                       value={inputMessage}
                       onChange={(e) => setInputMessage(e.target.value)}
-                      placeholder="Ask about courses, career advice, or personal development..."
+                      placeholder="Type your message..."
                       className="flex-1 px-6 py-3 rounded-full bg-white/5 border border-white/10 
                                text-white placeholder-white/50 focus:outline-none focus:border-blue-500"
                     />

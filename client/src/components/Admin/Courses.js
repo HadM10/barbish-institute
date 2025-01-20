@@ -55,6 +55,7 @@ const CourseTable = ({
   showArchived,
 }) => {
   const [expandedRows, setExpandedRows] = useState({});
+  const [expandedCategories, setExpandedCategories] = useState({});
 
   // Filter courses based on search term and archived status
   const filteredCourses = courses.filter(
@@ -90,6 +91,13 @@ const CourseTable = ({
     }));
   };
 
+  const toggleCategory = (category) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
+
   return (
     <div className="space-y-6">
       {activeCategories.map(([category, categoryCourses]) => (
@@ -98,128 +106,153 @@ const CourseTable = ({
           className="bg-white rounded-xl shadow-md overflow-hidden"
         >
           <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
-            <h3 className="text-xl font-semibold text-white">{category}</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-white">{category}</h3>
+              <button
+                onClick={() => toggleCategory(category)}
+                className="text-white hover:bg-white/10 rounded-full p-1 transition-colors"
+              >
+                {expandedCategories[category] ? (
+                  <ChevronUpIcon className="w-6 h-6" />
+                ) : (
+                  <ChevronDownIcon className="w-6 h-6" />
+                )}
+              </button>
+            </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Course
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Instructor
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Duration
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Price
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {categoryCourses.map((course) => (
-                  <React.Fragment key={course.id}>
-                    <tr className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center space-x-3">
-                          <img
-                            src={course.image}
-                            alt={course.title}
-                            className="h-10 w-10 rounded-lg object-cover"
-                          />
-                          <div>
-                            <div className="font-medium text-gray-900">
-                              {course.title}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-gray-500">
-                        {course.instructor}
-                      </td>
-                      <td className="px-6 py-4 text-gray-500">
-                        {course.duration} hours
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="px-2 py-1 text-green-800 text-sm font-medium bg-green-100 rounded-full">
-                          ${course.price}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex justify-end space-x-2">
-                          <button
-                            onClick={() => toggleRow(course.id)}
-                            className="text-gray-400 hover:text-gray-500"
-                          >
-                            {expandedRows[course.id] ? (
-                              <ChevronUpIcon className="w-5 h-5" />
-                            ) : (
-                              <ChevronDownIcon className="w-5 h-5" />
-                            )}
-                          </button>
-                          <button
-                            onClick={() => onEdit(course)}
-                            className="text-blue-400 hover:text-blue-500"
-                          >
-                            <PencilIcon className="w-5 h-5" />
-                          </button>
-                          <button
-                            onClick={() => onDelete(course.id)}
-                            className="text-red-400 hover:text-red-500"
-                          >
-                            <TrashIcon className="w-5 h-5" />
-                          </button>
-                          <button
-                            onClick={() => onArchive(course.id)}
-                            className="text-yellow-400 hover:text-yellow-500"
-                          >
-                            <ArchiveBoxIcon className="w-5 h-5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                    {expandedRows[course.id] && (
+          
+          <AnimatePresence>
+            {expandedCategories[category] && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
                       <tr>
-                        <td colSpan="5" className="px-6 py-4 bg-gray-50">
-                          <div className="space-y-4">
-                            <div>
-                              <h4 className="font-medium text-gray-900">
-                                Description
-                              </h4>
-                              <p className="mt-1 text-gray-500">
-                                {course.description}
-                              </p>
-                            </div>
-                            <div>
-                              <h4 className="font-medium text-gray-900">
-                                Course Content
-                              </h4>
-                              <ul className="mt-1 space-y-1">
-                                {course.content.map((item, index) => (
-                                  <li
-                                    key={index}
-                                    className="text-gray-500 flex items-center"
-                                  >
-                                    <div className="w-1.5 h-1.5 bg-purple-600 rounded-full mr-2" />
-                                    {item}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          </div>
-                        </td>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Course
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Instructor
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Duration
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Price
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
                       </tr>
-                    )}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {categoryCourses.map((course) => (
+                        <React.Fragment key={course.id}>
+                          <tr className="hover:bg-gray-50 transition-colors">
+                            <td className="px-6 py-4">
+                              <div className="flex items-center space-x-3">
+                                <img
+                                  src={course.image}
+                                  alt={course.title}
+                                  className="h-10 w-10 rounded-lg object-cover"
+                                />
+                                <div>
+                                  <div className="font-medium text-gray-900">
+                                    {course.title}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-gray-500">
+                              {course.instructor}
+                            </td>
+                            <td className="px-6 py-4 text-gray-500">
+                              {course.duration} hours
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="px-2 py-1 text-green-800 text-sm font-medium bg-green-100 rounded-full">
+                                ${course.price}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex justify-end space-x-2">
+                                <button
+                                  onClick={() => toggleRow(course.id)}
+                                  className="text-gray-400 hover:text-gray-500"
+                                >
+                                  {expandedRows[course.id] ? (
+                                    <ChevronUpIcon className="w-5 h-5" />
+                                  ) : (
+                                    <ChevronDownIcon className="w-5 h-5" />
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => onEdit(course)}
+                                  className="text-blue-400 hover:text-blue-500"
+                                >
+                                  <PencilIcon className="w-5 h-5" />
+                                </button>
+                                <button
+                                  onClick={() => onDelete(course.id)}
+                                  className="text-red-400 hover:text-red-500"
+                                >
+                                  <TrashIcon className="w-5 h-5" />
+                                </button>
+                                <button
+                                  onClick={() => onArchive(course.id)}
+                                  className="text-yellow-400 hover:text-yellow-500"
+                                >
+                                  <ArchiveBoxIcon className="w-5 h-5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                          {expandedRows[course.id] && (
+                            <tr>
+                              <td colSpan="5" className="px-6 py-4 bg-gray-50">
+                                <div className="space-y-4">
+                                  <div>
+                                    <h4 className="font-medium text-gray-900">
+                                      Description
+                                    </h4>
+                                    <p className="mt-1 text-gray-500">
+                                      {course.description}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <h4 className="font-medium text-gray-900">
+                                      Course Content
+                                    </h4>
+                                    <ul className="mt-1 space-y-1">
+                                      {course.content.map((item, index) => (
+                                        <li
+                                          key={index}
+                                          className="text-gray-500 flex items-center"
+                                        >
+                                          <div className="w-1.5 h-1.5 bg-purple-600 rounded-full mr-2" />
+                                          {item}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       ))}
     </div>
