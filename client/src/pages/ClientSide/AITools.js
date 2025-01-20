@@ -27,7 +27,7 @@ const AITools = () => {
   ];
 
   // OpenRouter API key
-  const OPENROUTER_KEY = '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';
+  const OPENROUTER_KEY = 'xxxxxx';
 
   useEffect(() => {
     setMessages([{
