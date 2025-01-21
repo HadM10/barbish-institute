@@ -38,18 +38,12 @@ exports.getSessionById = async (req, res) => {
 // Create a new session
 exports.createSession = async (req, res) => {
   try {
-    let videoUrl = null;
-
-    if (req.files && req.files.video) {
-      videoUrl = await uploadVideo(req.files.video[0]);
-    }
-
     const newSession = await Session.create({
       title: req.body.title,
       description: req.body.description,
       content: req.body.content,
       duration: req.body.duration,
-      videoUrl: videoUrl || req.body.videoUrl,
+      videoUrl: req.body.videoUrl,
       courseId: req.body.courseId,
     });
 
@@ -65,25 +59,48 @@ exports.createSession = async (req, res) => {
 // Update a session
 exports.updateSession = async (req, res) => {
   try {
+    console.log('Update request received:', {
+      id: req.params.id,
+      body: req.body
+    });
+
     const session = await Session.findByPk(req.params.id);
     if (!session) {
+      console.log('Session not found:', req.params.id);
       return res.status(404).send({ error: "Session not found" });
     }
 
-    let videoUrl = session.videoUrl;
-    if (req.files && req.files.video) {
-      videoUrl = await uploadVideo(req.files.video[0]);
-    }
+    // Log current session state
+    console.log('Current session state:', session.toJSON());
 
-    const updatedSession = await session.update({
-      ...req.body,
-      videoUrl: videoUrl || req.body.videoUrl,
+    const updateData = {
+      title: req.body.title,
+      description: req.body.description,
+      content: req.body.content,
+      duration: req.body.duration,
+      videoUrl: req.body.videoUrl,
+      courseId: req.body.courseId,
+    };
+
+    console.log('Updating with data:', updateData);
+
+    const updatedSession = await session.update(updateData);
+    
+    // Log updated session state
+    console.log('Updated session state:', updatedSession.toJSON());
+
+    // Fetch fresh session data with Course information
+    const refreshedSession = await Session.findByPk(req.params.id, {
+      include: [Course],
     });
-    res.status(200).send(updatedSession);
+    
+    res.status(200).send(refreshedSession);
   } catch (error) {
-    res
-      .status(500)
-      .send({ error: "Error updating session", details: error.message });
+    console.error('Error updating session:', error);
+    res.status(500).send({ 
+      error: "Error updating session", 
+      details: error.message 
+    });
   }
 };
 
@@ -102,5 +119,3 @@ exports.deleteSession = async (req, res) => {
       .send({ error: "Error deleting session", details: error.message });
   }
 };
-
-exports.uploadFields = upload.fields([{ name: "video", maxCount: 1 }]);

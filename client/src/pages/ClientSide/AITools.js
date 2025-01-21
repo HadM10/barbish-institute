@@ -27,7 +27,7 @@ const AITools = () => {
   ];
 
   // OpenRouter API key
-  const OPENROUTER_KEY = 'xxxxxx';
+  const OPENROUTER_KEY = 'the API here';
 
   useEffect(() => {
     setMessages([{

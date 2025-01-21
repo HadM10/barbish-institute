@@ -267,6 +267,26 @@ const RecordedSessions = () => {
     setShowModal(false);
   };
 
+  // Add this function before the return statement, alongside other helper functions
+  const isValidYoutubeUrl = (url) => {
+    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
+    return youtubeRegex.test(url);
+  };
+
+  const testYoutubeLink = (url) => {
+    if (!url) {
+      showNotification("Please enter a YouTube URL first", "error");
+      return;
+    }
+    
+    if (!isValidYoutubeUrl(url)) {
+      showNotification("Please enter a valid YouTube URL", "error");
+      return;
+    }
+    
+    window.open(url, '_blank');
+  };
+
   return (
     <div className="p-2 md:p-6 w-full overflow-hidden">
       <AnimatePresence>
@@ -541,39 +561,35 @@ const RecordedSessions = () => {
                   />
                 </div>
 
-                {/* Video Upload */}
+                {/* YouTube URL Input */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Video File *
+                    YouTube Video URL *
                   </label>
-                  <div className="mt-1 flex justify-center px-4 md:px-6 py-4 md:py-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-purple-500 transition-all duration-200">
-                    <div className="space-y-2 text-center">
-                      <VideoCameraIcon className="mx-auto h-10 w-10 md:h-12 md:w-12 text-gray-400" />
-                      <div className="flex flex-wrap justify-center gap-1 text-sm text-gray-600">
-                        <label
-                          htmlFor="video-upload"
-                          className="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-purple-500"
-                        >
-                          <span>Upload a video</span>
-                          <input
-                            id="video-upload"
-                            name="video"
-                            type="file"
-                            accept="video/*"
-                            onChange={handleInputChange}
-                            className="sr-only"
-                            required={!isEditing}
-                          />
-                        </label>
-                        <p className="pl-1">or drag and drop</p>
-                      </div>
-                      <p className="text-xs text-gray-500">MP4, WebM up to 2GB</p>
-                      {formData.video && (
-                        <p className="text-sm text-gray-600 break-all px-2">
-                          Selected: {formData.video.name}
-                        </p>
-                      )}
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type="url"
+                        name="videoUrl"
+                        value={formData.videoUrl || ""}
+                        onChange={handleInputChange}
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        className="w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg 
+                                 focus:outline-none focus:ring-2 focus:ring-purple-500 
+                                 transition-all duration-150"
+                        required
+                      />
+                      <VideoCameraIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => testYoutubeLink(formData.videoUrl)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
+                               transition-all duration-200 flex items-center gap-2"
+                    >
+                      <LinkIcon className="w-5 h-5" />
+                      Test Link
+                    </button>
                   </div>
                 </div>
 

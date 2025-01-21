@@ -6,6 +6,14 @@ import { getMostSubCourses } from "../../../api/mostSubCoursesAPI";
 import englishCourseImg from "../../../assets/images/english-course.jpg";
 
 const CourseCard = ({ course, index }) => {
+  const handleWhatsAppClick = (e) => {
+    e.preventDefault();
+    const whatsappNumber = "+96176601305"; // Your WhatsApp number
+    const message = `Hi, I'm interested in the ${course.title} course priced at $${course.price}. Can you provide more information?`;
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -118,11 +126,12 @@ const CourseCard = ({ course, index }) => {
             </div>
 
             <button
+              onClick={handleWhatsAppClick}
               className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 
                            rounded-lg bg-gradient-to-r from-blue-500 to-violet-500 
                            text-white text-base font-semibold
                            shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 
-                           transform hover:scale-[1.02] transition-all duration-300 "
+                           transform hover:scale-[1.02] transition-all duration-300"
             >
               <FaWhatsapp className="text-base" />
               <span>Enquire Now</span>
