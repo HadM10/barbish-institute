@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   PlusIcon,
@@ -7,11 +7,10 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
   XMarkIcon,
-  
   PencilIcon,
   CheckCircleIcon,
   XCircleIcon,
-  ArchiveBoxIcon
+  ArchiveBoxIcon,
 } from "@heroicons/react/24/outline";
 import {
   getAllCourses,
@@ -23,9 +22,8 @@ import CategoryAPI from "../../api/categoryAPI";
 
 // Custom Notification Component
 const Notification = ({ message, type, onClose }) => {
-  const bgColor = type === 'error' || type === 'delete' 
-    ? 'bg-red-500' 
-    : 'bg-emerald-500';
+  const bgColor =
+    type === "error" || type === "delete" ? "bg-red-500" : "bg-emerald-500";
 
   return (
     <motion.div
@@ -35,9 +33,9 @@ const Notification = ({ message, type, onClose }) => {
       className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-6 py-4 
                 rounded-lg shadow-lg ${bgColor}`}
     >
-      {type === 'delete' ? (
+      {type === "delete" ? (
         <TrashIcon className="w-6 h-6 text-white" />
-      ) : type === 'success' ? (
+      ) : type === "success" ? (
         <CheckCircleIcon className="w-6 h-6 text-white" />
       ) : (
         <XCircleIcon className="w-6 h-6 text-white" />
@@ -47,146 +45,249 @@ const Notification = ({ message, type, onClose }) => {
   );
 };
 
-const CourseTable = ({ courses, categories, onEdit, onDelete, onArchive, searchTerm, showArchived }) => {
-  const [expandedRows, setExpandedRows] = useState({});
+// Memoized Image component with caching
+const CachedImage = memo(({ src, alt, className }) => {
+  const [imgSrc, setImgSrc] = useState(src);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Filter courses based on search term and archived status
-  const filteredCourses = courses.filter(course => 
-    course.isArchived === showArchived && 
-    (course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     course.categoryName.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  useEffect(() => {
+    const img = new Image();
+    img.src = src;
+    img.onload = () => {
+      setImgSrc(src);
+      setIsLoading(false);
+    };
+    img.onerror = () => {
+      setImgSrc("https://via.placeholder.com/400x300");
+      setIsLoading(false);
+    };
+  }, [src]);
 
-  // Group filtered courses by category and filter out empty categories
-  const groupedCourses = filteredCourses.reduce((acc, course) => {
-    if (!acc[course.categoryName]) {
-      acc[course.categoryName] = [];
-    }
-    acc[course.categoryName].push(course);
-    return acc;
-  }, {});
+  if (isLoading) {
+    return <div className={`${className} animate-pulse bg-gray-200`} />;
+  }
 
-  // Filter out categories with no active courses when viewing active courses
-  const activeCategories = Object.entries(groupedCourses).filter(([category, courses]) => {
-    if (showArchived) {
-      return courses.length > 0;
-    }
-    return courses.some(course => !course.isArchived);
-  });
+  return <img src={imgSrc} alt={alt} className={className} loading="lazy" />;
+});
 
-  const toggleRow = (courseId) => {
-    setExpandedRows(prev => ({
-      ...prev,
-      [courseId]: !prev[courseId]
-    }));
-  };
+const CourseTable = memo(
+  ({
+    courses,
+    categories,
+    onEdit,
+    onDelete,
+    onArchive,
+    searchTerm,
+    showArchived,
+  }) => {
+    const [expandedRows, setExpandedRows] = useState({});
+    const [expandedCategories, setExpandedCategories] = useState({});
 
-  return (
-    <div className="space-y-6">
-      {activeCategories.map(([category, categoryCourses]) => (
-        <div key={category} className="bg-white rounded-xl shadow-md overflow-hidden">
-          <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
-            <h3 className="text-xl font-semibold text-white">{category}</h3>
+    // Filter courses based on search term and archived status
+    const filteredCourses = courses.filter(
+      (course) =>
+        course.isArchived === showArchived &&
+        (course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          course.categoryName.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+
+    // Group filtered courses by category and filter out empty categories
+    const groupedCourses = filteredCourses.reduce((acc, course) => {
+      if (!acc[course.categoryName]) {
+        acc[course.categoryName] = [];
+      }
+      acc[course.categoryName].push(course);
+      return acc;
+    }, {});
+
+    // Filter out categories with no active courses when viewing active courses
+    const activeCategories = Object.entries(groupedCourses).filter(
+      ([category, courses]) => {
+        if (showArchived) {
+          return courses.length > 0;
+        }
+        return courses.some((course) => !course.isArchived);
+      }
+    );
+
+    const toggleRow = (courseId) => {
+      setExpandedRows((prev) => ({
+        ...prev,
+        [courseId]: !prev[courseId],
+      }));
+    };
+
+    const toggleCategory = (category) => {
+      setExpandedCategories((prev) => ({
+        ...prev,
+        [category]: !prev[category],
+      }));
+    };
+
+    return (
+      <div className="space-y-6">
+        {activeCategories.map(([category, categoryCourses]) => (
+          <div
+            key={category}
+            className="bg-white rounded-xl shadow-md overflow-hidden"
+          >
+            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-white">{category}</h3>
+                <button
+                  onClick={() => toggleCategory(category)}
+                  className="text-white hover:bg-white/10 rounded-full p-1 transition-colors"
+                >
+                  {expandedCategories[category] ? (
+                    <ChevronUpIcon className="w-6 h-6" />
+                  ) : (
+                    <ChevronDownIcon className="w-6 h-6" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <AnimatePresence>
+              {expandedCategories[category] && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Course
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Instructor
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Duration
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Price
+                          </th>
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {categoryCourses.map((course) => (
+                          <React.Fragment key={course.id}>
+                            <tr className="hover:bg-gray-50 transition-colors">
+                              <td className="px-6 py-4">
+                                <div className="flex items-center space-x-3">
+                                  <CachedImage
+                                    src={course.image}
+                                    alt={course.title}
+                                    className="h-10 w-10 rounded-lg object-cover"
+                                  />
+                                  <div>
+                                    <div className="font-medium text-gray-900">
+                                      {course.title}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 text-gray-500">
+                                {course.instructor}
+                              </td>
+                              <td className="px-6 py-4 text-gray-500">
+                                {course.duration} hours
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className="px-2 py-1 text-green-800 text-sm font-medium bg-green-100 rounded-full">
+                                  ${course.price}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="flex justify-end space-x-2">
+                                  <button
+                                    onClick={() => toggleRow(course.id)}
+                                    className="text-gray-400 hover:text-gray-500"
+                                  >
+                                    {expandedRows[course.id] ? (
+                                      <ChevronUpIcon className="w-5 h-5" />
+                                    ) : (
+                                      <ChevronDownIcon className="w-5 h-5" />
+                                    )}
+                                  </button>
+                                  <button
+                                    onClick={() => onEdit(course)}
+                                    className="text-blue-400 hover:text-blue-500"
+                                  >
+                                    <PencilIcon className="w-5 h-5" />
+                                  </button>
+                                  <button
+                                    onClick={() => onDelete(course.id)}
+                                    className="text-red-400 hover:text-red-500"
+                                  >
+                                    <TrashIcon className="w-5 h-5" />
+                                  </button>
+                                  <button
+                                    onClick={() => onArchive(course.id)}
+                                    className="text-yellow-400 hover:text-yellow-500"
+                                  >
+                                    <ArchiveBoxIcon className="w-5 h-5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                            {expandedRows[course.id] && (
+                              <tr>
+                                <td
+                                  colSpan="5"
+                                  className="px-6 py-4 bg-gray-50"
+                                >
+                                  <div className="space-y-4">
+                                    <div>
+                                      <h4 className="font-medium text-gray-900">
+                                        Description
+                                      </h4>
+                                      <p className="mt-1 text-gray-500">
+                                        {course.description}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <h4 className="font-medium text-gray-900">
+                                        Course Content
+                                      </h4>
+                                      <ul className="mt-1 space-y-1">
+                                        {course.content.map((item, index) => (
+                                          <li
+                                            key={index}
+                                            className="text-gray-500 flex items-center"
+                                          >
+                                            <div className="w-1.5 h-1.5 bg-purple-600 rounded-full mr-2" />
+                                            {item}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Instructor</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {categoryCourses.map((course) => (
-                  <React.Fragment key={course.id}>
-                    <tr className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center space-x-3">
-                          <img 
-                            src={course.image} 
-                            alt={course.title}
-                            className="h-10 w-10 rounded-lg object-cover"
-                          />
-                          <div>
-                            <div className="font-medium text-gray-900">{course.title}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-gray-500">{course.instructor}</td>
-                      <td className="px-6 py-4 text-gray-500">{course.duration} hours</td>
-                      <td className="px-6 py-4">
-                        <span className="px-2 py-1 text-green-800 text-sm font-medium bg-green-100 rounded-full">
-                          ${course.price}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex justify-end space-x-2">
-                          <button
-                            onClick={() => toggleRow(course.id)}
-                            className="text-gray-400 hover:text-gray-500"
-                          >
-                            {expandedRows[course.id] ? 
-                              <ChevronUpIcon className="w-5 h-5" /> : 
-                              <ChevronDownIcon className="w-5 h-5" />
-                            }
-                          </button>
-                          <button
-                            onClick={() => onEdit(course)}
-                            className="text-blue-400 hover:text-blue-500"
-                          >
-                            <PencilIcon className="w-5 h-5" />
-                          </button>
-                          <button
-                            onClick={() => onDelete(course.id)}
-                            className="text-red-400 hover:text-red-500"
-                          >
-                            <TrashIcon className="w-5 h-5" />
-                          </button>
-                          <button
-                            onClick={() => onArchive(course.id)}
-                            className="text-yellow-400 hover:text-yellow-500"
-                          >
-                            <ArchiveBoxIcon className="w-5 h-5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                    {expandedRows[course.id] && (
-                      <tr>
-                        <td colSpan="5" className="px-6 py-4 bg-gray-50">
-                          <div className="space-y-4">
-                            <div>
-                              <h4 className="font-medium text-gray-900">Description</h4>
-                              <p className="mt-1 text-gray-500">{course.description}</p>
-                            </div>
-                            <div>
-                              <h4 className="font-medium text-gray-900">Course Content</h4>
-                              <ul className="mt-1 space-y-1">
-                                {course.content.map((item, index) => (
-                                  <li key={index} className="text-gray-500 flex items-center">
-                                    <div className="w-1.5 h-1.5 bg-purple-600 rounded-full mr-2" />
-                                    {item}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
+        ))}
+      </div>
+    );
+  }
+);
 
 const Courses = () => {
   const [courses, setCourses] = useState([]);
@@ -209,18 +310,93 @@ const Courses = () => {
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [showArchived, setShowArchived] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const showNotification = (message, type = 'success') => {
+  // Memoized handlers
+  const showNotification = useCallback((message, type = "success") => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
-  };
+  }, []);
+
+  const handleImageChange = useCallback(
+    (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        // Add size validation
+        if (file.size > 10 * 1024 * 1024) {
+          showNotification("Image size should be less than 10MB", "error");
+          return;
+        }
+        setFormData((prev) => ({
+          ...prev,
+          image: file,
+        }));
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreview(reader.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    },
+    [showNotification]
+  );
+
+  const handleDelete = useCallback(
+    async (courseId) => {
+      if (window.confirm("Are you sure you want to delete this course?")) {
+        try {
+          const res = await deleteCourseAPI(courseId);
+          if (res.success) {
+            setCourses((prev) =>
+              prev.filter((course) => course.id !== courseId)
+            );
+            showNotification("Course deleted successfully!", "delete");
+          } else {
+            showNotification(
+              "Failed to delete course: " + (res.message || "Unknown error"),
+              "error"
+            );
+          }
+        } catch (error) {
+          showNotification("Error deleting course: " + error.message, "error");
+        }
+      }
+    },
+    [showNotification]
+  );
+
+  const handleArchive = useCallback(
+    async (courseId) => {
+      try {
+        const course = courses.find((c) => c.id === courseId);
+        const res = await updateCourseAPI(courseId, {
+          isArchived: !course.isArchived,
+        });
+        if (res.success) {
+          setCourses((prev) =>
+            prev.map((c) =>
+              c.id === courseId ? { ...c, isArchived: !c.isArchived } : c
+            )
+          );
+          showNotification(
+            `Course ${
+              course.isArchived ? "unarchived" : "archived"
+            } successfully!`
+          );
+        }
+      } catch (error) {
+        showNotification("Failed to archive course: " + error.message, "error");
+      }
+    },
+    [courses, showNotification]
+  );
 
   // Find this useEffect in your Courses.js
-// eslint-disable-next-line react-hooks/exhaustive-deps
-useEffect(() => {
-  fetchCategories();
-  fetchCourses();
-}, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    fetchCategories();
+    fetchCourses();
+  }, []);
 
   const fetchCategories = async () => {
     try {
@@ -228,10 +404,13 @@ useEffect(() => {
       if (res.success) {
         setCategories(res.data.data);
       } else {
-        showNotification('Failed to fetch categories: ' + (res.message || 'Unknown error'), 'error');
+        showNotification(
+          "Failed to fetch categories: " + (res.message || "Unknown error"),
+          "error"
+        );
       }
     } catch (error) {
-      showNotification('Error fetching categories: ' + error.message, 'error');
+      showNotification("Error fetching categories: " + error.message, "error");
     }
   };
 
@@ -255,34 +434,22 @@ useEffect(() => {
         }));
         setCourses(adapted);
       } else {
-        showNotification('Failed to fetch courses: ' + (res.message || 'Unknown error'), 'error');
+        showNotification(
+          "Failed to fetch courses: " + (res.message || "Unknown error"),
+          "error"
+        );
       }
     } catch (error) {
-      showNotification('Error fetching courses: ' + error.message, 'error');
+      showNotification("Error fetching courses: " + error.message, "error");
     }
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFormData(prev => ({
-        ...prev,
-        image: file
-      }));
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
   };
 
   const handleEdit = (course) => {
@@ -295,37 +462,6 @@ useEffect(() => {
     });
     setImagePreview(course.image);
     setShowModal(true);
-  };
-
-  const handleDelete = async (courseId) => {
-    if (window.confirm("Are you sure you want to delete this course?")) {
-      try {
-        const res = await deleteCourseAPI(courseId);
-        if (res.success) {
-          setCourses(prev => prev.filter(course => course.id !== courseId));
-          showNotification('Course deleted successfully!', 'delete');
-        } else {
-          showNotification('Failed to delete course: ' + (res.message || 'Unknown error'), 'error');
-        }
-      } catch (error) {
-        showNotification('Error deleting course: ' + error.message, 'error');
-      }
-    }
-  };
-
-  const handleArchive = async (courseId) => {
-    try {
-      const course = courses.find(c => c.id === courseId);
-      const res = await updateCourseAPI(courseId, { isArchived: !course.isArchived });
-      if (res.success) {
-        setCourses(prev => prev.map(c => 
-          c.id === courseId ? { ...c, isArchived: !c.isArchived } : c
-        ));
-        showNotification(`Course ${course.isArchived ? 'unarchived' : 'archived'} successfully!`);
-      }
-    } catch (error) {
-      showNotification('Failed to archive course: ' + error.message, 'error');
-    }
   };
 
   const resetForm = () => {
@@ -348,9 +484,16 @@ useEffect(() => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!formData.title || !formData.description || !formData.price || !formData.categoryName) {
-      showNotification('Please fill in all required fields', 'error');
+    setIsSubmitting(true);
+
+    if (
+      !formData.title ||
+      !formData.description ||
+      !formData.price ||
+      !formData.categoryName
+    ) {
+      showNotification("Please fill in all required fields", "error");
+      setIsSubmitting(false);
       return;
     }
 
@@ -360,9 +503,9 @@ useEffect(() => {
 
     const categoryId = selectedCategory.id;
 
+    // Create payload with FormData
     const dbPayload = {
       title: formData.title,
-      image: imagePreview || "https://via.placeholder.com/400x300",
       description: formData.description,
       content: formData.content,
       price: parseFloat(formData.price),
@@ -372,20 +515,33 @@ useEffect(() => {
       categoryId,
     };
 
+    // Add image only if it's a File object
+    if (formData.image instanceof File) {
+      dbPayload.image = formData.image;
+    }
+
     try {
       if (isEditing && formData.id) {
         const res = await updateCourseAPI(formData.id, dbPayload);
         if (res.success) {
           setCourses((prev) =>
             prev.map((course) =>
-              course.id === formData.id 
-                ? { ...course, ...formData, categoryName: selectedCategory.name } 
+              course.id === formData.id
+                ? {
+                    ...course,
+                    ...formData,
+                    image: res.data.image || course.image, // Use new image URL from response
+                    categoryName: selectedCategory.name,
+                  }
                 : course
             )
           );
-          showNotification('Course updated successfully!');
+          showNotification("Course updated successfully!");
         } else {
-          showNotification('Failed to update course: ' + (res.message || 'Unknown error'), 'error');
+          showNotification(
+            "Failed to update course: " + (res.message || "Unknown error"),
+            "error"
+          );
         }
       } else {
         const res = await createCourse(dbPayload);
@@ -401,18 +557,25 @@ useEffect(() => {
             price: newCourse.price || 0,
             duration: newCourse.duration || 0,
             instructor: newCourse.instructor,
+            image: newCourse.image, // Use image URL from response
             isArchived: newCourse.isArchived,
             categoryName: selectedCategory.name,
           };
           setCourses((prev) => [...prev, adapted]);
-          showNotification('Course created successfully!');
+          showNotification("Course created successfully!");
         } else {
-          showNotification('Failed to create course: ' + (res.message || 'Unknown error'), 'error');
+          showNotification(
+            "Failed to create course: " + (res.message || "Unknown error"),
+            "error"
+          );
         }
       }
       resetForm();
+      fetchCourses();
     } catch (error) {
-      showNotification('Operation failed: ' + error.message, 'error');
+      showNotification("Error saving course: " + error.message, "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -432,7 +595,9 @@ useEffect(() => {
         <div className="bg-white rounded-xl shadow-md p-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Course Management</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Course Management
+              </h1>
               <p className="text-gray-500 mt-1">Manage your course catalog</p>
             </div>
             <div className="flex items-center gap-4 w-full md:w-auto">
@@ -446,8 +611,19 @@ useEffect(() => {
                            focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
                   </svg>
                 </div>
               </div>
@@ -458,7 +634,7 @@ useEffect(() => {
                           hover:shadow-lg transition-all"
               >
                 <ArchiveBoxIcon className="w-5 h-5 mr-2" />
-                {showArchived ? 'View Active' : 'View Archived'}
+                {showArchived ? "View Active" : "View Archived"}
               </button>
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -473,11 +649,11 @@ useEffect(() => {
               </motion.button>
             </div>
           </div>
-          
+
           {searchTerm && (
             <div className="mt-4 text-sm text-gray-500">
               Showing results for "{searchTerm}"
-              <button 
+              <button
                 onClick={() => setSearchTerm("")}
                 className="ml-2 text-purple-600 hover:text-purple-700"
               >
@@ -539,9 +715,7 @@ useEffect(() => {
                       />
                     </div>
                     <div className="mb-4">
-                      <label>
-                        Category *
-                      </label>
+                      <label>Category *</label>
                       <select
                         name="categoryName"
                         value={formData.categoryName}
@@ -550,7 +724,7 @@ useEffect(() => {
                                    rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                         required
                       >
-                         <option value="">Select Category</option>
+                        <option value="">Select Category</option>
                         {categories.map((category) => (
                           <option key={category.id} value={category.name}>
                             {category.name}
@@ -608,7 +782,7 @@ useEffect(() => {
                         <div className="space-y-1 text-center">
                           {imagePreview ? (
                             <div className="relative">
-                              <img
+                              <CachedImage
                                 src={imagePreview}
                                 alt="Preview"
                                 className="mx-auto h-32 w-auto rounded-lg"
@@ -695,9 +869,19 @@ useEffect(() => {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         type="submit"
+                        disabled={isSubmitting}
                         className="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700"
                       >
-                        {isEditing ? "Update Course" : "Add Course"}
+                        {isSubmitting ? (
+                          <div className="flex items-center justify-center">
+                            <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin mr-2"></div>
+                            {isEditing ? "Updating..." : "Adding..."}
+                          </div>
+                        ) : isEditing ? (
+                          "Update Course"
+                        ) : (
+                          "Add Course"
+                        )}
                       </motion.button>
                     </div>
                   </form>
@@ -711,4 +895,7 @@ useEffect(() => {
   );
 };
 
-export default Courses;
+CachedImage.displayName = "CachedImage";
+CourseTable.displayName = "CourseTable";
+
+export default memo(Courses);

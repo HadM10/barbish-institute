@@ -21,11 +21,20 @@ import {
   deleteBonCard,
 } from "../../api/BonCardAPI";
 
+// Only adding image caching function
+const getCachedImage = (src) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = src;
+    img.onload = () => resolve(src);
+    img.onerror = () => reject(new Error("Image load failed"));
+  });
+};
+
 // Notification Component
 const Notification = ({ message, type }) => {
-  const bgColor = type === 'error' || type === 'delete' 
-    ? 'bg-red-500' 
-    : 'bg-emerald-500';
+  const bgColor =
+    type === "error" || type === "delete" ? "bg-red-500" : "bg-emerald-500";
 
   return (
     <motion.div
@@ -34,9 +43,9 @@ const Notification = ({ message, type }) => {
       exit={{ x: 400, opacity: 0 }}
       className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-6 py-4 rounded-lg shadow-lg ${bgColor}`}
     >
-      {type === 'delete' ? (
+      {type === "delete" ? (
         <TrashIcon className="w-6 h-6 text-white" />
-      ) : type === 'success' ? (
+      ) : type === "success" ? (
         <CheckCircleIcon className="w-6 h-6 text-white" />
       ) : (
         <XCircleIcon className="w-6 h-6 text-white" />
@@ -44,6 +53,12 @@ const Notification = ({ message, type }) => {
       <p className="text-white font-medium">{message}</p>
     </motion.div>
   );
+};
+
+const formatPrice = (price) => {
+  if (!price) return "0.00";
+  const numPrice = parseFloat(price);
+  return isNaN(numPrice) ? "0.00" : numPrice.toFixed(2);
 };
 
 const BonusCard = () => {
@@ -63,8 +78,9 @@ const BonusCard = () => {
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedRows, setExpandedRows] = useState(new Set());
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const showNotification = (message, type = 'success') => {
+  const showNotification = (message, type = "success") => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
   };
@@ -76,28 +92,39 @@ const BonusCard = () => {
         if (res.success) {
           setBonCards(res.data);
         } else {
-          showNotification("Failed to fetch bonus cards", 'error');
+          showNotification("Failed to fetch bonus cards", "error");
         }
       } catch (error) {
-        showNotification("Error loading bonus cards", 'error');
+        showNotification("Error loading bonus cards", "error");
       }
     };
-  
+
     fetchBonCards();
   }, []); // Empty dependency array since we're defining fetchBonCards inside useEffect
+
+  // Only modification: Add image caching when loading images
+  useEffect(() => {
+    bonCards.forEach((card) => {
+      if (card.image) {
+        getCachedImage(card.image).catch(() => {
+          // Silently handle failed image loads
+        });
+      }
+    });
+  }, [bonCards]);
 
   const handleEdit = (bonCard) => {
     setIsEditing(true);
     setEditId(bonCard.id);
     setFormData({
-      title: bonCard.title,
-      description: bonCard.description,
-      image: bonCard.image,
-      price: bonCard.price,
-      link: bonCard.link,
+      title: bonCard.title || "",
+      description: bonCard.description || "",
+      image: null, // Don't set the image file, just keep the URL
+      price: bonCard.price || "",
+      link: bonCard.link || "",
       expiredDate: bonCard.expiredDate ? bonCard.expiredDate.split("T")[0] : "",
     });
-    setImagePreview(bonCard.image);
+    setImagePreview(bonCard.image); // Set the image preview to current image URL
     setShowModal(true);
   };
 
@@ -112,19 +139,11 @@ const BonusCard = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 5242880) {
-        showNotification("Image size should be less than 5MB", 'error');
-        return;
-      }
       setFormData((prev) => ({
         ...prev,
         image: file,
       }));
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
@@ -138,51 +157,61 @@ const BonusCard = () => {
       expiredDate: "",
     });
     setImagePreview(null);
+    setShowModal(false);
     setIsEditing(false);
     setEditId(null);
-    setShowModal(false);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     if (!formData.title || !formData.description || !formData.price) {
-      showNotification("Please fill in all required fields", 'error');
+      showNotification("Please fill in all required fields", "error");
+      setIsSubmitting(false);
       return;
     }
 
     try {
-      const payload = {
-        title: formData.title,
-        description: formData.description,
-        image: imagePreview || "https://via.placeholder.com/400x300",
-        price: parseFloat(formData.price) || 0,
-        link: formData.link,
-        expiredDate: formData.expiredDate || null,
-      };
-
       if (isEditing) {
-        const res = await updateBonCard(editId, payload);
+        const res = await updateBonCard(editId, formData);
         if (res.success) {
           setBonCards((prev) =>
-            prev.map((bonCard) => (bonCard.id === editId ? res.data : bonCard))
+            prev.map((card) =>
+              card.id === editId
+                ? { ...card, ...formData, image: res.data.image }
+                : card
+            )
           );
           showNotification("Bonus card updated successfully!");
         } else {
-          showNotification(res.message || "Failed to update bonus card", 'error');
+          showNotification(
+            "Failed to update bonus card: " + (res.message || "Unknown error"),
+            "error"
+          );
         }
       } else {
-        const res = await createBonCard(payload);
+        const res = await createBonCard(formData);
         if (res.success) {
-          setBonCards((prev) => [...prev, res.data]);
+          const newBonCard = res.data;
+          const adapted = {
+            ...newBonCard,
+            image: newBonCard.image,
+          };
+          setBonCards((prev) => [...prev, adapted]);
           showNotification("Bonus card created successfully!");
         } else {
-          showNotification(res.message || "Failed to create bonus card", 'error');
+          showNotification(
+            "Failed to create bonus card: " + (res.message || "Unknown error"),
+            "error"
+          );
         }
       }
       resetForm();
     } catch (error) {
-      showNotification(error.message || "Operation failed", 'error');
+      showNotification("Operation failed: " + error.message, "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -194,24 +223,28 @@ const BonusCard = () => {
           setBonCards((prev) =>
             prev.filter((bonCard) => bonCard.id !== bonCardId)
           );
-          showNotification("Bonus card deleted successfully", 'delete');
+          showNotification("Bonus card deleted successfully", "delete");
         } else {
-          showNotification(res.message || "Failed to delete bonus card", 'error');
+          showNotification(
+            res.message || "Failed to delete bonus card",
+            "error"
+          );
         }
       } catch (error) {
-        showNotification(error.message || "Error deleting bonus card", 'error');
+        showNotification(error.message || "Error deleting bonus card", "error");
       }
     }
   };
 
-  const filteredBonCards = bonCards.filter((card) =>
-    card.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    card.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    card.price.toString().includes(searchTerm)
+  const filteredBonCards = bonCards.filter(
+    (card) =>
+      card.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      card.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      card.price.toString().includes(searchTerm)
   );
 
   const toggleRowExpansion = (id) => {
-    setExpandedRows(prev => {
+    setExpandedRows((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
         next.delete(id);
@@ -244,9 +277,7 @@ const BonusCard = () => {
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700 bg-clip-text text-transparent">
                 Bonus Cards
               </h1>
-              <p className="text-gray-600 mt-2">
-                Manage your bonus cards
-              </p>
+              <p className="text-gray-600 mt-2">Manage your bonus cards</p>
             </div>
             <div className="flex items-center gap-4">
               <div className="relative">
@@ -278,12 +309,24 @@ const BonusCard = () => {
             <table className="w-full">
               <thead className="bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700">
                 <tr>
-                  <th className="px-6 py-4 text-left text-white font-semibold">Title</th>
-                  <th className="hidden md:table-cell px-6 py-4 text-left text-white font-semibold">Description</th>
-                  <th className="hidden sm:table-cell px-6 py-4 text-center text-white font-semibold">Price</th>
-                  <th className="hidden lg:table-cell px-6 py-4 text-center text-white font-semibold">Expiry Date</th>
-                  <th className="hidden md:table-cell px-6 py-4 text-center text-white font-semibold">Link</th>
-                  <th className="px-6 py-4 text-center text-white font-semibold">Actions</th>
+                  <th className="px-6 py-4 text-left text-white font-semibold">
+                    Title
+                  </th>
+                  <th className="hidden md:table-cell px-6 py-4 text-left text-white font-semibold">
+                    Description
+                  </th>
+                  <th className="hidden sm:table-cell px-6 py-4 text-center text-white font-semibold">
+                    Price
+                  </th>
+                  <th className="hidden lg:table-cell px-6 py-4 text-center text-white font-semibold">
+                    Expiry Date
+                  </th>
+                  <th className="hidden md:table-cell px-6 py-4 text-center text-white font-semibold">
+                    Link
+                  </th>
+                  <th className="px-6 py-4 text-center text-white font-semibold">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -292,11 +335,21 @@ const BonusCard = () => {
                     <tr className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <img
-                            src={bonCard.image}
-                            alt={bonCard.title}
-                            className="w-10 h-10 rounded-lg object-cover"
-                          />
+                          {bonCard.image ? (
+                            <img
+                              src={bonCard.image}
+                              alt={bonCard.title}
+                              className="h-20 w-20 object-cover rounded-lg"
+                              onError={(e) => {
+                                e.target.src =
+                                  "https://via.placeholder.com/150";
+                              }}
+                            />
+                          ) : (
+                            <div className="h-20 w-20 bg-gray-200 rounded-lg flex items-center justify-center">
+                              <span className="text-gray-500">No Image</span>
+                            </div>
+                          )}
                           <div className="flex flex-col">
                             <span className="font-medium">{bonCard.title}</span>
                             <button
@@ -320,23 +373,25 @@ const BonusCard = () => {
                       </td>
                       <td className="hidden md:table-cell px-6 py-4 text-gray-600">
                         <div className="max-w-xs lg:max-w-md xl:max-w-lg">
-                          <div className="line-clamp-2">{bonCard.description}</div>
+                          <div className="line-clamp-2">
+                            {bonCard.description}
+                          </div>
                         </div>
                       </td>
-                      <td className="hidden sm:table-cell px-6 py-4 text-center">
-                        ${bonCard.price.toFixed(2)}
+                      <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${formatPrice(bonCard.price)}
                       </td>
                       <td className="hidden lg:table-cell px-6 py-4 text-center">
                         {new Date(bonCard.expiredDate).toLocaleDateString()}
                       </td>
                       <td className="hidden md:table-cell px-6 py-4 text-center">
                         <a
-                          href={bonCard.link || '#'}
+                          href={bonCard.link || "#"}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-500 hover:underline"
                         >
-                          {bonCard.link ? 'View Link' : 'No link available'}
+                          {bonCard.link ? "View Link" : "No link available"}
                         </a>
                       </td>
                       <td className="px-6 py-4">
@@ -362,27 +417,35 @@ const BonusCard = () => {
                           <div className="space-y-3">
                             <div>
                               <span className="font-medium">Description:</span>
-                              <p className="mt-1 text-gray-600">{bonCard.description}</p>
+                              <p className="mt-1 text-gray-600">
+                                {bonCard.description}
+                              </p>
                             </div>
                             <div>
                               <span className="font-medium">Price:</span>
-                              <p className="mt-1">${bonCard.price.toFixed(2)}</p>
+                              <p className="mt-1">
+                                ${formatPrice(bonCard.price)}
+                              </p>
                             </div>
                             <div>
                               <span className="font-medium">Expiry Date:</span>
                               <p className="mt-1">
-                                {new Date(bonCard.expiredDate).toLocaleDateString()}
+                                {new Date(
+                                  bonCard.expiredDate
+                                ).toLocaleDateString()}
                               </p>
                             </div>
                             <div>
                               <span className="font-medium">Link:</span>
                               <a
-                                href={bonCard.link || '#'}
+                                href={bonCard.link || "#"}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="mt-1 block text-blue-500 hover:underline"
                               >
-                                {bonCard.link ? 'View Link' : 'No link available'}
+                                {bonCard.link
+                                  ? "View Link"
+                                  : "No link available"}
                               </a>
                             </div>
                           </div>
@@ -500,11 +563,14 @@ const BonusCard = () => {
                               type="button"
                               onClick={() => {
                                 setImagePreview(null);
-                                setFormData((prev) => ({ ...prev, image: null }));
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  image: null,
+                                }));
                               }}
-                              className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-full transform hover:scale-110"
+                              className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
                             >
-                              <TrashIcon className="w-4 h-4" />
+                              <XMarkIcon className="w-4 h-4" />
                             </button>
                           </div>
                         ) : (
@@ -512,7 +578,7 @@ const BonusCard = () => {
                             <div className="flex text-sm text-gray-600">
                               <label
                                 htmlFor="file-upload"
-                                className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500"
+                                className="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500"
                               >
                                 <span>Upload a file</span>
                                 <input
@@ -527,7 +593,7 @@ const BonusCard = () => {
                               <p className="pl-1">or drag and drop</p>
                             </div>
                             <p className="text-xs text-gray-500">
-                              PNG, JPG, GIF up to 5MB
+                              PNG, JPG, GIF up to 10MB
                             </p>
                           </>
                         )}
@@ -546,10 +612,20 @@ const BonusCard = () => {
                   </button>
                   <button
                     type="submit"
+                    disabled={isSubmitting}
                     className="px-6 py-2 bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700 
                              text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
                   >
-                    {isEditing ? "Update Bonus Card" : "Add Bonus Card"}
+                    {isSubmitting ? (
+                      <div className="flex items-center justify-center">
+                        <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin mr-2"></div>
+                        {isEditing ? "Updating..." : "Adding..."}
+                      </div>
+                    ) : isEditing ? (
+                      "Update Bonus Card"
+                    ) : (
+                      "Add Bonus Card"
+                    )}
                   </button>
                 </div>
               </form>

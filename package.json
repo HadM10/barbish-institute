@@ -1,0 +1,8 @@
+{
+  "name": "barbish-institute",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "cd server && node server.js",
+    "heroku-postbuild": "cd client && npm install && npm run build"
+  }
+}

@@ -1,10 +1,18 @@
 // components/User/Home/CourseCard.js
-import React, { useState } from 'react';
-import { FaWhatsapp, FaClock, FaUser, FaTimes } from 'react-icons/fa';
-import { motion } from 'framer-motion';
+import React, { useState, memo, useCallback } from "react";
+import { FaWhatsapp, FaClock, FaUser, FaTimes } from "react-icons/fa";
+import { motion } from "framer-motion";
 
-const CourseCard = ({ course }) => {
+const CourseCard = memo(({ course }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const handleCardClick = useCallback(() => {
+    setIsExpanded(true);
+  }, []);
+
+  const handleModalClose = useCallback(() => {
+    setIsExpanded(false);
+  }, []);
 
   return (
     <div className="relative group animate-fadeIn">
@@ -12,34 +20,43 @@ const CourseCard = ({ course }) => {
         className="bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transform 
                    transition-all duration-300 hover:shadow-2xl hover:-translate-y-1
                    border border-gray-100"
-        onClick={() => setIsExpanded(true)}
+        onClick={handleCardClick}
       >
         {/* Image Container */}
         <div className="relative h-[280px] overflow-hidden">
           <img
-            src={englishCourseImg}
+            src={course.image || englishCourseImg}
             alt={course.title}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover transform 
                      group-hover:scale-105 transition-transform duration-700"
+            onError={(e) => {
+              e.target.src = englishCourseImg;
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent" />
         </div>
 
         {/* Content Section */}
         <div className="p-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-3 line-clamp-1 group-hover:text-blue-600
-                         transition-colors duration-300">
+          <h3
+            className="text-xl font-bold text-gray-800 mb-3 line-clamp-1 group-hover:text-blue-600
+                         transition-colors duration-300"
+          >
             {course.title}
           </h3>
-          
+
           <p className="text-gray-600 text-sm mb-5 line-clamp-2">
             {course.description}
           </p>
 
           {/* Price Section */}
           <div className="flex items-center justify-center mb-4">
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600
-                           px-4 py-2 rounded-full shadow-lg">
+            <div
+              className="bg-gradient-to-r from-blue-600 to-purple-600
+                           px-4 py-2 rounded-full shadow-lg"
+            >
               <span className="text-white font-bold text-lg">
                 ${course.price}
               </span>
@@ -73,7 +90,7 @@ const CourseCard = ({ course }) => {
       {isExpanded && (
         <div
           className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
-          onClick={() => setIsExpanded(false)}
+          onClick={handleModalClose}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -87,9 +104,15 @@ const CourseCard = ({ course }) => {
               {/* Square Image Container */}
               <div className="w-full h-[200px] md:h-[300px] flex-shrink-0">
                 <img
-                  src={englishCourseImg}
+                  src={course.image || englishCourseImg}
                   alt={course.title}
+                  loading="lazy"
+                  decoding="async"
+                  fetchPriority="high"
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.src = englishCourseImg;
+                  }}
                 />
               </div>
 
@@ -98,10 +121,12 @@ const CourseCard = ({ course }) => {
                 {/* Header with Price and Close */}
                 <div className="flex justify-between items-center mb-4">
                   <div className="bg-white/95 px-4 py-2 rounded-full">
-                    <span className="text-primary font-bold text-lg">${course.price}</span>
+                    <span className="text-primary font-bold text-lg">
+                      ${course.price}
+                    </span>
                   </div>
                   <button
-                    onClick={() => setIsExpanded(false)}
+                    onClick={handleModalClose}
                     className="p-1.5 hover:bg-white/10 rounded-full transition-colors"
                   >
                     <FaTimes className="text-white text-lg" />
@@ -109,20 +134,26 @@ const CourseCard = ({ course }) => {
                 </div>
 
                 {/* Course Title */}
-                <h2 className="text-xl font-bold text-white mb-4">{course.title}</h2>
+                <h2 className="text-xl font-bold text-white mb-4">
+                  {course.title}
+                </h2>
 
                 {/* Course Details Grid */}
                 <div className="grid grid-cols-2 gap-2 mb-4">
                   <div className="bg-white/10 rounded-lg p-2.5">
                     <div className="flex items-center gap-2">
                       <FaClock className="text-white text-sm" />
-                      <span className="text-white text-sm">{course.duration} hours</span>
+                      <span className="text-white text-sm">
+                        {course.duration} hours
+                      </span>
                     </div>
                   </div>
                   <div className="bg-white/10 rounded-lg p-2.5">
                     <div className="flex items-center gap-2">
                       <FaUser className="text-white text-sm" />
-                      <span className="text-white text-sm">{course.instructor || 'Mahdi'}</span>
+                      <span className="text-white text-sm">
+                        {course.instructor || "Mahdi"}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -137,10 +168,15 @@ const CourseCard = ({ course }) => {
 
                 {/* What You'll Learn */}
                 <div className="mb-4">
-                  <h3 className="text-white font-semibold mb-2">What You'll Learn</h3>
+                  <h3 className="text-white font-semibold mb-2">
+                    What You'll Learn
+                  </h3>
                   <ul className="space-y-2">
-                    {course.content?.split('\n').map((item, index) => (
-                      <li key={index} className="flex items-start gap-2 text-white/90 text-sm">
+                    {course.content?.split("\n").map((item, index) => (
+                      <li
+                        key={index}
+                        className="flex items-start gap-2 text-white/90 text-sm"
+                      >
                         <div className="w-1.5 h-1.5 rounded-full bg-white/70 mt-1.5" />
                         <span>{item}</span>
                       </li>
@@ -150,7 +186,7 @@ const CourseCard = ({ course }) => {
 
                 {/* Enquire Button - Fixed at bottom */}
                 <div className="sticky bottom-0 pt-2">
-                  <button 
+                  <button
                     className="w-full bg-white hover:bg-white/90 text-indigo-600 
                              py-2.5 rounded-lg font-medium flex items-center 
                              justify-center gap-2 transition-colors"
@@ -166,6 +202,8 @@ const CourseCard = ({ course }) => {
       )}
     </div>
   );
-};
+});
+
+CourseCard.displayName = "CourseCard";
 
 export default CourseCard;

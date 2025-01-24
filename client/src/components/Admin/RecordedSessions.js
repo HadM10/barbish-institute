@@ -7,7 +7,7 @@ import {
   PencilIcon,
   TrashIcon,
   CheckCircleIcon,
-  XCircleIcon
+  XCircleIcon,
 } from "@heroicons/react/24/outline";
 
 import {
@@ -21,9 +21,8 @@ import { getAllCourses } from "../../api/courseAPI";
 
 // Add Notification Component
 const Notification = ({ message, type, onClose }) => {
-  const bgColor = type === 'error' || type === 'delete' 
-    ? 'bg-red-500' 
-    : 'bg-emerald-500';
+  const bgColor =
+    type === "error" || type === "delete" ? "bg-red-500" : "bg-emerald-500";
 
   return (
     <motion.div
@@ -33,9 +32,9 @@ const Notification = ({ message, type, onClose }) => {
       className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-6 py-4 
                 rounded-lg shadow-lg ${bgColor}`}
     >
-      {type === 'delete' ? (
+      {type === "delete" ? (
         <TrashIcon className="w-6 h-6 text-white" />
-      ) : type === 'success' ? (
+      ) : type === "success" ? (
         <CheckCircleIcon className="w-6 h-6 text-white" />
       ) : (
         <XCircleIcon className="w-6 h-6 text-white" />
@@ -57,9 +56,9 @@ const RecordedSessions = () => {
     description: "",
     content: "",
     duration: "",
-    videoFile: null,
+    video: null,
     courseName: "",
-    isActive: "active",
+    courseId: "",
   });
 
   // Add notification state
@@ -68,10 +67,14 @@ const RecordedSessions = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   // Add filtered sessions logic
-  const filteredSessions = sessions.filter(session => 
-    session.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    session.courseName.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredSessions = sessions.filter(
+    (session) =>
+      session.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      session.courseName.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Add loading state
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch sessions and courses on component mount
   useEffect(() => {
@@ -92,7 +95,6 @@ const RecordedSessions = () => {
           courseName: session.Course?.title || "Unknown Course",
           duration: session.duration || "Unknown Duration",
           videoUrl: session.videoUrl || "No Video URL",
-          isActive: session.isActive ? "active" : "inactive",
           createdAt: session.createdAt || new Date(),
         }));
 
@@ -131,22 +133,20 @@ const RecordedSessions = () => {
   const handleInputChange = (e) => {
     const { name, value, type, files } = e.target;
 
-    if (type === 'file') {
-      setFormData(prev => ({
+    if (type === "file") {
+      setFormData((prev) => ({
         ...prev,
-        [name]: files[0],
-        videoUrl: '' // Clear the videoUrl when a file is selected
+        video: files[0],
       }));
     } else if (name === "courseName") {
-      courses.find(
-        (course) => course.courseName === value
-      );
-      setFormData(prev => ({
+      const selectedCourse = courses.find((course) => course.title === value);
+      setFormData((prev) => ({
         ...prev,
         [name]: value,
+        courseId: selectedCourse?.id,
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         [name]: value,
       }));
@@ -154,7 +154,7 @@ const RecordedSessions = () => {
   };
 
   // Add showNotification helper
-  const showNotification = (message, type = 'success') => {
+  const showNotification = (message, type = "success") => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
   };
@@ -162,85 +162,77 @@ const RecordedSessions = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.title || !formData.description || !formData.duration || !formData.courseName) {
-      showNotification('Please fill in all required fields', 'error');
+    if (!formData.title || !formData.description || !formData.courseId) {
+      showNotification("Please fill in all required fields", "error");
       return;
     }
 
-    const selectedCourse = courses.find(
-      (course) => course.title === formData.courseName
-    );
-    const isActive = formData.status === "active";
-    const courseId = selectedCourse.id;
-
-    if (!selectedCourse) {
-      showNotification("Invalid course selection", "error");
-      return;
-    }
-
-    const sessionData = {
-      title: formData.title,
-      description: formData.description,
-      content: formData.content,
-      duration: formData.duration,
-      videoUrl: formData.videoUrl,
-      courseId, // Ensure the courseId is passed correctly
-      isActive,
-    };
+    setIsSubmitting(true);
 
     try {
+      const sessionData = {
+        ...formData,
+      };
+
       if (isEditing) {
         const res = await updateSession(editId, sessionData);
         if (res.success) {
           setSessions((prev) =>
             prev.map((session) =>
-              session.id === editId ? { ...session, ...formData, courseName: selectedCourse.title } : session
+              session.id === editId
+                ? {
+                    ...session,
+                    ...sessionData,
+                    courseName: formData.courseName,
+                  }
+                : session
             )
           );
-          showNotification('Session updated successfully!');
+          showNotification("Session updated successfully!");
         } else {
-          showNotification('Failed to update session: ' + res.message, 'error');
+          showNotification("Failed to update session: " + res.message, "error");
         }
       } else {
         const res = await createSession(sessionData);
         if (res.success) {
-          const newSession = res.data;
-          const adapted = {
-            id: newSession.id,
-            title: newSession.title,
-            description: newSession.description,
-            content: newSession.content || "No content",
-            duration: newSession.duration || "Unknown Duration",
-            videoUrl: newSession.videoUrl || "No Video URL",
-            courseName: selectedCourse.title,
-            isActive: newSession.isActive ? "active" : "inactive",
-            createdAt: new Date(),
-          };
-          setSessions((prev) => [...prev, adapted]);
-          showNotification('Session added successfully!');
+          setSessions((prev) => [
+            ...prev,
+            {
+              ...res.data,
+              courseName: formData.courseName,
+            },
+          ]);
+          showNotification("Session added successfully!");
         } else {
-          showNotification('Failed to add session: ' + (res.message || 'Unknown error'), 'error');
+          showNotification("Failed to add session: " + res.message, "error");
         }
       }
+      resetForm();
     } catch (error) {
-      showNotification('Error creating/updating session: ' + error.message, 'error');
+      showNotification("Error: " + error.message, "error");
+    } finally {
+      setIsSubmitting(false);
     }
-  
-    resetForm();
   };
 
   const handleEdit = (session) => {
     setIsEditing(true);
     setEditId(session.id);
+    
+    // Find the course ID based on the course name
+    const selectedCourse = courses.find(course => course.title === session.courseName);
+    
     setFormData({
       title: session.title,
       description: session.description,
       content: session.content || "",
       duration: session.duration.toString(),
       videoUrl: session.videoUrl || "",
-      courseName: session.courseName, // Set courseName to display in the form
-      isActive: session.isActive,
+      courseName: session.courseName,
+      courseId: selectedCourse?.id, // Add the courseId to the form data
+      video: null // Reset video since we already have videoUrl
     });
+    
     setShowModal(true);
   };
 
@@ -250,35 +242,12 @@ const RecordedSessions = () => {
         const res = await deleteSession(id);
         if (res.success) {
           setSessions((prev) => prev.filter((session) => session.id !== id));
-          showNotification('Session deleted successfully!', 'delete');
+          showNotification("Session deleted successfully!", "delete");
         } else {
-          showNotification('Failed to delete session: ' + res.message, 'error');
+          showNotification("Failed to delete session: " + res.message, "error");
         }
       } catch (error) {
-        showNotification('Error deleting session: ' + error.message, 'error');
-      }
-    }
-  };
-
-  const handleStatusToggle = async (id) => {
-    const session = sessions.find((s) => s.id === id);
-    if (session) {
-      try {
-        const newStatus = session.isActive === "active" ? "inactive" : "active";
-        const res = await updateSession(id, { isActive: newStatus === "active" });
-
-        if (res.success) {
-          setSessions((prev) =>
-            prev.map((s) =>
-              s.id === id ? { ...s, isActive: newStatus } : s
-            )
-          );
-          showNotification(`Session status changed to ${newStatus}`);
-        } else {
-          showNotification("Failed to update status", "error");
-        }
-      } catch (error) {
-        showNotification("Error updating status", "error");
+        showNotification("Error deleting session: " + error.message, "error");
       }
     }
   };
@@ -289,13 +258,33 @@ const RecordedSessions = () => {
       description: "",
       content: "",
       duration: "",
-      videoFile: null,
+      video: null,
       courseName: "",
-      isActive: true,
+      courseId: "",
     });
     setIsEditing(false);
     setEditId(null);
     setShowModal(false);
+  };
+
+  // Add this function before the return statement, alongside other helper functions
+  const isValidYoutubeUrl = (url) => {
+    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
+    return youtubeRegex.test(url);
+  };
+
+  const testYoutubeLink = (url) => {
+    if (!url) {
+      showNotification("Please enter a YouTube URL first", "error");
+      return;
+    }
+    
+    if (!isValidYoutubeUrl(url)) {
+      showNotification("Please enter a valid YouTube URL", "error");
+      return;
+    }
+    
+    window.open(url, '_blank');
   };
 
   return (
@@ -336,8 +325,19 @@ const RecordedSessions = () => {
                        placeholder-gray-400"
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
               </svg>
             </div>
           </div>
@@ -356,7 +356,7 @@ const RecordedSessions = () => {
         {searchTerm && (
           <div className="mb-4 text-sm text-gray-500">
             Showing results for "{searchTerm}"
-            <button 
+            <button
               onClick={() => setSearchTerm("")}
               className="ml-2 text-purple-600 hover:text-purple-700"
             >
@@ -389,9 +389,6 @@ const RecordedSessions = () => {
                     Video Link
                   </th>
                   <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -399,9 +396,10 @@ const RecordedSessions = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredSessions.map((session, index) => {
                   // Get the session number within its course
-                  const courseSessionIndex = filteredSessions
-                    .filter(s => s.courseName === session.courseName)
-                    .findIndex(s => s.id === session.id) + 1;
+                  const courseSessionIndex =
+                    filteredSessions
+                      .filter((s) => s.courseName === session.courseName)
+                      .findIndex((s) => s.id === session.id) + 1;
 
                   return (
                     <tr
@@ -417,11 +415,23 @@ const RecordedSessions = () => {
                         </div>
                       </td>
                       <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-sm">
-                        {session.courseName}
+                        <div className="max-w-[100px] md:max-w-full">
+                          <p
+                            className="text-sm text-gray-900 truncate"
+                            title={session.courseName}
+                          >
+                            {session.courseName.length > 15 
+                              ? `${session.courseName.substring(0, 15)}...` 
+                              : session.courseName}
+                          </p>
+                        </div>
                       </td>
                       <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap">
                         <div className="max-w-[150px] md:max-w-[200px]">
-                          <p className="text-sm text-gray-900 truncate" title={session.description}>
+                          <p
+                            className="text-sm text-gray-900 truncate"
+                            title={session.description}
+                          >
                             {session.description}
                           </p>
                         </div>
@@ -441,18 +451,6 @@ const RecordedSessions = () => {
                             <LinkIcon className="w-5 h-5 transform hover:scale-110 transition-transform duration-150" />
                           </a>
                         )}
-                      </td>
-                      <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-sm">
-                        <button
-                          onClick={() => handleStatusToggle(session.id)}
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            session.isActive === "active"
-                              ? "bg-green-100 text-green-800 hover:bg-green-200"
-                              : "bg-red-100 text-red-800 hover:bg-red-200"
-                          } transition-colors duration-200`}
-                        >
-                          {session.isActive ? "Active" : "Inactive"}
-                        </button>
                       </td>
                       <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-sm">
                         <div className="flex gap-3">
@@ -489,9 +487,9 @@ const RecordedSessions = () => {
       {/* Add/Edit Session Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md my-8 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900">
+          <div className="bg-white rounded-2xl p-4 md:p-6 w-full max-w-[95%] md:max-w-2xl lg:max-w-4xl my-4 md:my-8">
+            <div className="flex justify-between items-center mb-4 md:mb-6 sticky top-0 bg-white z-10 pb-4 border-b">
+              <h3 className="text-lg md:text-xl font-bold text-gray-900">
                 {isEditing ? "Edit Session" : "Add New Session"}
               </h3>
               <button
@@ -502,8 +500,8 @@ const RecordedSessions = () => {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid gap-4">
+            <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto max-h-[calc(100vh-200px)]">
+              <div className="grid gap-4 md:gap-6">
                 {/* Session Name */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -543,7 +541,7 @@ const RecordedSessions = () => {
                     name="content"
                     value={formData.content}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-150"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-150 min-h-[100px] resize-y"
                     rows="3"
                   ></textarea>
                 </div>
@@ -563,38 +561,35 @@ const RecordedSessions = () => {
                   />
                 </div>
 
-                {/* Video Upload */}
+                {/* YouTube URL Input */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Video File *
+                    YouTube Video URL *
                   </label>
-                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-purple-500 transition-all duration-200">
-                    <div className="space-y-1 text-center">
-                      <VideoCameraIcon className="mx-auto h-12 w-12 text-gray-400" />
-                      <div className="flex text-sm text-gray-600">
-                        <label htmlFor="video-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-purple-500">
-                          <span>Upload a video</span>
-                          <input
-                            id="video-upload"
-                            name="videoFile"
-                            type="file"
-                            accept="video/*"
-                            onChange={handleInputChange}
-                            className="sr-only"
-                            required={!isEditing}
-                          />
-                        </label>
-                        <p className="pl-1">or drag and drop</p>
-                      </div>
-                      <p className="text-xs text-gray-500">
-                        MP4, WebM up to 2GB
-                      </p>
-                      {formData.videoFile && (
-                        <p className="text-sm text-gray-600 truncate">
-                          Selected: {formData.videoFile.name}
-                        </p>
-                      )}
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type="url"
+                        name="videoUrl"
+                        value={formData.videoUrl || ""}
+                        onChange={handleInputChange}
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        className="w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg 
+                                 focus:outline-none focus:ring-2 focus:ring-purple-500 
+                                 transition-all duration-150"
+                        required
+                      />
+                      <VideoCameraIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => testYoutubeLink(formData.videoUrl)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
+                               transition-all duration-200 flex items-center gap-2"
+                    >
+                      <LinkIcon className="w-5 h-5" />
+                      Test Link
+                    </button>
                   </div>
                 </div>
 
@@ -620,12 +615,25 @@ const RecordedSessions = () => {
                 </div>
               </div>
 
-              <div className="mt-6 text-center">
+              <div className="mt-6 text-center sticky bottom-0 bg-white pt-4 border-t">
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200"
+                  disabled={isSubmitting}
+                  className={`w-full md:w-auto px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 
+                            transition-all duration-200 ${
+                              isSubmitting ? "opacity-50 cursor-not-allowed" : ""
+                            }`}
                 >
-                  {isEditing ? "Update Session" : "Add Session"}
+                  {isSubmitting ? (
+                    <div className="flex items-center justify-center">
+                      <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin mr-2"></div>
+                      {isEditing ? "Updating..." : "Adding..."}
+                    </div>
+                  ) : isEditing ? (
+                    "Update Session"
+                  ) : (
+                    "Add Session"
+                  )}
                 </button>
               </div>
             </form>
