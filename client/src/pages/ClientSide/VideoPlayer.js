@@ -28,17 +28,22 @@ const VideoPlayer = () => {
     fetchSession();
 
     // Add message listener for YouTube player events
-    window.addEventListener('message', handleYouTubeEvent);
-    return () => window.removeEventListener('message', handleYouTubeEvent);
+    window.addEventListener("message", handleYouTubeEvent);
+    return () => window.removeEventListener("message", handleYouTubeEvent);
   }, [sessionId]);
 
   // Handle YouTube player events
   const handleYouTubeEvent = (event) => {
-    if (event.origin.includes('youtube')) {
-      // Show overlay when user interacts with YouTube buttons
-      if (event.data.includes('share') || 
-          event.data.includes('playlist') || 
-          event.data.includes('watch-later')) {
+    if (event.origin.includes("youtube")) {
+      // YouTube iframe API sends events as objects with info property
+      const eventData = JSON.stringify(event.data).toLowerCase();
+
+      // Check if the event data contains these strings
+      if (
+        eventData.includes("share") ||
+        eventData.includes("playlist") ||
+        eventData.includes("watch-later")
+      ) {
         setShowSecurityOverlay(true);
       }
     }
@@ -47,19 +52,20 @@ const VideoPlayer = () => {
   const getYouTubeEmbedUrl = (url) => {
     if (!url) return null;
 
-    let videoId = '';
-    
+    let videoId = "";
+
     // Clean the URL first
     url = url.trim();
-    
-    if (url.includes('youtu.be/')) {
-      videoId = url.split('youtu.be/')[1]?.split(/[?#]/)[0];
-    } else if (url.includes('watch?v=')) {
-      videoId = url.split('watch?v=')[1]?.split(/[?#&]/)[0];
-    } else if (url.includes('embed/')) {
-      videoId = url.split('embed/')[1]?.split(/[?#]/)[0];
+
+    if (url.includes("youtu.be/")) {
+      videoId = url.split("youtu.be/")[1]?.split(/[?#]/)[0];
+    } else if (url.includes("watch?v=")) {
+      videoId = url.split("watch?v=")[1]?.split(/[?#&]/)[0];
+    } else if (url.includes("embed/")) {
+      videoId = url.split("embed/")[1]?.split(/[?#]/)[0];
     } else {
-      const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+      const regExp =
+        /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
       const match = url.match(regExp);
       videoId = match && match[7].length === 11 ? match[7] : null;
     }
@@ -83,7 +89,7 @@ const VideoPlayer = () => {
       cc_load_policy: 0,
       autoplay: 0,
     });
-    
+
     // Use regular youtube.com instead of youtube-nocookie.com for better compatibility
     return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
   };
@@ -126,11 +132,11 @@ const VideoPlayer = () => {
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                       style={{
-                        position: 'absolute',
+                        position: "absolute",
                         top: 0,
                         left: 0,
-                        width: '100%',
-                        height: '100%',
+                        width: "100%",
+                        height: "100%",
                       }}
                       onError={() => setVideoError(true)}
                     />
@@ -138,65 +144,71 @@ const VideoPlayer = () => {
                     {videoError && (
                       <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
                         <div className="text-center text-white px-4">
-                          <svg 
-                            className="w-16 h-16 mx-auto mb-4 text-gray-500" 
-                            fill="none" 
-                            stroke="currentColor" 
+                          <svg
+                            className="w-16 h-16 mx-auto mb-4 text-gray-500"
+                            fill="none"
+                            stroke="currentColor"
                             viewBox="0 0 24 24"
                           >
-                            <path 
-                              strokeLinecap="round" 
-                              strokeLinejoin="round" 
-                              strokeWidth={2} 
-                              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                             />
                           </svg>
-                          <h3 className="text-xl font-bold mb-2">Video Unavailable</h3>
+                          <h3 className="text-xl font-bold mb-2">
+                            Video Unavailable
+                          </h3>
                           <p className="text-gray-400">
-                            This video is currently unavailable. Please try again later or contact support.
+                            This video is currently unavailable. Please try
+                            again later or contact support.
                           </p>
                         </div>
                       </div>
                     )}
 
                     {showSecurityOverlay && (
-                      <div 
+                      <div
                         className="fixed inset-0 z-[99999] backdrop-blur-md bg-black/70
                                  flex items-center justify-center"
                         onClick={() => setShowSecurityOverlay(false)}
                       >
-                        <div 
+                        <div
                           className="bg-white rounded-xl p-6 max-w-md mx-4 text-center
                                    transform transition-all duration-300
                                    shadow-2xl"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <div className="mb-4">
-                            <div className="w-16 h-16 bg-red-100 rounded-full mx-auto
-                                          flex items-center justify-center">
-                              <svg 
-                                className="w-8 h-8 text-red-500" 
-                                fill="none" 
-                                stroke="currentColor" 
+                            <div
+                              className="w-16 h-16 bg-red-100 rounded-full mx-auto
+                                          flex items-center justify-center"
+                            >
+                              <svg
+                                className="w-8 h-8 text-red-500"
+                                fill="none"
+                                stroke="currentColor"
                                 viewBox="0 0 24 24"
                               >
-                                <path 
-                                  strokeLinecap="round" 
-                                  strokeLinejoin="round" 
-                                  strokeWidth={2} 
-                                  d="M12 15v2m0 0v2m0-2h2m-2 0H10m12 0a9 9 0 11-18 0 9 9 0 0118 0z" 
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 15v2m0 0v2m0-2h2m-2 0H10m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
                                 />
                               </svg>
                             </div>
                           </div>
-                          
+
                           <h3 className="text-xl font-bold text-gray-900 mb-2">
                             Action Not Allowed
                           </h3>
                           <p className="text-gray-600 mb-6">
-                            This is a private video session. Sharing, saving, and external links are disabled.
+                            This is a private video session. Sharing, saving,
+                            and external links are disabled.
                           </p>
-                          
+
                           <button
                             className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700
                                      text-white rounded-lg font-medium

@@ -110,11 +110,11 @@ const BonusCards = () => {
             {/* Image Container */}
             <div className="relative aspect-[4/3]">
               <img
-                src={offer.image || "https://via.placeholder.com/150"}
+                src={offer.image || "https://via.placeholder.com/1080"}
                 alt={offer.title}
-                className="w-full h-full object-cover"
+                className="w-full aspect-square object-cover"
                 onError={(e) => {
-                  e.target.src = "https://via.placeholder.com/150";
+                  e.target.src = "https://via.placeholder.com/1080";
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />

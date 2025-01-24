@@ -152,10 +152,12 @@ const Courses = () => {
       const handleWhatsAppClick = (e) => {
         e.stopPropagation();
         // Replace this number with your WhatsApp number
-        const whatsappNumber = "+96176601305"; 
+        const whatsappNumber = "+96176601305";
         const message = `Hi, I'm interested in the ${course.title} course priced at $${course.price}. Can you provide more information?`;
-        const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-        window.open(whatsappUrl, '_blank');
+        const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+          message
+        )}`;
+        window.open(whatsappUrl, "_blank");
       };
 
       return (
@@ -370,7 +372,9 @@ const Courses = () => {
                               <FaClock className="text-blue-400 text-xl" />{" "}
                               {/* Smaller icon */}
                               <div>
-                                <p className="text-white/70 text-sm">Duration</p>{" "}
+                                <p className="text-white/70 text-sm">
+                                  Duration
+                                </p>{" "}
                                 {/* Smaller font size */}
                                 <p className="text-white font-medium text-lg">
                                   {course.duration} hours
@@ -415,7 +419,10 @@ const Courses = () => {
                           {/* Smaller font size */}
                           <ul className="space-y-3">
                             {course.content?.split("\n").map((item, index) => (
-                              <li key={index} className="flex items-start gap-4">
+                              <li
+                                key={index}
+                                className="flex items-start gap-4"
+                              >
                                 <div className="w-2 h-2 rounded-full bg-blue-400 mt-2.5" />
                                 <span className="text-white/80 text-lg">
                                   {item}
@@ -746,11 +753,11 @@ const Courses = () => {
                   </svg>
                 </button>
                 {showSortOptions && (
-                  <div 
+                  <div
                     className="absolute left-0 mt-2 w-64 bg-white rounded-xl shadow-xl z-50 border border-gray-100"
                     style={{
-                      maxHeight: 'calc(100vh - 200px)',
-                      overflowY: 'auto'
+                      maxHeight: "calc(100vh - 200px)",
+                      overflowY: "auto",
                     }}
                   >
                     <div className="p-4">
@@ -762,17 +769,24 @@ const Courses = () => {
                           { id: "default", label: "Default" },
                           { id: "price-low-high", label: "Price: Low to High" },
                           { id: "price-high-low", label: "Price: High to Low" },
-                          { id: "duration-low-high", label: "Duration: Shortest First" },
-                          { id: "duration-high-low", label: "Duration: Longest First" },
+                          {
+                            id: "duration-low-high",
+                            label: "Duration: Shortest First",
+                          },
+                          {
+                            id: "duration-high-low",
+                            label: "Duration: Longest First",
+                          },
                         ].map((option) => (
                           <button
                             key={option.id}
                             onClick={() => handleSort(option.id)}
                             className={`
                               w-full text-left px-4 py-3 rounded-lg transition-all duration-200
-                              ${sortOption === option.id
-                                ? "bg-blue-50 text-blue-600"
-                                : "hover:bg-gray-50"
+                              ${
+                                sortOption === option.id
+                                  ? "bg-blue-50 text-blue-600"
+                                  : "hover:bg-gray-50"
                               }
                             `}
                           >
@@ -907,12 +921,12 @@ const Courses = () => {
                   </svg>
                 </button>
                 {showCategoryDropdown && (
-                  <div 
+                  <div
                     className="absolute mt-2 w-[180px] bg-white rounded-xl shadow-xl z-50 border border-gray-100"
                     style={{
                       right: 0, // Align to the right of the button
-                      maxHeight: 'calc(100vh - 200px)', // Prevent overflow
-                      overflowY: 'auto'
+                      maxHeight: "calc(100vh - 200px)", // Prevent overflow
+                      overflowY: "auto",
                     }}
                   >
                     <div className="p-3">

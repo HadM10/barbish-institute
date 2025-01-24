@@ -477,7 +477,7 @@ const Navbar = () => {
             isMobileMenuOpen ? "block" : "hidden lg:block"
           }`}
         >
-          <ul className="flex flex-col lg:flex-row justify-center items-center space-y-3 lg:space-y-0 lg:space-x-10 py-2.5">
+          <ul className="flex flex-col lg:flex-row justify-center items-center space-y-3 lg:space-y-0 lg:space-x-10 py-4">
             {menuItems.map((item) => (
               <li key={item.title}>
                 <Link
