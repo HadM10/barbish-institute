@@ -33,16 +33,16 @@ const Footer = () => {
         </div>
         <div className="mt-8 pt-8 border-t border-white/20 text-center">
           <div className="flex justify-center space-x-4 mb-4">
-            <a href="https://www.facebook.com/barbish" target="_blank" rel="noopener noreferrer">
+            <a href="https://www.facebook.com/share/1E52XQRvDX/" target="_blank" rel="noopener noreferrer">
               <FaFacebook className="text-white text-2xl hover:text-blue-500 transition-colors" />
             </a>
-            <a href="https://www.instagram.com/barbish" target="_blank" rel="noopener noreferrer">
+            <a href="https://www.instagram.com/barbish_institution?igsh=MXI1aTJ6cHl1aWNvaw==" target="_blank" rel="noopener noreferrer">
               <FaInstagram className="text-white text-2xl hover:text-pink-500 transition-colors" />
             </a>
-            <a href="https://www.tiktok.com/@barbish" target="_blank" rel="noopener noreferrer">
+            <a href="https://www.tiktok.com/@barbishinstitutio?_t=ZS-8tMyKLQXXpn&_r=1" target="_blank" rel="noopener noreferrer">
               <FaTiktok className="text-white text-2xl hover:text-black transition-colors" />
             </a>
-            <a href="https://wa.me/96171020724" target="_blank" rel="noopener noreferrer">
+            <a href="https://wa.link/nbj130" target="_blank" rel="noopener noreferrer">
               <FaWhatsapp className="text-white text-2xl hover:text-green-500 transition-colors" />
             </a>
           </div>

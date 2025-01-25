@@ -9,6 +9,8 @@ import {
   FaCrown,
 } from "react-icons/fa";
 import { getAllBonCards } from "../../api/BonCardAPI";
+import bonCardLeft from "../../assets/images/boncard.png";
+import bonCardRight from "../../assets/images/boncard1.png";
 
 const BonusCards = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -59,28 +61,48 @@ const BonusCards = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black pt-28 sm:pt-32">
-      {/* Hero Section - Increased top margin */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center pt-10 sm:pt-14 md:pt-16 mb-6 sm:mb-10 px-3"
-      >
-        <div className="inline-block p-1.5 sm:p-2 px-3 sm:px-4 rounded-full bg-purple-500/10 text-purple-300 mb-4">
-          <div className="flex items-center gap-1.5">
-            <FaGift className="text-base " />
-            <span className="text-base ">Exclusive Member Benefits</span>
-          </div>
-        </div>
-        <h1
-          className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text 
-                     bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 mb-3 sm:mb-4 px-4"
+      {/* Hero Section with Images */}
+      <div className="relative container mx-auto">
+        {/* Left Image */}
+        <motion.img
+          src={bonCardLeft}
+          alt="Left Decoration"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-24 md:w-32 lg:w-40 hidden md:block"
+        />
+
+        {/* Right Image */}
+        <motion.img
+          src={bonCardRight}
+          alt="Right Decoration"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="absolute right-0 top-1/2 -translate-y-1/2 w-24 md:w-32 lg:w-40 hidden md:block"
+        />
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center pt-10 sm:pt-14 md:pt-16 mb-6 sm:mb-10 px-3"
         >
-          Premium Partner Offers
-        </h1>
-        <p className="text-sm sm:text-base md:text-base text-gray-300 max-w-2xl mx-auto px-4">
-          Access exclusive benefits curated for our distinguished members
-        </p>
-      </motion.div>
+          <div className="inline-block p-1.5 sm:p-2 px-3 sm:px-4 rounded-full bg-purple-500/10 text-purple-300 mb-4">
+            <div className="flex items-center gap-1.5">
+              <FaGift className="text-base " />
+              <span className="text-base ">Exclusive Member Benefits</span>
+            </div>
+          </div>
+          <h1
+            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text 
+                       bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 mb-3 sm:mb-4 px-4"
+          >
+            Premium Partner Offers
+          </h1>
+          <p className="text-sm sm:text-base md:text-base text-gray-300 max-w-2xl mx-auto px-4">
+            Access exclusive benefits curated for our distinguished members
+          </p>
+        </motion.div>
+      </div>
 
       {/* Search Bar - Compact Design */}
       <div className="max-w-md mx-auto mb-6 sm:mb-10 px-3">
