@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FaWhatsapp,
   FaInstagram,
@@ -15,6 +15,9 @@ import bonCardRight from "../../assets/images/boncard1.png";
 const BonusCards = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [offers, setOffers] = useState([]);
+  const [selectedCard, setSelectedCard] = useState(null);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [showMobileCards, setShowMobileCards] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -59,53 +62,173 @@ const BonusCards = () => {
     }
   };
 
+  const handleCardClick = (side) => {
+    setSelectedCard(side);
+    setIsFlipped(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black pt-28 sm:pt-32">
-      {/* Hero Section with Images */}
-      <div className="relative container mx-auto">
-        {/* Left Image */}
-        <motion.img
-          src={bonCardLeft}
-          alt="Left Decoration"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="absolute left-0 top-1/2 -translate-y-1/2 w-24 md:w-32 lg:w-40 hidden md:block"
-        />
-
-        {/* Right Image */}
-        <motion.img
-          src={bonCardRight}
-          alt="Right Decoration"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="absolute right-0 top-1/2 -translate-y-1/2 w-24 md:w-32 lg:w-40 hidden md:block"
-        />
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center pt-10 sm:pt-14 md:pt-16 mb-6 sm:mb-10 px-3"
-        >
-          <div className="inline-block p-1.5 sm:p-2 px-3 sm:px-4 rounded-full bg-purple-500/10 text-purple-300 mb-4">
-            <div className="flex items-center gap-1.5">
-              <FaGift className="text-base " />
-              <span className="text-base ">Exclusive Member Benefits</span>
-            </div>
+      {/* Hero Section - Adjusted spacing and responsiveness */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center pt-10 sm:pt-14 md:pt-16 mb-6 sm:mb-10 px-3"
+      >
+        <div className="inline-block p-1.5 sm:p-2 px-3 sm:px-4 rounded-full bg-purple-500/10 text-purple-300 mb-4
+                      max-w-[90%] mx-auto">
+          <div className="flex items-center gap-1.5 justify-center flex-wrap">
+            <FaGift className="text-sm sm:text-base" />
+            <span className="text-sm sm:text-base whitespace-normal text-center">
+              Exclusive Member Benefits
+            </span>
           </div>
-          <h1
-            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text 
-                       bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 mb-3 sm:mb-4 px-4"
+        </div>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text 
+                       bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 mb-3 sm:mb-4 px-4
+                       relative z-10">
+          Premium Partner Offers
+        </h1>
+        <p className="text-sm sm:text-base md:text-base text-gray-300 max-w-2xl mx-auto px-4 relative z-10">
+          Access exclusive benefits curated for our distinguished members
+        </p>
+      </motion.div>
+
+      {/* Premium Cards - Adjusted spacing */}
+      <div className="relative container mx-auto">
+        {/* Desktop Cards */}
+        <div className="hidden md:block relative h-0">
+          <div
+            onClick={() => handleCardClick('left')}
+            className="absolute left-0 xs:left-2 sm:left-4 md:left-8 lg:left-12 xl:left-16 2xl:left-24
+                     cursor-pointer transform -translate-y-[120%] z-0"
           >
-            Premium Partner Offers
-          </h1>
-          <p className="text-sm sm:text-base md:text-base text-gray-300 max-w-2xl mx-auto px-4">
-            Access exclusive benefits curated for our distinguished members
-          </p>
-        </motion.div>
+            <img
+              src={bonCardLeft}
+              alt="Premium Card Left"
+              className="w-24 xs:w-28 sm:w-32 md:w-36 lg:w-44 xl:w-52 2xl:w-64
+                       rounded-2xl shadow-lg
+                       transition-all duration-300 hover:scale-105
+                       hover:shadow-xl hover:brightness-110"
+            />
+          </div>
+
+          <div
+            onClick={() => handleCardClick('right')}
+            className="absolute right-0 xs:right-2 sm:right-4 md:right-8 lg:right-12 xl:right-16 2xl:right-24
+                     cursor-pointer transform -translate-y-[120%] z-0"
+          >
+            <img
+              src={bonCardRight}
+              alt="Premium Card Right"
+              className="w-24 xs:w-28 sm:w-32 md:w-36 lg:w-44 xl:w-52 2xl:w-64
+                       rounded-2xl shadow-lg
+                       transition-all duration-300 hover:scale-105
+                       hover:shadow-xl hover:brightness-110"
+            />
+          </div>
+        </div>
+
+        {/* Mobile Button */}
+        <div className="md:hidden flex justify-center -mt-4 mb-8">
+          <button
+            onClick={() => setShowMobileCards(!showMobileCards)}
+            className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-blue-500
+                     rounded-lg text-white font-semibold shadow-lg text-sm
+                     hover:shadow-xl transition-all duration-300"
+          >
+            {showMobileCards ? 'Hide Cards' : 'Show Premium Cards'}
+          </button>
+        </div>
+
+        {/* Mobile Cards View */}
+        <AnimatePresence>
+          {showMobileCards && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="md:hidden flex flex-col gap-4 px-4 -mt-4 mb-8"
+            >
+              <div onClick={() => handleCardClick('left')} 
+                   className="cursor-pointer">
+                <img src={bonCardLeft} 
+                     alt="Left Card" 
+                     className="w-full max-w-[280px] mx-auto rounded-2xl shadow-lg" />
+              </div>
+              <div onClick={() => handleCardClick('right')} 
+                   className="cursor-pointer">
+                <img src={bonCardRight} 
+                     alt="Right Card" 
+                     className="w-full max-w-[280px] mx-auto rounded-2xl shadow-lg" />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Search Bar - Compact Design */}
-      <div className="max-w-md mx-auto mb-6 sm:mb-10 px-3">
+      {/* Card Modal */}
+      <AnimatePresence>
+        {selectedCard && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 
+                    flex items-center justify-center"
+            onClick={() => setSelectedCard(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="relative w-[90%] max-w-lg p-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                onClick={() => setIsFlipped(!isFlipped)}
+                className={`relative w-full aspect-[3/4] cursor-pointer 
+                         [perspective:1000px] transition-all duration-700`}
+              >
+                <div
+                  className={`absolute w-full h-full [transform-style:preserve-3d] 
+                           transition-all duration-700
+                           ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}
+                >
+                  <div className="absolute w-full h-full [backface-visibility:hidden]">
+                    <img
+                      src={selectedCard === 'left' ? bonCardLeft : bonCardRight}
+                      alt="Card Front"
+                      className="w-full h-full object-contain rounded-xl"
+                    />
+                  </div>
+
+                  <div className="absolute w-full h-full [backface-visibility:hidden] 
+                                [transform:rotateY(180deg)]">
+                    <img
+                      src={selectedCard === 'left' ? bonCardRight : bonCardLeft}
+                      alt="Card Back"
+                      className="w-full h-full object-contain rounded-xl"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setSelectedCard(null)}
+                className="absolute -top-4 -right-4 text-white bg-black/50 
+                       rounded-full p-2 hover:bg-black/70 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="max-w-md mx-auto mb-6 sm:mb-10 px-3 relative z-20">
         <div className="relative">
           <input
             type="text"
@@ -120,11 +243,8 @@ const BonusCards = () => {
         </div>
       </div>
 
-      {/* Offers Grid - Two cards per row on mobile */}
-      <div
-        className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 px-3 
-                    sm:gap-4 lg:grid-cols-3 sm:px-4 md:gap-5 md:px-6 container mx-auto pb-16"
-      >
+      <div className="relative z-20 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 px-3 
+                    sm:gap-4 lg:grid-cols-3 sm:px-4 md:gap-5 md:px-6 container mx-auto pb-16">
         {filteredOffers.map((offer) => (
           <motion.div
             key={offer.id}
@@ -135,7 +255,6 @@ const BonusCards = () => {
                      rounded-lg sm:rounded-xl overflow-hidden border border-white/10 
                      flex flex-col shadow-lg hover:shadow-xl transition-all duration-300"
           >
-            {/* Image Container */}
             <div className="relative aspect-[4/3]">
               <img
                 src={offer.image || "https://via.placeholder.com/1080"}
@@ -162,7 +281,6 @@ const BonusCards = () => {
               </div>
             </div>
 
-            {/* Content Section */}
             <div className="p-2 sm:p-3 flex-1 flex flex-col space-y-1.5 sm:space-y-2">
               <div>
                 <h3 className="text-amber-400 text-base sm:text-base font-medium tracking-wide uppercase">
