@@ -94,73 +94,58 @@ const BonusCards = () => {
         </p>
       </motion.div>
 
-      {/* Premium Cards - Adjusted spacing */}
+      {/* Premium Cards Section */}
       <div className="relative container mx-auto">
-        {/* Desktop Cards */}
-        <div className="hidden md:block relative h-0">
-          <div
-            onClick={() => handleCardClick('left')}
-            className="absolute left-0 xs:left-2 sm:left-4 md:left-8 lg:left-12 xl:left-16 2xl:left-24
-                     cursor-pointer transform -translate-y-[120%] z-0"
-          >
-            <img
-              src={bonCardLeft}
-              alt="Premium Card Left"
-              className="w-24 xs:w-28 sm:w-32 md:w-36 lg:w-44 xl:w-52 2xl:w-64
-                       rounded-2xl shadow-lg
-                       transition-all duration-300 hover:scale-105
-                       hover:shadow-xl hover:brightness-110"
-            />
-          </div>
-
-          <div
-            onClick={() => handleCardClick('right')}
-            className="absolute right-0 xs:right-2 sm:right-4 md:right-8 lg:right-12 xl:right-16 2xl:right-24
-                     cursor-pointer transform -translate-y-[120%] z-0"
-          >
-            <img
-              src={bonCardRight}
-              alt="Premium Card Right"
-              className="w-24 xs:w-28 sm:w-32 md:w-36 lg:w-44 xl:w-52 2xl:w-64
-                       rounded-2xl shadow-lg
-                       transition-all duration-300 hover:scale-105
-                       hover:shadow-xl hover:brightness-110"
-            />
-          </div>
-        </div>
-
-        {/* Mobile Button */}
-        <div className="md:hidden flex justify-center -mt-4 mb-8">
+        {/* Show/Hide Cards Button */}
+        <div className="flex justify-center -mt-4 mb-8">
           <button
             onClick={() => setShowMobileCards(!showMobileCards)}
             className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-blue-500
                      rounded-lg text-white font-semibold shadow-lg text-sm
                      hover:shadow-xl transition-all duration-300"
           >
-            {showMobileCards ? 'Hide Cards' : 'Show Premium Cards'}
+            {showMobileCards ? 'Hide Premium Cards' : 'Show Premium Cards'}
           </button>
         </div>
 
-        {/* Mobile Cards View */}
+        {/* Cards View - Responsive Layout */}
         <AnimatePresence>
           {showMobileCards && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="md:hidden flex flex-col gap-4 px-4 -mt-4 mb-8"
+              className="px-4 -mt-4 mb-8"
             >
-              <div onClick={() => handleCardClick('left')} 
-                   className="cursor-pointer">
-                <img src={bonCardLeft} 
-                     alt="Left Card" 
-                     className="w-full max-w-[280px] mx-auto rounded-2xl shadow-lg" />
-              </div>
-              <div onClick={() => handleCardClick('right')} 
-                   className="cursor-pointer">
-                <img src={bonCardRight} 
-                     alt="Right Card" 
-                     className="w-full max-w-[280px] mx-auto rounded-2xl shadow-lg" />
+              <div className="flex flex-col md:flex-row md:justify-center md:items-center gap-4 md:gap-8 lg:gap-12">
+                <div 
+                  onClick={() => handleCardClick('left')} 
+                  className="cursor-pointer p-2 relative z-30 
+                           w-full max-w-[280px] mx-auto md:mx-0
+                           sm:max-w-[320px] md:max-w-[360px] lg:max-w-[400px]"
+                >
+                  <img 
+                    src={bonCardLeft} 
+                    alt="Left Card" 
+                    className="w-full rounded-2xl shadow-lg pointer-events-none
+                             transition-all duration-300 hover:scale-105
+                             hover:shadow-xl hover:brightness-110" 
+                  />
+                </div>
+                <div 
+                  onClick={() => handleCardClick('right')} 
+                  className="cursor-pointer p-2 relative z-30 
+                           w-full max-w-[280px] mx-auto md:mx-0
+                           sm:max-w-[320px] md:max-w-[360px] lg:max-w-[400px]"
+                >
+                  <img 
+                    src={bonCardRight} 
+                    alt="Right Card" 
+                    className="w-full rounded-2xl shadow-lg pointer-events-none
+                             transition-all duration-300 hover:scale-105
+                             hover:shadow-xl hover:brightness-110" 
+                  />
+                </div>
               </div>
             </motion.div>
           )}
