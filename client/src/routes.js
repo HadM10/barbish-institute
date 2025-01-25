@@ -1,15 +1,21 @@
 // src/routes.js
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { Routes, Route, Link } from "react-router-dom";
-import Admin from "./pages/AdminPanel/Admin";
+
+// Eagerly load Home for fast initial load
 import Home from "./pages/ClientSide/Home";
-import Courses from "./pages/ClientSide/Courses";
-import RecordedSessions from "./pages/ClientSide/RecordedSessions";
-import AITools from "./pages/ClientSide/AITools";
-import BonusCards from "./pages/ClientSide/BonusCards.js";
-import Contact from "./pages/ClientSide/Contact.js";
-import AboutServices from "./pages/ClientSide/AboutServices.js";
-import VideoPlayer from "./pages/ClientSide/VideoPlayer";
+
+// Lazy load other components
+const Admin = lazy(() => import("./pages/AdminPanel/Admin"));
+const Courses = lazy(() => import("./pages/ClientSide/Courses"));
+const RecordedSessions = lazy(() =>
+  import("./pages/ClientSide/RecordedSessions")
+);
+const AITools = lazy(() => import("./pages/ClientSide/AITools"));
+const BonusCards = lazy(() => import("./pages/ClientSide/BonusCards"));
+const Contact = lazy(() => import("./pages/ClientSide/Contact"));
+const AboutServices = lazy(() => import("./pages/ClientSide/AboutServices"));
+const VideoPlayer = lazy(() => import("./pages/ClientSide/VideoPlayer"));
 
 // 404 Component
 const NotFound = () => (
@@ -43,23 +49,31 @@ const NotFound = () => (
 );
 
 const AppRoutes = () => (
-  <Routes>
-    {/* Admin Routes */}
-    <Route path="/admin/*" element={<Admin />} />
-    
-    {/* Client Routes */}
-    <Route path="/" element={<Home />} />
-    <Route path="/courses" element={<Courses />} />
-    <Route path="/recorded-sessions" element={<RecordedSessions />} />
-    <Route path="/video-player/:sessionId" element={<VideoPlayer />} />
-    <Route path="/services" element={<AITools />} />
-    <Route path="/bonus" element={<BonusCards />} />
-    <Route path="/contact" element={<Contact />} />
-    <Route path="/about-services" element={<AboutServices />} />
-    
-    {/* 404 Route - Keep this last */}
-    <Route path="*" element={<NotFound />} />
-  </Routes>
+  <Suspense
+    fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    }
+  >
+    <Routes>
+      {/* Admin Routes */}
+      <Route path="/admin/*" element={<Admin />} />
+
+      {/* Client Routes */}
+      <Route path="/" element={<Home />} />
+      <Route path="/courses" element={<Courses />} />
+      <Route path="/recorded-sessions" element={<RecordedSessions />} />
+      <Route path="/video-player/:sessionId" element={<VideoPlayer />} />
+      <Route path="/services" element={<AITools />} />
+      <Route path="/bonus" element={<BonusCards />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/about-services" element={<AboutServices />} />
+
+      {/* 404 Route */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  </Suspense>
 );
 
 export default AppRoutes;

@@ -32,16 +32,15 @@ export const getSessionById = async (id) => {
 // Create a new session
 export const createSession = async (sessionData) => {
   try {
-    const formData = new FormData();
-    Object.keys(sessionData).forEach((key) => {
-      if (key === "video" && sessionData[key] instanceof File) {
-        formData.append("video", sessionData[key]);
-      } else if (key !== "video") {
-        formData.append(key, sessionData[key]);
-      }
+    // Send data directly as JSON
+    const response = await axios.post(API_BASE_URL, {
+      title: sessionData.title,
+      description: sessionData.description,
+      content: sessionData.content,
+      duration: sessionData.duration,
+      videoUrl: sessionData.videoUrl,
+      courseId: sessionData.courseId,
     });
-
-    const response = await axios.post(API_BASE_URL, formData);
     return { success: true, data: response.data };
   } catch (error) {
     return {
@@ -54,18 +53,33 @@ export const createSession = async (sessionData) => {
 // Update a session by ID
 export const updateSession = async (id, sessionData) => {
   try {
-    const formData = new FormData();
-    Object.keys(sessionData).forEach((key) => {
-      if (key === "video" && sessionData[key] instanceof File) {
-        formData.append("video", sessionData[key]);
-      } else if (key !== "video") {
-        formData.append(key, sessionData[key]);
-      }
+    console.log('Sending update request:', {
+      id,
+      sessionData
     });
 
-    const response = await axios.put(`${API_BASE_URL}/${id}`, formData);
-    return { success: true, data: response.data };
+    const response = await axios.put(`${API_BASE_URL}/${id}`, {
+      title: sessionData.title,
+      description: sessionData.description,
+      content: sessionData.content,
+      duration: sessionData.duration,
+      videoUrl: sessionData.videoUrl,
+      courseId: sessionData.courseId,
+    });
+
+    console.log('Update response:', response.data);
+
+    if (response.data) {
+      return { success: true, data: response.data };
+    } else {
+      console.error('No data in response');
+      return {
+        success: false,
+        message: "No data received from server"
+      };
+    }
   } catch (error) {
+    console.error('Update error:', error);
     return {
       success: false,
       message: error.response?.data?.error || error.message,

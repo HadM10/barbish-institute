@@ -1,64 +1,57 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaTimes, FaUser, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
-import { AuthContext } from "../../context/AuthContext";  // Import AuthContext
+import { AuthContext } from "../../context/AuthContext";
 
-const Login = ({ isOpen, onClose }) => {
+const Login = memo(({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null); // For displaying error messages
+  const [error, setError] = useState(null);
 
-  const { login } = useContext(AuthContext);  // Access login function from AuthContext
+  const { login } = useContext(AuthContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setError(null); // Reset previous errors
+    setError(null);
 
     try {
-      // Call the login function from AuthContext and pass form data
       const loginResponse = await login(formData);
-      console.log(loginResponse)
-      
+      console.log(loginResponse);
+
       if (loginResponse.status === "success") {
-        setError(<span style={{ color: '#7CFC00' }}>Login successful!</span>);
-      
-
-
-        // Wait for a short duration before closing the form
+        setError(<span style={{ color: "#7CFC00" }}>Login successful!</span>);
         setTimeout(() => {
           onClose();
           setFormData({ username: "", password: "" });
-          setError(null); // Close the login popup on successful login
-        }, 1000); // Adjust the timeout duration as needed
+          setError(null);
+        }, 1000);
       } else {
         setError(loginResponse.message || "Login failed. Please try again.");
       }
     } catch (error) {
-      // If an error occurs, display it
       setError(error.message || "Login failed. Please try again.");
     } finally {
-      setIsLoading(false); // Reset loading state
+      setIsLoading(false);
     }
   };
 
-
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -67,7 +60,6 @@ const Login = ({ isOpen, onClose }) => {
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
           />
 
-          {/* Login Form */}
           <motion.div
             initial={{ opacity: 0, scale: 0.75 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -76,7 +68,6 @@ const Login = ({ isOpen, onClose }) => {
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
             <div className="w-full max-w-sm p-8 rounded-2xl bg-gradient-to-br from-gray-900 to-black border border-white/10 shadow-xl">
-              {/* Close Button */}
               <div className="flex">
                 <button
                   onClick={onClose}
@@ -86,21 +77,17 @@ const Login = ({ isOpen, onClose }) => {
                 </button>
               </div>
 
-              {/* Header */}
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                   Login
                 </h2>
               </div>
 
-              {/* Error Message */}
               {error && (
                 <div className="text-red-500 text-center mb-4">{error}</div>
               )}
 
-              {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Username Input */}
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <FaUser className="text-gray-400" />
@@ -116,7 +103,6 @@ const Login = ({ isOpen, onClose }) => {
                   />
                 </div>
 
-                {/* Password Input */}
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <FaLock className="text-gray-400" />
@@ -132,14 +118,13 @@ const Login = ({ isOpen, onClose }) => {
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={() => setShowPassword((prev) => !prev)}
                     className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-white transition-colors duration-300"
                   >
                     {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
                 </div>
 
-                {/* Submit Button */}
                 <button
                   type="submit"
                   disabled={isLoading}
@@ -156,11 +141,12 @@ const Login = ({ isOpen, onClose }) => {
               </form>
             </div>
           </motion.div>
-          
         </>
       )}
     </AnimatePresence>
   );
-};
+});
+
+Login.displayName = "Login";
 
 export default Login;

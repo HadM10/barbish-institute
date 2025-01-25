@@ -3,6 +3,8 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const sequelize = require("./config/db");
+const compressionMiddleware = require("./middleware/compression");
+const path = require("path");
 
 // Import route files
 const contactRoutes = require("./routes/contactRoutes");
@@ -25,6 +27,7 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
+app.use(compressionMiddleware);
 
 // Health Check
 app.get("/", (req, res) => {
@@ -44,6 +47,17 @@ app.use("/api/auth", authRoutes);
 app.use("/api/mostSubCourses", mostSubCoursesRoutes);
 app.use("/api/user-sessions", userSessionRoutes);
 
+// Serve static files from React app in production
+if (process.env.NODE_ENV === "production") {
+  // Serve static files from the React app
+  app.use(express.static(path.join(__dirname, "../client/build")));
+
+  // Handle React routing, return all requests to React app
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "../client/build", "index.html"));
+  });
+}
+
 // Error Handling Middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -57,7 +71,7 @@ sequelize
   .authenticate()
   .then(() => {
     console.log("Database connected");
-    return sequelize.sync({ alter: true });
+    return sequelize.sync();
   })
   .then(() => {
     console.log("Database synced");

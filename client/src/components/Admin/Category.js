@@ -1,7 +1,7 @@
 // client/src/components/Admin/Category.js
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo, useCallback } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -15,12 +15,11 @@ import {
 } from "@heroicons/react/24/outline";
 import CategoryAPI from "../../api/categoryAPI";
 import "react-toastify/dist/ReactToastify.css";
-import { getAllCourses } from '../../api/courseAPI';
+import { getAllCourses } from "../../api/courseAPI";
 
-const Notification = ({ message, type, onClose }) => {
-  const bgColor = type === 'error' || type === 'delete' 
-    ? 'bg-red-500' 
-    : 'bg-emerald-500';
+const Notification = memo(({ message, type, onClose }) => {
+  const bgColor =
+    type === "error" || type === "delete" ? "bg-red-500" : "bg-emerald-500";
 
   return (
     <motion.div
@@ -30,9 +29,9 @@ const Notification = ({ message, type, onClose }) => {
       className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-6 py-4 
                 rounded-lg shadow-lg ${bgColor}`}
     >
-      {type === 'delete' ? (
+      {type === "delete" ? (
         <TrashIcon className="w-6 h-6 text-white" />
-      ) : type === 'success' ? (
+      ) : type === "success" ? (
         <CheckCircleIcon className="w-6 h-6 text-white" />
       ) : (
         <XCircleIcon className="w-6 h-6 text-white" />
@@ -40,7 +39,7 @@ const Notification = ({ message, type, onClose }) => {
       <p className="text-white font-medium">{message}</p>
     </motion.div>
   );
-};
+});
 
 const Category = () => {
   const [categories, setCategories] = useState([]);
@@ -65,26 +64,28 @@ const Category = () => {
       const res = await CategoryAPI.getAllCategories();
       if (res.success) {
         // Map categories and count courses for each
-        const categoriesWithCounts = res.data.data.map(category => {
+        const categoriesWithCounts = res.data.data.map((category) => {
           const courseCount = allCourses.filter(
-            course => course.categoryId === category.id || course.category_id === category.id
+            (course) =>
+              course.categoryId === category.id ||
+              course.category_id === category.id
           ).length;
-          
+
           return {
             ...category,
-            Courses: new Array(courseCount) // Create array with length equal to course count
+            Courses: new Array(courseCount), // Create array with length equal to course count
           };
         });
-        
+
         setCategories(categoriesWithCounts);
       } else {
         setCategories([]);
-        showNotification("No categories found", 'error');
+        showNotification("No categories found", "error");
       }
     } catch (error) {
       console.error("Error fetching categories:", error);
       setCategories([]);
-      showNotification("Error loading categories", 'error');
+      showNotification("Error loading categories", "error");
     } finally {
       setIsLoading(false);
     }
@@ -92,7 +93,7 @@ const Category = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!modalData.name) {
-      showNotification("Please fill all fields", 'error');
+      showNotification("Please fill all fields", "error");
       return;
     }
 
@@ -102,15 +103,17 @@ const Category = () => {
         : await CategoryAPI.createCategory(modalData);
 
       if (response?.success) {
-        showNotification(`Category ${isEditing ? "updated" : "created"} successfully`);
+        showNotification(
+          `Category ${isEditing ? "updated" : "created"} successfully`
+        );
         handleCloseModal();
         await fetchCategories();
       } else {
-        showNotification(response?.message || "Operation failed", 'error');
+        showNotification(response?.message || "Operation failed", "error");
       }
     } catch (error) {
       console.error("Operation error:", error);
-      showNotification("Operation failed", 'error');
+      showNotification("Operation failed", "error");
     }
   };
   const handleEdit = (category) => {
@@ -125,28 +128,27 @@ const Category = () => {
     setIsModalOpen(false);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure?")) return;
+  const showNotification = useCallback((message, type = "success") => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
+  }, []);
 
+  const handleDelete = useCallback(async (id) => {
+    if (!window.confirm("Are you sure?")) return;
     try {
       const result = await CategoryAPI.deleteCategory(id);
       if (result.success) {
-        showNotification("Category deleted successfully", 'delete');
+        showNotification("Category deleted successfully", "delete");
         fetchCategories();
       } else {
-        showNotification(result.message, 'error');
+        showNotification(result.message, "error");
       }
     } catch (error) {
-      showNotification("Delete failed", 'error');
+      showNotification("Delete failed", "error");
     }
-  };
+  }, []);
 
-  const showNotification = (message, type = 'success') => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification(null), 3000);
-  };
-
-  const filteredCategories = categories.filter(category =>
+  const filteredCategories = categories.filter((category) =>
     category.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -198,7 +200,7 @@ const Category = () => {
                            focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 {searchTerm && (
-                  <button 
+                  <button
                     onClick={() => setSearchTerm("")}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
@@ -253,13 +255,14 @@ const Category = () => {
                          rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300"
             >
               {/* Background Pattern */}
-              <div className="absolute inset-0 opacity-5"
-                   style={{
-                     backgroundImage: `radial-gradient(circle at 1px 1px, #4338ca 1px, transparent 0)`,
-                     backgroundSize: '16px 16px'
-                   }}
+              <div
+                className="absolute inset-0 opacity-5"
+                style={{
+                  backgroundImage: `radial-gradient(circle at 1px 1px, #4338ca 1px, transparent 0)`,
+                  backgroundSize: "16px 16px",
+                }}
               />
-              
+
               {/* Content */}
               <div className="relative">
                 <div className="flex justify-between items-start mb-4">
@@ -268,12 +271,15 @@ const Category = () => {
                       {category.name}
                     </h3>
                     {/* Course Count Badge */}
-                    <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full 
-                                  bg-indigo-100 text-indigo-800 text-sm font-medium">
-                      {category.Courses?.length || 0} {category.Courses?.length === 1 ? 'Course' : 'Courses'}
+                    <div
+                      className="mt-2 inline-flex items-center px-3 py-1 rounded-full 
+                                  bg-indigo-100 text-indigo-800 text-sm font-medium"
+                    >
+                      {category.Courses?.length || 0}{" "}
+                      {category.Courses?.length === 1 ? "Course" : "Courses"}
                     </div>
                   </div>
-                  
+
                   {/* Action Buttons */}
                   <div className="flex gap-2">
                     <button
@@ -377,4 +383,4 @@ const Category = () => {
   );
 };
 
-export default Category;
+export default memo(Category);

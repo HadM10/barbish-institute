@@ -37,14 +37,15 @@ const RecordedSessions = () => {
           </div>
         ),
         title: "Access Your Learning Materials",
-        description: "Please sign in with your provided credentials to access your recorded sessions.",
+        description:
+          "Please sign in with your provided credentials to access your recorded sessions.",
         primaryAction: {
           text: "Sign In",
-          onClick: () => setIsLoginOpen(true)
-        }
+          onClick: () => setIsLoginOpen(true),
+        },
       },
       noSubscription: {
-        icon: <FaBookReader className="text-6xl text-blue-500 mb-4" />,
+        icon: <FaBookReader className="text-6xl text-blue-500 mb-4 mt-20" />,
         title: "No Active Subscriptions",
         description: "Subscribe to our courses to start your learning journey!",
         actionText: "Browse Courses",
@@ -64,16 +65,12 @@ const RecordedSessions = () => {
     return (
       <div className="max-w-md mx-auto px-4">
         <div className="text-center">
-          <div className="flex justify-center">
-            {currentContent.icon}
-          </div>
+          <div className="flex justify-center">{currentContent.icon}</div>
           <h2 className="text-2xl font-bold text-gray-900 mb-3">
             {currentContent.title}
           </h2>
-          <p className="text-gray-600 mb-8">
-            {currentContent.description}
-          </p>
-          
+          <p className="text-gray-600 mb-8">{currentContent.description}</p>
+
           {currentContent.primaryAction && (
             <button
               onClick={currentContent.primaryAction.onClick}
@@ -162,9 +159,17 @@ const RecordedSessions = () => {
   }, [fetchCourseProgress]);
 
   useEffect(() => {
+    let isMounted = true;
+
     if (token) {
-      fetchCourses();
+      fetchCourses().then(() => {
+        if (!isMounted) return;
+      });
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [fetchCourses, token]);
 
   // Session Item Component
@@ -187,6 +192,19 @@ const RecordedSessions = () => {
 
     return (
       <div className="bg-white border-b border-gray-100">
+        {session.thumbnail && (
+          <img
+            src={session.thumbnail}
+            alt={session.title}
+            loading="lazy"
+            decoding="async"
+            className="w-full h-auto"
+            onError={(e) => {
+              e.target.onerror = null; // Prevent infinite loop
+              e.target.style.display = "none";
+            }}
+          />
+        )}
         <div className="p-3 md:p-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             {/* Left side with icon and title */}
@@ -205,7 +223,11 @@ const RecordedSessions = () => {
                       Session {index + 1}: {session.title}
                     </h3>
                     <div className="flex flex-wrap items-center gap-2 mt-1">
-                      <span className={`text-xs ${isWatched ? "text-green-600" : "text-gray-500"}`}>
+                      <span
+                        className={`text-xs ${
+                          isWatched ? "text-green-600" : "text-gray-500"
+                        }`}
+                      >
                         {isWatched ? "Completed" : "Not started"}
                       </span>
                       {session.duration && (
@@ -244,8 +266,10 @@ const RecordedSessions = () => {
                   before:opacity-0 hover:before:opacity-100 before:transition-opacity
                   overflow-hidden`}
               >
-                <MdOndemandVideo className={`mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 
-                  ${isWatched ? "text-red-500" : "text-blue-500"}`} />
+                <MdOndemandVideo
+                  className={`mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 
+                  ${isWatched ? "text-red-500" : "text-blue-500"}`}
+                />
                 <span className="relative">
                   <span className="hidden sm:inline">
                     {isWatched ? "Mark as Unwatched" : "Mark as Watched"}
@@ -264,8 +288,10 @@ const RecordedSessions = () => {
                          shadow-md hover:shadow-lg active:scale-95 font-medium text-xs sm:text-sm"
               >
                 <span className="mr-2">Watch Now</span>
-                <FaChevronRight className="h-3 w-3 sm:h-3.5 sm:w-3.5 
-                                       group-hover:translate-x-0.5 transition-transform" />
+                <FaChevronRight
+                  className="h-3 w-3 sm:h-3.5 sm:w-3.5 
+                                       group-hover:translate-x-0.5 transition-transform"
+                />
               </button>
 
               <button
@@ -424,14 +450,11 @@ const RecordedSessions = () => {
         <Navbar />
         <div className="container mx-auto px-4">
           <div className="pt-48 pb-20">
-            <EmptyState 
-              type="notLoggedIn" 
-              setIsLoginOpen={setIsLoginOpen}
-            />
+            <EmptyState type="notLoggedIn" setIsLoginOpen={setIsLoginOpen} />
           </div>
         </div>
-        <Login 
-          isOpen={isLoginOpen} 
+        <Login
+          isOpen={isLoginOpen}
           onClose={() => setIsLoginOpen(false)}
           redirectPath="/recorded-sessions"
         />

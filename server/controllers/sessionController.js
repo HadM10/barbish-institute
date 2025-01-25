@@ -38,18 +38,12 @@ exports.getSessionById = async (req, res) => {
 // Create a new session
 exports.createSession = async (req, res) => {
   try {
-    let videoUrl = null;
-
-    if (req.files && req.files.video) {
-      videoUrl = await uploadVideo(req.files.video[0]);
-    }
-
     const newSession = await Session.create({
       title: req.body.title,
       description: req.body.description,
       content: req.body.content,
       duration: req.body.duration,
-      videoUrl: videoUrl || req.body.videoUrl,
+      videoUrl: req.body.videoUrl,
       courseId: req.body.courseId,
     });
 
@@ -70,20 +64,30 @@ exports.updateSession = async (req, res) => {
       return res.status(404).send({ error: "Session not found" });
     }
 
-    let videoUrl = session.videoUrl;
-    if (req.files && req.files.video) {
-      videoUrl = await uploadVideo(req.files.video[0]);
-    }
+    const updateData = {
+      title: req.body.title,
+      description: req.body.description,
+      content: req.body.content,
+      duration: req.body.duration,
+      videoUrl: req.body.videoUrl,
+      courseId: req.body.courseId,
+    };
 
-    const updatedSession = await session.update({
-      ...req.body,
-      videoUrl: videoUrl || req.body.videoUrl,
+
+    const updatedSession = await session.update(updateData);
+    
+    // Fetch fresh session data with Course information
+    const refreshedSession = await Session.findByPk(req.params.id, {
+      include: [Course],
     });
-    res.status(200).send(updatedSession);
+    
+    res.status(200).send(refreshedSession);
   } catch (error) {
-    res
-      .status(500)
-      .send({ error: "Error updating session", details: error.message });
+    console.error('Error updating session:', error);
+    res.status(500).send({ 
+      error: "Error updating session", 
+      details: error.message 
+    });
   }
 };
 
@@ -102,5 +106,3 @@ exports.deleteSession = async (req, res) => {
       .send({ error: "Error deleting session", details: error.message });
   }
 };
-
-exports.uploadFields = upload.fields([{ name: "video", maxCount: 1 }]);

@@ -59,7 +59,6 @@ const RecordedSessions = () => {
     video: null,
     courseName: "",
     courseId: "",
-    isActive: true,
   });
 
   // Add notification state
@@ -96,7 +95,6 @@ const RecordedSessions = () => {
           courseName: session.Course?.title || "Unknown Course",
           duration: session.duration || "Unknown Duration",
           videoUrl: session.videoUrl || "No Video URL",
-          isActive: session.isActive ? "active" : "inactive",
           createdAt: session.createdAt || new Date(),
         }));
 
@@ -174,7 +172,6 @@ const RecordedSessions = () => {
     try {
       const sessionData = {
         ...formData,
-        isActive: true,
       };
 
       if (isEditing) {
@@ -203,7 +200,6 @@ const RecordedSessions = () => {
             {
               ...res.data,
               courseName: formData.courseName,
-              isActive: true,
             },
           ]);
           showNotification("Session added successfully!");
@@ -222,15 +218,21 @@ const RecordedSessions = () => {
   const handleEdit = (session) => {
     setIsEditing(true);
     setEditId(session.id);
+    
+    // Find the course ID based on the course name
+    const selectedCourse = courses.find(course => course.title === session.courseName);
+    
     setFormData({
       title: session.title,
       description: session.description,
       content: session.content || "",
       duration: session.duration.toString(),
       videoUrl: session.videoUrl || "",
-      courseName: session.courseName, // Set courseName to display in the form
-      isActive: session.isActive,
+      courseName: session.courseName,
+      courseId: selectedCourse?.id, // Add the courseId to the form data
+      video: null // Reset video since we already have videoUrl
     });
+    
     setShowModal(true);
   };
 
@@ -250,29 +252,6 @@ const RecordedSessions = () => {
     }
   };
 
-  const handleStatusToggle = async (id) => {
-    const session = sessions.find((s) => s.id === id);
-    if (session) {
-      try {
-        const newStatus = session.isActive === "active" ? "inactive" : "active";
-        const res = await updateSession(id, {
-          isActive: newStatus === "active",
-        });
-
-        if (res.success) {
-          setSessions((prev) =>
-            prev.map((s) => (s.id === id ? { ...s, isActive: newStatus } : s))
-          );
-          showNotification(`Session status changed to ${newStatus}`);
-        } else {
-          showNotification("Failed to update status", "error");
-        }
-      } catch (error) {
-        showNotification("Error updating status", "error");
-      }
-    }
-  };
-
   const resetForm = () => {
     setFormData({
       title: "",
@@ -282,11 +261,30 @@ const RecordedSessions = () => {
       video: null,
       courseName: "",
       courseId: "",
-      isActive: true,
     });
     setIsEditing(false);
     setEditId(null);
     setShowModal(false);
+  };
+
+  // Add this function before the return statement, alongside other helper functions
+  const isValidYoutubeUrl = (url) => {
+    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
+    return youtubeRegex.test(url);
+  };
+
+  const testYoutubeLink = (url) => {
+    if (!url) {
+      showNotification("Please enter a YouTube URL first", "error");
+      return;
+    }
+    
+    if (!isValidYoutubeUrl(url)) {
+      showNotification("Please enter a valid YouTube URL", "error");
+      return;
+    }
+    
+    window.open(url, '_blank');
   };
 
   return (
@@ -391,9 +389,6 @@ const RecordedSessions = () => {
                     Video Link
                   </th>
                   <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -420,7 +415,16 @@ const RecordedSessions = () => {
                         </div>
                       </td>
                       <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-sm">
-                        {session.courseName}
+                        <div className="max-w-[100px] md:max-w-full">
+                          <p
+                            className="text-sm text-gray-900 truncate"
+                            title={session.courseName}
+                          >
+                            {session.courseName.length > 15 
+                              ? `${session.courseName.substring(0, 15)}...` 
+                              : session.courseName}
+                          </p>
+                        </div>
                       </td>
                       <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap">
                         <div className="max-w-[150px] md:max-w-[200px]">
@@ -447,18 +451,6 @@ const RecordedSessions = () => {
                             <LinkIcon className="w-5 h-5 transform hover:scale-110 transition-transform duration-150" />
                           </a>
                         )}
-                      </td>
-                      <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-sm">
-                        <button
-                          onClick={() => handleStatusToggle(session.id)}
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            session.isActive === "active"
-                              ? "bg-green-100 text-green-800 hover:bg-green-200"
-                              : "bg-red-100 text-red-800 hover:bg-red-200"
-                          } transition-colors duration-200`}
-                        >
-                          {session.isActive ? "Active" : "Inactive"}
-                        </button>
                       </td>
                       <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-sm">
                         <div className="flex gap-3">
@@ -495,9 +487,9 @@ const RecordedSessions = () => {
       {/* Add/Edit Session Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md my-8 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900">
+          <div className="bg-white rounded-2xl p-4 md:p-6 w-full max-w-[95%] md:max-w-2xl lg:max-w-4xl my-4 md:my-8">
+            <div className="flex justify-between items-center mb-4 md:mb-6 sticky top-0 bg-white z-10 pb-4 border-b">
+              <h3 className="text-lg md:text-xl font-bold text-gray-900">
                 {isEditing ? "Edit Session" : "Add New Session"}
               </h3>
               <button
@@ -508,8 +500,8 @@ const RecordedSessions = () => {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid gap-4">
+            <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto max-h-[calc(100vh-200px)]">
+              <div className="grid gap-4 md:gap-6">
                 {/* Session Name */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -549,7 +541,7 @@ const RecordedSessions = () => {
                     name="content"
                     value={formData.content}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-150"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-150 min-h-[100px] resize-y"
                     rows="3"
                   ></textarea>
                 </div>
@@ -569,41 +561,35 @@ const RecordedSessions = () => {
                   />
                 </div>
 
-                {/* Video Upload */}
+                {/* YouTube URL Input */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Video File *
+                    YouTube Video URL *
                   </label>
-                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-purple-500 transition-all duration-200">
-                    <div className="space-y-1 text-center">
-                      <VideoCameraIcon className="mx-auto h-12 w-12 text-gray-400" />
-                      <div className="flex text-sm text-gray-600">
-                        <label
-                          htmlFor="video-upload"
-                          className="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-purple-500"
-                        >
-                          <span>Upload a video</span>
-                          <input
-                            id="video-upload"
-                            name="video"
-                            type="file"
-                            accept="video/*"
-                            onChange={handleInputChange}
-                            className="sr-only"
-                            required={!isEditing}
-                          />
-                        </label>
-                        <p className="pl-1">or drag and drop</p>
-                      </div>
-                      <p className="text-xs text-gray-500">
-                        MP4, WebM up to 2GB
-                      </p>
-                      {formData.video && (
-                        <p className="text-sm text-gray-600 truncate">
-                          Selected: {formData.video.name}
-                        </p>
-                      )}
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type="url"
+                        name="videoUrl"
+                        value={formData.videoUrl || ""}
+                        onChange={handleInputChange}
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        className="w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg 
+                                 focus:outline-none focus:ring-2 focus:ring-purple-500 
+                                 transition-all duration-150"
+                        required
+                      />
+                      <VideoCameraIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => testYoutubeLink(formData.videoUrl)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
+                               transition-all duration-200 flex items-center gap-2"
+                    >
+                      <LinkIcon className="w-5 h-5" />
+                      Test Link
+                    </button>
                   </div>
                 </div>
 
@@ -629,16 +615,14 @@ const RecordedSessions = () => {
                 </div>
               </div>
 
-              <div className="mt-6 text-center">
+              <div className="mt-6 text-center sticky bottom-0 bg-white pt-4 border-t">
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className={`px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 
-                              transition-all duration-200 ${
-                                isSubmitting
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
-                              }`}
+                  className={`w-full md:w-auto px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 
+                            transition-all duration-200 ${
+                              isSubmitting ? "opacity-50 cursor-not-allowed" : ""
+                            }`}
                 >
                   {isSubmitting ? (
                     <div className="flex items-center justify-center">

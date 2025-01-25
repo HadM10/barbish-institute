@@ -26,10 +26,7 @@ const Session = sequelize.define(
     videoUrl: {
       type: DataTypes.STRING,
     },
-    isActive: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true,
-    },
+    
   },
   { timestamps: true }
 );

@@ -6,7 +6,8 @@ const Course = require("../models/Course");
 exports.getAllSubscriptions = async (req, res) => {
   try {
     const subscriptions = await Subscription.findAll({
-      include: [User, Course], // Include related User and Course models 
+      include: [User, Course],
+      attributes: ['id', 'userId', 'courseId', 'startDate', 'endDate', 'amount', 'isActive', 'createdAt', 'updatedAt']
     });
     res.status(200).send(subscriptions);
   } catch (error) {
@@ -40,16 +41,24 @@ exports.getSubscriptionById = async (req, res) => {
 // Create a new subscription 
 exports.createSubscription = async (req, res) => {
   try {
-    const { userId, courseId, startDate, endDate } = req.body;
+    const { userId, courseId, startDate, endDate, amount, isActive } = req.body;
 
+    // Create subscription with amount
     const newSubscription = await Subscription.create({
       userId,
       courseId,
       startDate,
       endDate,
+      amount: Number(amount), // Explicitly convert amount to number
+      isActive
     });
 
-    res.status(201).send(newSubscription);
+    // Fetch the complete subscription with associations
+    const completeSubscription = await Subscription.findByPk(newSubscription.id, {
+      include: [User, Course]
+    });
+
+    res.status(201).send(completeSubscription);
   } catch (error) {
     res.status(500).send({
       error: "Error creating subscription",
@@ -62,10 +71,16 @@ exports.createSubscription = async (req, res) => {
 exports.updateSubscription = async (req, res) => {
   try {
     const subscription = await Subscription.findByPk(req.params.id);
-    if (!subscription)
+    if (!subscription) {
       return res.status(404).send({
         error: "Subscription not found",
       });
+    }
+
+    // If amount is included in the update, ensure it's a number
+    if (req.body.amount !== undefined) {
+      req.body.amount = Number(req.body.amount);
+    }
 
     const updatedSubscription = await subscription.update(req.body);
     res.status(200).send(updatedSubscription);

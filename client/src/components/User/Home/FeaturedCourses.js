@@ -1,11 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FaWhatsapp, FaClock, FaGraduationCap, FaTrophy } from "react-icons/fa";
 import { getMostSubCourses } from "../../../api/mostSubCoursesAPI";
 import englishCourseImg from "../../../assets/images/english-course.jpg";
 
-const CourseCard = ({ course, index }) => {
+const CourseCard = memo(({ course, index }) => {
+  const handleWhatsAppClick = useCallback(
+    (e) => {
+      e.preventDefault();
+      const whatsappNumber = "+96176601305";
+      const message = `Hi, I'm interested in the ${course.title} course priced at $${course.price}. Can you provide more information?`;
+      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+        message
+      )}`;
+      window.open(whatsappUrl, "_blank");
+    },
+    [course.title, course.price]
+  );
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -24,6 +37,9 @@ const CourseCard = ({ course, index }) => {
             <img
               src={course.image || englishCourseImg}
               alt={course.title}
+              loading="lazy"
+              decoding="async"
+              fetchPriority={index === 0 ? "high" : "low"}
               className="w-full object-cover"
               style={{ aspectRatio: "4/3" }}
               onError={(e) => {
@@ -118,11 +134,12 @@ const CourseCard = ({ course, index }) => {
             </div>
 
             <button
+              onClick={handleWhatsAppClick}
               className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 
                            rounded-lg bg-gradient-to-r from-blue-500 to-violet-500 
                            text-white text-base font-semibold
                            shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 
-                           transform hover:scale-[1.02] transition-all duration-300 "
+                           transform hover:scale-[1.02] transition-all duration-300"
             >
               <FaWhatsapp className="text-base" />
               <span>Enquire Now</span>
@@ -132,17 +149,21 @@ const CourseCard = ({ course, index }) => {
       </div>
     </motion.div>
   );
-};
+});
 
-const FeaturedCourses = () => {
+CourseCard.displayName = "CourseCard";
+
+const FeaturedCourses = memo(() => {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchCourses = async () => {
       try {
         const response = await getMostSubCourses();
-        if (response.success) {
+        if (isMounted && response.success) {
           setCourses(response.data);
         }
       } catch (error) {
@@ -151,7 +172,15 @@ const FeaturedCourses = () => {
     };
 
     fetchCourses();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  const handleExploreClick = useCallback(() => {
+    navigate("/courses");
+  }, [navigate]);
 
   return (
     <section className="relative py-12 bg-white">
@@ -235,15 +264,7 @@ const FeaturedCourses = () => {
         <div className="relative max-w-7xl mx-auto mb-10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-2">
             {courses.slice(0, 3).map((course, index) => (
-              <motion.div
-                key={course.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.2 }}
-                className="relative"
-              >
-                <CourseCard course={course} index={index} />
-              </motion.div>
+              <CourseCard key={course.id} course={course} index={index} />
             ))}
           </div>
         </div>
@@ -255,7 +276,7 @@ const FeaturedCourses = () => {
           transition={{ delay: 0.6 }}
         >
           <motion.button
-            onClick={() => navigate("/courses")}
+            onClick={handleExploreClick}
             className="group relative inline-flex items-center gap-3 px-8 py-4 
                      overflow-hidden rounded-full"
             whileHover={{ scale: 1.02 }}
@@ -278,6 +299,8 @@ const FeaturedCourses = () => {
       </div>
     </section>
   );
-};
+});
+
+FeaturedCourses.displayName = "FeaturedCourses";
 
 export default FeaturedCourses;
