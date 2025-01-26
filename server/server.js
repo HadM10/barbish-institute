@@ -65,7 +65,7 @@ app.use((err, req, res, next) => {
 });
 
 // Sync Database and Start Server
-const PORT = process.env.PORT || 5000; // Added default port
+const PORT = process.env.PORT || 3306; // Added default port
 
 sequelize
   .authenticate()
