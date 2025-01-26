@@ -29,12 +29,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(compressionMiddleware);
 
-// Health Check
-app.get("/", (req, res) => {
-  res.send("API is running...");
-});
-
-// Routes
+// API Routes
 app.use("/api/contact", contactRoutes);
 app.use("/api/boncards", bonCardRoutes);
 app.use("/api/users", userRoutes);
@@ -52,6 +47,11 @@ if (process.env.NODE_ENV === "production") {
   // Serve static files from the React app
   app.use(express.static(path.join(__dirname, "../client/build")));
 
+  // API health check
+  app.get("/api/health", (req, res) => {
+    res.send("API is running...");
+  });
+
   // Handle React routing, return all requests to React app
   app.get("*", (req, res) => {
     res.sendFile(path.join(__dirname, "../client/build", "index.html"));
@@ -65,7 +65,7 @@ app.use((err, req, res, next) => {
 });
 
 // Sync Database and Start Server
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000; // Added default port
 
 sequelize
   .authenticate()
