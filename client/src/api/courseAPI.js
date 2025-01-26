@@ -2,12 +2,12 @@
 import axios from "axios";
 
 // Point this to your backend's URL and port.
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = `${process.env.REACT_APP_API_URL}/course`;
 
 // GET all courses (GET /api/course)
 export async function getAllCourses() {
   try {
-    const response = await axios.get(`${API_BASE_URL}/api/course`);
+    const response = await axios.get(API_BASE_URL);
     // The controller returns an array of courses directly, e.g. [ { id, title, ... }, ... ]
     // So 'response.data' should be that array.
     return { success: true, data: response.data };

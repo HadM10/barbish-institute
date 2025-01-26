@@ -1,11 +1,11 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = `${process.env.REACT_APP_API_URL}/boncards`;
 
 // GET all bonCards
 export async function getAllBonCards() {
   try {
-    const response = await axios.get(`${API_BASE_URL}/api/boncards`);
+    const response = await axios.get(`${API_BASE_URL}`);
     return response.data;
   } catch (error) {
     return {
@@ -29,7 +29,7 @@ export async function createBonCard(bonCardData) {
       }
     });
 
-    const response = await axios.post(`${API_BASE_URL}/api/boncards`, formData);
+    const response = await axios.post(`${API_BASE_URL}`, formData);
     return response.data;
   } catch (error) {
     return {
@@ -53,10 +53,7 @@ export async function updateBonCard(bonCardId, bonCardData) {
       }
     });
 
-    const response = await axios.put(
-      `${API_BASE_URL}/api/boncards/${bonCardId}`,
-      formData
-    );
+    const response = await axios.put(`${API_BASE_URL}/${bonCardId}`, formData);
     return response.data;
   } catch (error) {
     return {
@@ -69,9 +66,7 @@ export async function updateBonCard(bonCardId, bonCardData) {
 // DELETE a bonCard
 export async function deleteBonCard(bonCardId) {
   try {
-    const response = await axios.delete(
-      `${API_BASE_URL}/api/boncards/${bonCardId}`
-    );
+    const response = await axios.delete(`${API_BASE_URL}/${bonCardId}`);
     return response.data;
   } catch (error) {
     return {
