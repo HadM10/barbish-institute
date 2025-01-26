@@ -9,7 +9,7 @@ const CourseCard = memo(({ course, index }) => {
   const handleWhatsAppClick = useCallback(
     (e) => {
       e.preventDefault();
-      const whatsappNumber = "+96176601305";
+      const whatsappNumber = "+96171020724";
       const message = `Hi, I'm interested in the ${course.title} course priced at $${course.price}. Can you provide more information?`;
       const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
         message

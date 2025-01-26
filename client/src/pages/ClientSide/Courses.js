@@ -152,7 +152,7 @@ const Courses = () => {
       const handleWhatsAppClick = (e) => {
         e.stopPropagation();
         // Replace this number with your WhatsApp number
-        const whatsappNumber = "+96176601305";
+        const whatsappNumber = "+96171020724";
         const message = `Hi, I'm interested in the ${course.title} course priced at $${course.price}. Can you provide more information?`;
         const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
           message
