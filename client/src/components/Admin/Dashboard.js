@@ -1,5 +1,5 @@
 import React, { useState, useEffect, memo, useMemo } from "react";
-import DashboardAPI from "../../api/dashboardAPI"; // Import the StatsAPI
+import {getStats} from "../../api/dashboardAPI"; // Import the StatsAPI
 import {
   UserGroupIcon,
   VideoCameraIcon,
@@ -72,7 +72,7 @@ const Dashboard = () => {
   // Fetch stats when the component mounts
   useEffect(() => {
     const fetchStats = async () => {
-      const result = await DashboardAPI.getStats();
+      const result = await getStats();
       if (result.success) {
         setStats(result.data); // Set the stats data to state
       } else {
