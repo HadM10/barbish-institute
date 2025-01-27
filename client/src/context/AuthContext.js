@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
           // Check if the user is trying to access /admin and is not an admin
           if (
             decodedToken.role !== "admin" &&
-            window.location.pathname === "/admin"
+            window.location.pathname.startsWith("/admin")
           ) {
             navigate("/", {
               state: { message: "You do not have access to this page." },
@@ -46,14 +46,13 @@ export const AuthProvider = ({ children }) => {
         logout(); // Invalid token or error in decoding
       }
     } else {
-      // No token found - Allow access to all pages except /admin
-      if (window.location.pathname === "/admin") {
+      // No token found - Allow access to all pages except /admin/*
+      if (window.location.pathname.startsWith("/admin")) {
         navigate("/", {
           state: { message: "You do not have access to this page." },
         });
       }
-      setAuth(null); // If no token, set auth to null
-      // Do not navigate away for non-admin pages
+      setAuth(null);
     }
     setLoading(false); // Set loading to false after check
   }, [logout, navigate]);
