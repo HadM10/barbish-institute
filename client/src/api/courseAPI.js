@@ -34,7 +34,7 @@ export async function createCourse(courseData) {
       }
     });
 
-    const response = await axios.post(`${API_BASE_URL}/api/course`, formData, {
+    const response = await axios.post(`${API_BASE_URL}`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -65,7 +65,7 @@ export async function updateCourse(courseId, courseData) {
     });
 
     const response = await axios.put(
-      `${API_BASE_URL}/api/course/${courseId}`,
+      `${API_BASE_URL}/${courseId}`,
       formData,
       {
         headers: {
@@ -87,7 +87,7 @@ export async function updateCourse(courseId, courseData) {
 export async function deleteCourse(courseId) {
   try {
     const response = await axios.delete(
-      `${API_BASE_URL}/api/course/${courseId}`
+      `${API_BASE_URL}/${courseId}`
     );
     // The controller returns { message: "Course deleted successfully" }
     return { success: true, data: response.data };
