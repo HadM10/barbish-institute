@@ -53,8 +53,8 @@ const AppRoutes = () => (
     fallback={
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex items-center gap-3">
-          <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin bg-gradient-to-r from-primary via-accent to-sky"></div>
-          <span className="text-lg font-medium bg-gradient-to-r from-primary via-accent to-sky bg-clip-text text-transparent">
+          <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin bg-gradient-to-r from-secondary via-accent to-sky"></div>
+          <span className="text-lg font-medium bg-gradient-to-r from-secondary via-accent to-sky bg-clip-text text-transparent">
             Loading...
           </span>
         </div>
