@@ -24,7 +24,19 @@ require("./models/Relations");
 
 const app = express();
 
-// Middleware
+// Add www redirect middleware HERE, before other middleware
+app.use((req, res, next) => {
+  if (
+    !req.hostname.startsWith("www.") &&
+    req.hostname !== "localhost" &&
+    req.hostname !== "127.0.0.1"
+  ) {
+    return res.redirect(301, `https://www.${req.hostname}${req.originalUrl}`);
+  }
+  next();
+});
+
+// Other middleware
 app.use(cors());
 app.use(bodyParser.json());
 app.use(compressionMiddleware);
