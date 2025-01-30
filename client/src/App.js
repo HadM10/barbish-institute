@@ -133,10 +133,8 @@ const App = () => {
             </div>
 
             {/* Loading indicator - Only shows for longer loads */}
-            <div className="mt-4 px-4 py-2 rounded-lg bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm">
-              <span className="text-sm font-medium bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent animate-pulse">
-                Loading...
-              </span>
+            <div className="mt-4 text-sm font-medium text-gray-600 animate-pulse">
+              Loading...
             </div>
           </div>
         </div>

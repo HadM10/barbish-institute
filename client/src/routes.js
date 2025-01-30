@@ -52,7 +52,12 @@ const AppRoutes = () => (
   <Suspense
     fallback={
       <div className="min-h-screen flex items-center justify-center">
-        Loading...
+        <div className="flex items-center gap-3">
+          <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-lg font-medium text-indigo-600">
+            Loading...
+          </span>
+        </div>
       </div>
     }
   >
