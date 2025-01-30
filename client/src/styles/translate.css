@@ -1,0 +1,28 @@
+/* Hide Google Translate elements */
+.goog-te-banner-frame,
+.goog-te-menu-value,
+.VIpgJd-ZVi9od-l4eHX-hSRGPd,
+.goog-te-gadget {
+  display: none !important;
+}
+
+/* Remove top spacing added by Google Translate */
+body {
+  top: 0 !important;
+}
+
+/* Hide Google Translate attribution */
+.skiptranslate {
+  display: none !important;
+}
+
+/* Prevent translation of the language switcher */
+.notranslate {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Prevent translation of specific elements */
+.notranslate * {
+  -webkit-user-modify: read-only !important;
+} 
