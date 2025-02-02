@@ -24,7 +24,7 @@ require("./models/Relations");
 
 const app = express();
 
-// Add www redirect middleware HERE, before other middleware
+// First: www redirect middleware
 app.use((req, res, next) => {
   if (
     !req.hostname.startsWith("www.") &&
@@ -32,6 +32,18 @@ app.use((req, res, next) => {
     req.hostname !== "127.0.0.1"
   ) {
     return res.redirect(301, `https://www.${req.hostname}${req.originalUrl}`);
+  }
+  next();
+});
+
+// Second: Add HTTPS redirect middleware
+app.use((req, res, next) => {
+  if (
+    !req.secure &&
+    req.get("x-forwarded-proto") !== "https" &&
+    process.env.NODE_ENV === "production"
+  ) {
+    return res.redirect(301, `https://${req.hostname}${req.originalUrl}`);
   }
   next();
 });
