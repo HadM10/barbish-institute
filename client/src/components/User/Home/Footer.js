@@ -71,7 +71,7 @@ const Footer = () => {
           <p className="text-sky text-sm mt-2">
             Powered by{" "}
             <a
-              href="https://topcoders.com"
+              href="https://www.topcoderslb.com"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-blue-300 transition-colors"
