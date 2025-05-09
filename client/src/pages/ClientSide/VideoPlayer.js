@@ -12,16 +12,26 @@ const VideoPlayer = () => {
   const [videoError, setVideoError] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchSession = async () => {
       try {
         const response = await getSessionById(sessionId);
-        if (response.success) {
+        if (isMounted && response.success) {
           setSessionData(response.data);
-          setVideoError(false); // Reset error state when new video loads
+          setVideoError(false);
+
+          // Preload video thumbnail if available
+          if (response.data?.thumbnailUrl) {
+            const img = new Image();
+            img.src = response.data.thumbnailUrl;
+          }
         }
       } catch (error) {
-        console.error("Error fetching session:", error);
-        setVideoError(true);
+        if (isMounted) {
+          console.error("Error fetching session:", error);
+          setVideoError(true);
+        }
       }
     };
 
@@ -29,7 +39,11 @@ const VideoPlayer = () => {
 
     // Add message listener for YouTube player events
     window.addEventListener("message", handleYouTubeEvent);
-    return () => window.removeEventListener("message", handleYouTubeEvent);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener("message", handleYouTubeEvent);
+    };
   }, [sessionId]);
 
   // Handle YouTube player events
@@ -127,6 +141,8 @@ const VideoPlayer = () => {
                       className="w-full h-full"
                       src={getYouTubeEmbedUrl(sessionData.videoUrl)}
                       title="Video Player"
+                      loading="eager"
+                      importance="high"
                       frameBorder="0"
                       sandbox="allow-same-origin allow-scripts allow-forms allow-presentation"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import {jwtDecode} from "jwt-decode"; // Ensure correct import
+import jwt_decode from "jwt-decode"; // Changed from {jwtDecode}
 import { login as apiLogin } from "../api/auth";
 
 export const AuthContext = createContext();
@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem("token");
     if (token) {
       try {
-        const decodedToken = jwtDecode(token);
+        const decodedToken = jwt_decode(token); // Changed from jwtDecode to jwt_decode
         const currentTime = Date.now() / 1000;
 
         if (decodedToken.exp < currentTime) {
@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
           // Check if the user is trying to access /admin and is not an admin
           if (
             decodedToken.role !== "admin" &&
-            window.location.pathname === "/admin"
+            window.location.pathname.startsWith("/admin")
           ) {
             navigate("/", {
               state: { message: "You do not have access to this page." },
@@ -45,15 +45,14 @@ export const AuthProvider = ({ children }) => {
       } catch (error) {
         logout(); // Invalid token or error in decoding
       }
-    }else {
-      // No token found - Allow access to all pages except /admin
-      if (window.location.pathname === "/admin") {
+    } else {
+      // No token found - Allow access to all pages except /admin/*
+      if (window.location.pathname.startsWith("/admin")) {
         navigate("/", {
           state: { message: "You do not have access to this page." },
         });
       }
-      setAuth(null); // If no token, set auth to null
-      // Do not navigate away for non-admin pages
+      setAuth(null);
     }
     setLoading(false); // Set loading to false after check
   }, [logout, navigate]);
@@ -65,7 +64,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (userData) => {
     try {
       const { token, role } = await apiLogin(userData); // Call API to log in the user
-      const decodedToken = jwtDecode(token);
+      const decodedToken = jwt_decode(token); // Changed from jwtDecode to jwt_decode
 
       // Store the token in localStorage
       localStorage.setItem("token", token);
@@ -81,7 +80,7 @@ export const AuthProvider = ({ children }) => {
         navigate("/admin"); // Redirect admin to /admin page
       } else {
         navigate("/"); // Redirect regular user to home
-      }  
+      }
 
       return { token, role, status: "success" }; // Return login response
     } catch (error) {

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { IoLanguageOutline } from 'react-icons/io5';
 
-const TranslateButton = () => {
+const TranslateButton = memo(() => {
   const [currentLang, setCurrentLang] = useState('en');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -71,6 +71,8 @@ const TranslateButton = () => {
       </button>
     </>
   );
-};
+});
+
+TranslateButton.displayName = 'TranslateButton';
 
 export default TranslateButton; 

@@ -59,19 +59,10 @@ exports.createSession = async (req, res) => {
 // Update a session
 exports.updateSession = async (req, res) => {
   try {
-    console.log('Update request received:', {
-      id: req.params.id,
-      body: req.body
-    });
-
     const session = await Session.findByPk(req.params.id);
     if (!session) {
-      console.log('Session not found:', req.params.id);
       return res.status(404).send({ error: "Session not found" });
     }
-
-    // Log current session state
-    console.log('Current session state:', session.toJSON());
 
     const updateData = {
       title: req.body.title,
@@ -82,13 +73,9 @@ exports.updateSession = async (req, res) => {
       courseId: req.body.courseId,
     };
 
-    console.log('Updating with data:', updateData);
 
     const updatedSession = await session.update(updateData);
     
-    // Log updated session state
-    console.log('Updated session state:', updatedSession.toJSON());
-
     // Fetch fresh session data with Course information
     const refreshedSession = await Session.findByPk(req.params.id, {
       include: [Course],

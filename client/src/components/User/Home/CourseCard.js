@@ -1,10 +1,18 @@
 // components/User/Home/CourseCard.js
-import React, { useState } from "react";
+import React, { useState, memo, useCallback } from "react";
 import { FaWhatsapp, FaClock, FaUser, FaTimes } from "react-icons/fa";
 import { motion } from "framer-motion";
 
-const CourseCard = ({ course }) => {
+const CourseCard = memo(({ course }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const handleCardClick = useCallback(() => {
+    setIsExpanded(true);
+  }, []);
+
+  const handleModalClose = useCallback(() => {
+    setIsExpanded(false);
+  }, []);
 
   return (
     <div className="relative group animate-fadeIn">
@@ -12,13 +20,15 @@ const CourseCard = ({ course }) => {
         className="bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transform 
                    transition-all duration-300 hover:shadow-2xl hover:-translate-y-1
                    border border-gray-100"
-        onClick={() => setIsExpanded(true)}
+        onClick={handleCardClick}
       >
         {/* Image Container */}
         <div className="relative h-[280px] overflow-hidden">
           <img
             src={course.image || englishCourseImg}
             alt={course.title}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover transform 
                      group-hover:scale-105 transition-transform duration-700"
             onError={(e) => {
@@ -80,7 +90,7 @@ const CourseCard = ({ course }) => {
       {isExpanded && (
         <div
           className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
-          onClick={() => setIsExpanded(false)}
+          onClick={handleModalClose}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -96,6 +106,9 @@ const CourseCard = ({ course }) => {
                 <img
                   src={course.image || englishCourseImg}
                   alt={course.title}
+                  loading="lazy"
+                  decoding="async"
+                  fetchPriority="high"
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     e.target.src = englishCourseImg;
@@ -113,7 +126,7 @@ const CourseCard = ({ course }) => {
                     </span>
                   </div>
                   <button
-                    onClick={() => setIsExpanded(false)}
+                    onClick={handleModalClose}
                     className="p-1.5 hover:bg-white/10 rounded-full transition-colors"
                   >
                     <FaTimes className="text-white text-lg" />
@@ -189,6 +202,8 @@ const CourseCard = ({ course }) => {
       )}
     </div>
   );
-};
+});
+
+CourseCard.displayName = "CourseCard";
 
 export default CourseCard;

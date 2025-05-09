@@ -21,9 +21,8 @@ import {
 } from "../../api/userAPI";
 
 const Notification = ({ message, type, onClose }) => {
-  const bgColor = type === 'error' || type === 'delete' 
-    ? 'bg-red-500' 
-    : 'bg-emerald-500';
+  const bgColor =
+    type === "error" || type === "delete" ? "bg-red-500" : "bg-emerald-500";
 
   return (
     <motion.div
@@ -33,9 +32,9 @@ const Notification = ({ message, type, onClose }) => {
       className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-6 py-4 
                 rounded-lg shadow-lg ${bgColor}`}
     >
-      {type === 'delete' ? (
+      {type === "delete" ? (
         <TrashIcon className="w-6 h-6 text-white" />
-      ) : type === 'success' ? (
+      ) : type === "success" ? (
         <CheckCircleIcon className="w-6 h-6 text-white" />
       ) : (
         <XCircleIcon className="w-6 h-6 text-white" />
@@ -61,10 +60,10 @@ const Users = () => {
   const [notification, setNotification] = useState(null);
 
   // For Users.js
-// eslint-disable-next-line react-hooks/exhaustive-deps
-useEffect(() => {
-  fetchUsers();
-}, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const fetchUsers = async () => {
     setIsLoading(true);
@@ -73,10 +72,16 @@ useEffect(() => {
       if (response.success) {
         setUsers(response.data);
       } else {
-        showNotification("Failed to fetch users: " + (response.message || "Unknown error"), 'error');
+        showNotification(
+          "Failed to fetch users: " + (response.message || "Unknown error"),
+          "error"
+        );
       }
     } catch (error) {
-      showNotification("Failed to fetch users: " + (error.message || "Unknown error"), 'error');
+      showNotification(
+        "Failed to fetch users: " + (error.message || "Unknown error"),
+        "error"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -118,35 +123,46 @@ useEffect(() => {
     e.preventDefault();
     setIsLoading(true);
 
-    if (!formData.username || !formData.email || (!isEditing && !formData.password)) {
-      showNotification("Please fill in all required fields", 'error');
+    if (
+      !formData.username ||
+      !formData.email ||
+      (!isEditing && !formData.password)
+    ) {
+      showNotification("Please fill in all required fields", "error");
       setIsLoading(false);
       return;
     }
 
     try {
-      if (isEditing) {
-        const updatedUser = await updateUser(editingId, formData);
-        if (updatedUser.success) {
-          setUsers((prev) =>
-            prev.map((u) => (u.id === editingId ? updatedUser.data : u))
+      const response = isEditing
+        ? await updateUser(editingId, formData)
+        : await createUser(formData);
+
+      if (response.success) {
+        showNotification(
+          `User ${isEditing ? "updated" : "created"} successfully!`
+        );
+
+        // Update the users state after successful edit
+        if (isEditing) {
+          setUsers((prevUsers) =>
+            prevUsers.map((user) =>
+              user.id === editingId
+                ? { ...user, ...formData } // Update the edited user
+                : user
+            )
           );
-          showNotification("User updated successfully!");
         } else {
-          showNotification("The email address is already in use", 'error');
+          // For new user creation
+          setUsers((prevUsers) => [...prevUsers, response.data]);
         }
+
+        resetForm();
       } else {
-        const newUser = await createUser(formData);
-        if (newUser.success) {
-          setUsers((prev) => [...prev, newUser.data]);
-          showNotification("User added successfully!");
-        } else {
-          showNotification("The email address is already in use", 'error');
-        }
+        showNotification(response.message || "Failed to save user", "error");
       }
-      resetForm();
     } catch (error) {
-      showNotification("The email address is already in use", 'error');
+      showNotification("Error saving user: " + error.message, "error");
     } finally {
       setIsLoading(false);
     }
@@ -159,40 +175,12 @@ useEffect(() => {
       const result = await deleteUser(userId);
       if (result.success) {
         setUsers((prev) => prev.filter((u) => u.id !== userId));
-        showNotification("User deleted successfully!", 'delete');
+        showNotification("User deleted successfully!", "delete");
       } else {
-        showNotification("Failed to delete user: " + result.message, 'error');
+        showNotification("Failed to delete user: " + result.message, "error");
       }
     } catch (error) {
-      showNotification(`Failed to delete user: ${error.message}`, 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleStatusToggle = async (userId) => {
-    const user = users.find((u) => u.id === userId);
-    const newStatus = user?.status === "active" ? "inactive" : "active";
-    const message = newStatus === "active" ? "activate" : "deactivate";
-
-    if (!window.confirm(`Are you sure you want to ${message} this user?`)) return;
-
-    setIsLoading(true);
-    try {
-      const updatedUser = await updateUser(userId, {
-        ...user,
-        status: newStatus,
-      });
-      if (updatedUser.success) {
-        setUsers((prev) =>
-          prev.map((u) => (u.id === userId ? updatedUser.data : u))
-        );
-        showNotification(`User ${newStatus === "active" ? "activated" : "deactivated"} successfully!`);
-      } else {
-        showNotification("Failed to update user status: " + updatedUser.message, 'error');
-      }
-    } catch (error) {
-      showNotification(`Failed to update user status: ${error.message}`, 'error');
+      showNotification(`Failed to delete user: ${error.message}`, "error");
     } finally {
       setIsLoading(false);
     }
@@ -204,7 +192,7 @@ useEffect(() => {
       user?.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const showNotification = (message, type = 'success') => {
+  const showNotification = (message, type = "success") => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
   };
@@ -325,11 +313,12 @@ useEffect(() => {
                   <th className="px-6 py-4 text-left text-white font-semibold">
                     Email
                   </th>
-                  <th className="px-6 py-4 text-center text-white font-semibold">
-                    Status
-                  </th>
+
                   <th className="px-6 py-4 text-left text-white font-semibold">
                     Created At
+                  </th>
+                  <th className="px-6 py-4 text-center text-white font-semibold">
+                    Status
                   </th>
                   <th className="px-6 py-4 text-center text-white font-semibold">
                     Actions
@@ -356,6 +345,16 @@ useEffect(() => {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-gray-600">{user?.email}</td>
+
+                    <td className="px-6 py-4 text-gray-600">
+                      {new Date(user?.createdAt).toLocaleString("en-US", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex justify-center">
                         <span
@@ -379,38 +378,19 @@ useEffect(() => {
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-gray-600">
-                      {user?.createdAt}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-2">
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <div className="flex space-x-2 justify-center">
                         <button
                           onClick={() => handleEdit(user)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 
-                                     hover:scale-110 hover:shadow-lg"
+                          className="text-indigo-600 hover:text-indigo-900"
                         >
-                          <PencilIcon className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => handleStatusToggle(user?.id)}
-                          className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 
-                            hover:scale-105 hover:shadow-lg min-w-[100px] text-center
-                            ${
-                              user?.status === "active"
-                                ? "bg-red-100 text-red-800 hover:bg-red-200"
-                                : "bg-green-100 text-green-800 hover:bg-green-200"
-                            }`}
-                        >
-                          {user?.status === "active"
-                            ? "Deactivate"
-                            : "Activate"}
+                          <PencilIcon className="h-5 w-5" />
                         </button>
                         <button
                           onClick={() => handleDeleteUser(user?.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 
-                                     hover:scale-110 hover:shadow-lg"
+                          className="text-red-600 hover:text-red-900"
                         >
-                          <TrashIcon className="w-5 h-5" />
+                          <TrashIcon className="h-5 w-5" />
                         </button>
                       </div>
                     </td>

@@ -10,7 +10,7 @@ exports.getStats = async (req, res) => {
         (SELECT COUNT(*) FROM Users WHERE isActive = 1) AS activeUsers,
         (SELECT COUNT(*) FROM Categories) AS totalCategories,
         (SELECT COUNT(*) FROM Sessions) AS totalSessions,
-        (SELECT COUNT(*) FROM contactus) AS totalMessages,
+        (SELECT COUNT(*) FROM ContactUs) AS totalMessages,
         (SELECT SUM(amount) FROM Subscriptions) AS totalRevenue,
         (SELECT COUNT(*) FROM Courses) AS totalCourses,
         (SELECT COUNT(*) FROM Subscriptions) AS totalSubscriptions

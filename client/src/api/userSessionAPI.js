@@ -1,5 +1,5 @@
 import axios from "axios";
-import { jwtDecode } from "jwt-decode";
+import jwt_decode from "jwt-decode";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -8,7 +8,7 @@ const getUserIdFromToken = () => {
   if (!token) return null;
 
   try {
-    const decoded = jwtDecode(token);
+    const decoded = jwt_decode(token);
     return decoded.id;
   } catch (error) {
     console.error("Error decoding token:", error);

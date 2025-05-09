@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import { IoLanguageOutline } from 'react-icons/io5';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const LanguageSelector = () => {
+const LanguageSelector = memo(() => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentLang, setCurrentLang] = useState(() => 
@@ -22,6 +22,7 @@ const LanguageSelector = () => {
 
   // Initialize Google Translate with persistent language
   useEffect(() => {
+    let observer;
     const initializeTranslation = () => {
       if (!window.google?.translate?.TranslateElement) {
         setTimeout(initializeTranslation, 100);
@@ -35,12 +36,9 @@ const LanguageSelector = () => {
         multilanguagePage: true
       }, 'google_translate_element');
 
-      // Apply saved language after a short delay to ensure translation is ready
       const savedLang = localStorage.getItem('selectedLanguage');
       if (savedLang) {
-        setTimeout(() => {
-          applyTranslation(savedLang);
-        }, 500);
+        setTimeout(() => applyTranslation(savedLang), 500);
       }
     };
 
@@ -55,17 +53,18 @@ const LanguageSelector = () => {
       initializeTranslation();
     }
 
-    // Mutation observer to ensure translation persists
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
+    // Mutation observer optimization
+    observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
         if (mutation.type === 'childList' && document.querySelector('.goog-te-combo')) {
           const savedLang = localStorage.getItem('selectedLanguage');
           if (savedLang && savedLang !== 'en') {
             applyTranslation(savedLang);
           }
           observer.disconnect();
+          break;
         }
-      });
+      }
     });
 
     observer.observe(document.body, {
@@ -73,12 +72,10 @@ const LanguageSelector = () => {
       subtree: true
     });
 
-    return () => {
-      observer.disconnect();
-    };
+    return () => observer?.disconnect();
   }, [applyTranslation]);
 
-  // Hide Google Translate elements
+  // Hide Google Translate elements - moved to a separate useEffect
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
@@ -100,9 +97,10 @@ const LanguageSelector = () => {
       }
     `;
     document.head.appendChild(style);
+    return () => style.remove();
   }, []);
 
-  const toggleLanguage = async () => {
+  const toggleLanguage = useCallback(async () => {
     if (isLoading) return;
     setIsLoading(true);
     
@@ -117,7 +115,7 @@ const LanguageSelector = () => {
         setIsOpen(false);
       }, 300);
     }
-  };
+  }, [isLoading, currentLang, applyTranslation]);
 
   return (
     <>
@@ -170,6 +168,8 @@ const LanguageSelector = () => {
       </div>
     </>
   );
-};
+});
+
+LanguageSelector.displayName = 'LanguageSelector';
 
 export default LanguageSelector; 

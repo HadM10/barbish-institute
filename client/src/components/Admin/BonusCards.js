@@ -21,6 +21,16 @@ import {
   deleteBonCard,
 } from "../../api/BonCardAPI";
 
+// Only adding image caching function
+const getCachedImage = (src) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = src;
+    img.onload = () => resolve(src);
+    img.onerror = () => reject(new Error("Image load failed"));
+  });
+};
+
 // Notification Component
 const Notification = ({ message, type }) => {
   const bgColor =
@@ -68,6 +78,7 @@ const BonusCard = () => {
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedRows, setExpandedRows] = useState(new Set());
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const showNotification = (message, type = "success") => {
     setNotification({ message, type });
@@ -90,6 +101,17 @@ const BonusCard = () => {
 
     fetchBonCards();
   }, []); // Empty dependency array since we're defining fetchBonCards inside useEffect
+
+  // Only modification: Add image caching when loading images
+  useEffect(() => {
+    bonCards.forEach((card) => {
+      if (card.image) {
+        getCachedImage(card.image).catch(() => {
+          // Silently handle failed image loads
+        });
+      }
+    });
+  }, [bonCards]);
 
   const handleEdit = (bonCard) => {
     setIsEditing(true);
@@ -142,9 +164,11 @@ const BonusCard = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     if (!formData.title || !formData.description || !formData.price) {
       showNotification("Please fill in all required fields", "error");
+      setIsSubmitting(false);
       return;
     }
 
@@ -186,6 +210,8 @@ const BonusCard = () => {
       resetForm();
     } catch (error) {
       showNotification("Operation failed: " + error.message, "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -586,10 +612,20 @@ const BonusCard = () => {
                   </button>
                   <button
                     type="submit"
+                    disabled={isSubmitting}
                     className="px-6 py-2 bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700 
                              text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
                   >
-                    {isEditing ? "Update Bonus Card" : "Add Bonus Card"}
+                    {isSubmitting ? (
+                      <div className="flex items-center justify-center">
+                        <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin mr-2"></div>
+                        {isEditing ? "Updating..." : "Adding..."}
+                      </div>
+                    ) : isEditing ? (
+                      "Update Bonus Card"
+                    ) : (
+                      "Add Bonus Card"
+                    )}
                   </button>
                 </div>
               </form>

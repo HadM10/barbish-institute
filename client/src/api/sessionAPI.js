@@ -1,7 +1,7 @@
 // src/api/sessionAPI.js
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:5000/api/session";
+const API_BASE_URL = `${process.env.REACT_APP_API_URL}/session`;
 
 // Fetch all sessions
 export const getAllSessions = async () => {
@@ -53,9 +53,9 @@ export const createSession = async (sessionData) => {
 // Update a session by ID
 export const updateSession = async (id, sessionData) => {
   try {
-    console.log('Sending update request:', {
+    console.log("Sending update request:", {
       id,
-      sessionData
+      sessionData,
     });
 
     const response = await axios.put(`${API_BASE_URL}/${id}`, {
@@ -67,19 +67,19 @@ export const updateSession = async (id, sessionData) => {
       courseId: sessionData.courseId,
     });
 
-    console.log('Update response:', response.data);
+    console.log("Update response:", response.data);
 
     if (response.data) {
       return { success: true, data: response.data };
     } else {
-      console.error('No data in response');
+      console.error("No data in response");
       return {
         success: false,
-        message: "No data received from server"
+        message: "No data received from server",
       };
     }
   } catch (error) {
-    console.error('Update error:', error);
+    console.error("Update error:", error);
     return {
       success: false,
       message: error.response?.data?.error || error.message,

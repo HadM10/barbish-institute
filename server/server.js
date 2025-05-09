@@ -3,6 +3,8 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const sequelize = require("./config/db");
+const compressionMiddleware = require("./middleware/compression");
+const path = require("path");
 
 // Import route files
 const contactRoutes = require("./routes/contactRoutes");
@@ -22,16 +24,36 @@ require("./models/Relations");
 
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(bodyParser.json());
-
-// Health Check
-app.get("/", (req, res) => {
-  res.send("API is running...");
+// First: www redirect middleware
+app.use((req, res, next) => {
+  if (
+    !req.hostname.startsWith("www.") &&
+    req.hostname !== "localhost" &&
+    req.hostname !== "127.0.0.1"
+  ) {
+    return res.redirect(301, `https://www.${req.hostname}${req.originalUrl}`);
+  }
+  next();
 });
 
-// Routes
+// Second: Add HTTPS redirect middleware
+app.use((req, res, next) => {
+  if (
+    !req.secure &&
+    req.get("x-forwarded-proto") !== "https" &&
+    process.env.NODE_ENV === "production"
+  ) {
+    return res.redirect(301, `https://${req.hostname}${req.originalUrl}`);
+  }
+  next();
+});
+
+// Other middleware
+app.use(cors());
+app.use(bodyParser.json());
+app.use(compressionMiddleware);
+
+// API Routes
 app.use("/api/contact", contactRoutes);
 app.use("/api/boncards", bonCardRoutes);
 app.use("/api/users", userRoutes);
@@ -44,6 +66,22 @@ app.use("/api/auth", authRoutes);
 app.use("/api/mostSubCourses", mostSubCoursesRoutes);
 app.use("/api/user-sessions", userSessionRoutes);
 
+// Serve static files from React app in production
+if (process.env.NODE_ENV === "production") {
+  // Serve static files from the React app
+  app.use(express.static(path.join(__dirname, "../client/build")));
+
+  // API health check
+  app.get("/api/health", (req, res) => {
+    res.send("API is running...");
+  });
+
+  // Handle React routing, return all requests to React app
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "../client/build", "index.html"));
+  });
+}
+
 // Error Handling Middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -51,13 +89,13 @@ app.use((err, req, res, next) => {
 });
 
 // Sync Database and Start Server
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3306; // Added default port
 
 sequelize
   .authenticate()
   .then(() => {
     console.log("Database connected");
-    return sequelize.sync({ alter: true });
+    return sequelize.sync();
   })
   .then(() => {
     console.log("Database synced");

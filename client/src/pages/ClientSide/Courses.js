@@ -152,7 +152,7 @@ const Courses = () => {
       const handleWhatsAppClick = (e) => {
         e.stopPropagation();
         // Replace this number with your WhatsApp number
-        const whatsappNumber = "+96176601305";
+        const whatsappNumber = "+96171020724";
         const message = `Hi, I'm interested in the ${course.title} course priced at $${course.price}. Can you provide more information?`;
         const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
           message
@@ -173,6 +173,8 @@ const Courses = () => {
               <img
                 src={course.image || englishCourseImg}
                 alt={course.title}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-contain bg-gray-100"
                 onError={(e) => {
                   e.target.src = englishCourseImg;
@@ -238,6 +240,8 @@ const Courses = () => {
                     <img
                       src={course.image || englishCourseImg}
                       alt={course.title}
+                      loading="eager"
+                      decoding="async"
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.target.src = englishCourseImg;
@@ -319,6 +323,8 @@ const Courses = () => {
                       <img
                         src={course.image || englishCourseImg}
                         alt={course.title}
+                        loading="eager"
+                        decoding="async"
                         className="w-full h-full object-contain"
                         onError={(e) => {
                           e.target.src = englishCourseImg;

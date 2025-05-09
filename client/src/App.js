@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { FaChevronUp } from "react-icons/fa";
 import AppRoutes from "./routes";
@@ -9,7 +9,10 @@ import "./styles/translate.css";
 
 const App = () => {
   const location = useLocation();
-  const isAdminRoute = location.pathname.startsWith('/admin');
+  const isAdminRoute = useMemo(
+    () => location.pathname.startsWith("/admin"),
+    [location.pathname]
+  );
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const loadingTimeoutRef = React.useRef(null);
@@ -40,11 +43,11 @@ const App = () => {
     const handleLoadEnd = () => stopLoading();
 
     // Listen for actual loading events
-    window.addEventListener('loadstart', handleLoadStart);
-    window.addEventListener('load', handleLoadEnd);
-    
+    window.addEventListener("loadstart", handleLoadStart);
+    window.addEventListener("load", handleLoadEnd);
+
     // Check if images are still loading
-    const images = document.querySelectorAll('img');
+    const images = document.querySelectorAll("img");
     let loadingImages = 0;
 
     const imageLoadHandler = () => {
@@ -54,11 +57,11 @@ const App = () => {
       }
     };
 
-    images.forEach(img => {
+    images.forEach((img) => {
       if (!img.complete) {
         loadingImages++;
-        img.addEventListener('load', imageLoadHandler);
-        img.addEventListener('error', imageLoadHandler);
+        img.addEventListener("load", imageLoadHandler);
+        img.addEventListener("error", imageLoadHandler);
       }
     });
 
@@ -68,11 +71,11 @@ const App = () => {
     }
 
     return () => {
-      window.removeEventListener('loadstart', handleLoadStart);
-      window.removeEventListener('load', handleLoadEnd);
-      images.forEach(img => {
-        img.removeEventListener('load', imageLoadHandler);
-        img.removeEventListener('error', imageLoadHandler);
+      window.removeEventListener("loadstart", handleLoadStart);
+      window.removeEventListener("load", handleLoadEnd);
+      images.forEach((img) => {
+        img.removeEventListener("load", imageLoadHandler);
+        img.removeEventListener("error", imageLoadHandler);
       });
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
@@ -80,20 +83,27 @@ const App = () => {
     };
   }, [location.pathname, startLoading, stopLoading]);
 
-  // Handle scroll event
+  // Optimize scroll handler with throttling
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      setShowScrollButton(window.scrollY > 300);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setShowScrollButton(window.scrollY > 300);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
-      behavior: 'smooth'
+      behavior: "smooth",
     });
   };
 
@@ -106,20 +116,22 @@ const App = () => {
 
       {/* Optimized Preloader - Only shows when actually needed */}
       {isLoading && (
-        <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-[9999] 
-                    flex items-center justify-center transition-opacity duration-300">
+        <div
+          className="fixed inset-0 bg-white/80 backdrop-blur-sm z-[9999] 
+                    flex items-center justify-center transition-opacity duration-300"
+        >
           <div className="relative flex flex-col items-center">
             <div className="w-16 h-16 relative">
               {/* Main spinner */}
               <div className="absolute inset-0 border-4 border-blue-600/20 rounded-full" />
               <div className="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin" />
-              
+
               {/* Pulsing core */}
               <div className="absolute inset-0 m-auto w-6 h-6">
                 <div className="w-full h-full bg-gradient-to-r from-blue-600 to-purple-600 rounded-full animate-pulse" />
               </div>
             </div>
-            
+
             {/* Loading indicator - Only shows for longer loads */}
             <div className="mt-4 text-sm font-medium text-gray-600 animate-pulse">
               Loading...

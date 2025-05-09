@@ -5,12 +5,6 @@ exports.markSessionAsWatched = async (req, res) => {
   try {
     const { userId, sessionId, isWatched = true } = req.body;
 
-    console.log("Updating session watch status:", {
-      userId,
-      sessionId,
-      isWatched,
-    });
-
     // Find or create the user session record
     const [userSession, created] = await UserSession.findOrCreate({
       where: { userId, sessionId },
@@ -33,8 +27,6 @@ exports.markSessionAsWatched = async (req, res) => {
       where: { userId, sessionId },
       raw: true,
     });
-
-    console.log("Session status updated:", updatedSession);
 
     res.status(200).json({
       status: "success",
@@ -60,11 +52,6 @@ exports.getSessionProgress = async (req, res) => {
       raw: true,
     });
 
-    console.log("Found sessions for course:", {
-      courseId,
-      count: sessions.length,
-    });
-
     // Get all user sessions (both watched and unwatched)
     const userSessions = await UserSession.findAll({
       where: {
@@ -73,8 +60,6 @@ exports.getSessionProgress = async (req, res) => {
       },
       raw: true,
     });
-
-    console.log("Found user sessions:", { count: userSessions.length });
 
     // Count watched sessions
     const watchedCount = userSessions.filter((us) => us.isWatched).length;
@@ -94,12 +79,6 @@ exports.getSessionProgress = async (req, res) => {
         };
       }),
     };
-
-    console.log("Sending progress data:", {
-      courseId,
-      totalSessions: progress.totalSessions,
-      watchedSessions: progress.watchedSessions,
-    });
 
     res.status(200).json({
       status: "success",
