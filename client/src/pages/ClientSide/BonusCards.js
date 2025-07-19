@@ -7,6 +7,8 @@ import {
   FaSearch,
   FaGift,
   FaCrown,
+  FaChevronDown,
+  FaChevronUp,
 } from "react-icons/fa";
 import { getAllBonCards } from "../../api/BonCardAPI";
 import bonCardLeft from "../../assets/images/boncard.png";
@@ -18,6 +20,7 @@ const BonusCards = () => {
   const [selectedCard, setSelectedCard] = useState(null);
   const [isFlipped, setIsFlipped] = useState(false);
   const [showMobileCards, setShowMobileCards] = useState(false);
+  const [expandedDescriptions, setExpandedDescriptions] = useState({});
 
   useEffect(() => {
     let isMounted = true;
@@ -67,6 +70,19 @@ const BonusCards = () => {
     setIsFlipped(false);
   };
 
+  const toggleDescription = (offerId) => {
+    setExpandedDescriptions((prev) => ({
+      ...prev,
+      [offerId]: !prev[offerId],
+    }));
+  };
+
+  const truncateText = (text, maxLength = 100) => {
+    if (!text) return "";
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + "...";
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black pt-28 sm:pt-32">
       {/* Hero Section - Adjusted spacing and responsiveness */}
@@ -75,8 +91,10 @@ const BonusCards = () => {
         animate={{ opacity: 1, y: 0 }}
         className="text-center pt-10 sm:pt-14 md:pt-16 mb-6 sm:mb-10 px-3"
       >
-        <div className="inline-block p-1.5 sm:p-2 px-3 sm:px-4 rounded-full bg-purple-500/10 text-purple-300 mb-4
-                      max-w-[90%] mx-auto">
+        <div
+          className="inline-block p-1.5 sm:p-2 px-3 sm:px-4 rounded-full bg-purple-500/10 text-purple-300 mb-4
+                      max-w-[90%] mx-auto"
+        >
           <div className="flex items-center gap-1.5 justify-center flex-wrap">
             <FaGift className="text-sm sm:text-base" />
             <span className="text-sm sm:text-base whitespace-normal text-center">
@@ -84,9 +102,11 @@ const BonusCards = () => {
             </span>
           </div>
         </div>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text 
+        <h1
+          className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text 
                        bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 mb-3 sm:mb-4 px-4
-                       relative z-10">
+                       relative z-10"
+        >
           Premium Partner Offers
         </h1>
         <p className="text-sm sm:text-base md:text-base text-gray-300 max-w-2xl mx-auto px-4 relative z-10">
@@ -104,7 +124,7 @@ const BonusCards = () => {
                      rounded-lg text-white font-semibold shadow-lg text-sm
                      hover:shadow-xl transition-all duration-300"
           >
-            {showMobileCards ? 'Hide Premium Cards' : 'Show Premium Cards'}
+            {showMobileCards ? "Hide Premium Cards" : "Show Premium Cards"}
           </button>
         </div>
 
@@ -118,32 +138,32 @@ const BonusCards = () => {
               className="px-4 -mt-4 mb-8"
             >
               <div className="flex flex-col md:flex-row md:justify-center md:items-center gap-4 md:gap-8 lg:gap-12">
-                <div 
-                  onClick={() => handleCardClick('left')} 
+                <div
+                  onClick={() => handleCardClick("left")}
                   className="cursor-pointer p-2 relative z-30 
                            w-full max-w-[280px] mx-auto md:mx-0
                            sm:max-w-[320px] md:max-w-[360px] lg:max-w-[400px]"
                 >
-                  <img 
-                    src={bonCardLeft} 
-                    alt="Left Card" 
+                  <img
+                    src={bonCardLeft}
+                    alt="Left Card"
                     className="w-full rounded-2xl shadow-lg pointer-events-none
                              transition-all duration-300 hover:scale-105
-                             hover:shadow-xl hover:brightness-110" 
+                             hover:shadow-xl hover:brightness-110"
                   />
                 </div>
-                <div 
-                  onClick={() => handleCardClick('right')} 
+                <div
+                  onClick={() => handleCardClick("right")}
                   className="cursor-pointer p-2 relative z-30 
                            w-full max-w-[280px] mx-auto md:mx-0
                            sm:max-w-[320px] md:max-w-[360px] lg:max-w-[400px]"
                 >
-                  <img 
-                    src={bonCardRight} 
-                    alt="Right Card" 
+                  <img
+                    src={bonCardRight}
+                    alt="Right Card"
                     className="w-full rounded-2xl shadow-lg pointer-events-none
                              transition-all duration-300 hover:scale-105
-                             hover:shadow-xl hover:brightness-110" 
+                             hover:shadow-xl hover:brightness-110"
                   />
                 </div>
               </div>
@@ -178,20 +198,22 @@ const BonusCards = () => {
                 <div
                   className={`absolute w-full h-full [transform-style:preserve-3d] 
                            transition-all duration-700
-                           ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}
+                           ${isFlipped ? "[transform:rotateY(180deg)]" : ""}`}
                 >
                   <div className="absolute w-full h-full [backface-visibility:hidden]">
                     <img
-                      src={selectedCard === 'left' ? bonCardLeft : bonCardRight}
+                      src={selectedCard === "left" ? bonCardLeft : bonCardRight}
                       alt="Card Front"
                       className="w-full h-full object-contain rounded-xl"
                     />
                   </div>
 
-                  <div className="absolute w-full h-full [backface-visibility:hidden] 
-                                [transform:rotateY(180deg)]">
+                  <div
+                    className="absolute w-full h-full [backface-visibility:hidden] 
+                                [transform:rotateY(180deg)]"
+                  >
                     <img
-                      src={selectedCard === 'left' ? bonCardRight : bonCardLeft}
+                      src={selectedCard === "left" ? bonCardRight : bonCardLeft}
                       alt="Card Back"
                       className="w-full h-full object-contain rounded-xl"
                     />
@@ -204,8 +226,18 @@ const BonusCards = () => {
                 className="absolute -top-4 -right-4 text-white bg-black/50 
                        rounded-full p-2 hover:bg-black/70 transition-colors"
               >
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </motion.div>
@@ -228,8 +260,10 @@ const BonusCards = () => {
         </div>
       </div>
 
-      <div className="relative z-20 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 px-3 
-                    sm:gap-4 lg:grid-cols-3 sm:px-4 md:gap-5 md:px-6 container mx-auto pb-16">
+      <div
+        className="relative z-20 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 px-3 
+                    sm:gap-4 lg:grid-cols-3 sm:px-4 md:gap-5 md:px-6 container mx-auto pb-16"
+      >
         {filteredOffers.map((offer) => (
           <motion.div
             key={offer.id}
@@ -276,9 +310,35 @@ const BonusCards = () => {
                 </h2>
               </div>
 
-              <p className="text-gray-300 flex-1 leading-relaxed text-base sm:text-base line-clamp-2 sm:line-clamp-3">
-                {offer.description}
-              </p>
+              <div className="flex-1">
+                <p className="text-gray-300 leading-relaxed text-base sm:text-base">
+                  {expandedDescriptions[offer.id]
+                    ? offer.description
+                    : truncateText(offer.description, 120)}
+                </p>
+                {offer.description && offer.description.length > 120 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleDescription(offer.id);
+                    }}
+                    className="mt-2 text-amber-400 hover:text-amber-300 text-sm font-medium 
+                             flex items-center gap-1 transition-colors duration-200"
+                  >
+                    {expandedDescriptions[offer.id] ? (
+                      <>
+                        <span>See Less</span>
+                        <FaChevronUp className="text-xs" />
+                      </>
+                    ) : (
+                      <>
+                        <span>See More</span>
+                        <FaChevronDown className="text-xs" />
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
 
               <div
                 className="flex items-center justify-between pt-1.5 sm:pt-2 

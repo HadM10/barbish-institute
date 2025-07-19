@@ -401,7 +401,7 @@ const Courses = () => {
                                 </p>{" "}
                                 {/* Smaller font size */}
                                 <p className="text-white font-medium text-lg">
-                                  Expert Tutor
+                                  {course.instructor}
                                 </p>{" "}
                                 {/* Smaller font size */}
                               </div>
