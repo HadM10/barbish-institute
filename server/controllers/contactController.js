@@ -77,3 +77,32 @@ exports.updateContactStatus = async (req, res) => {
     });
   }
 };
+
+// Delete a contact entry
+exports.deleteContact = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const contact = await ContactUs.findByPk(id);
+
+    if (!contact) {
+      return res.status(404).send({
+        success: false,
+        message: 'Contact request not found.',
+      });
+    }
+
+    await contact.destroy();
+
+    res.status(200).send({
+      success: true,
+      message: 'Contact request deleted successfully.',
+    });
+  } catch (error) {
+    console.error('Error deleting contact request:', error);
+    res.status(500).send({
+      success: false,
+      message: 'An error occurred while deleting the contact request.',
+    });
+  }
+};

@@ -9,6 +9,8 @@ import {
   UserGroupIcon,
   CheckCircleIcon,
   XCircleIcon,
+  EyeIcon,
+  EyeSlashIcon,
 } from "@heroicons/react/24/outline";
 import "react-toastify/dist/ReactToastify.css";
 import { motion, AnimatePresence } from "framer-motion";
@@ -58,6 +60,7 @@ const Users = () => {
     status: "active",
   });
   const [notification, setNotification] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   // For Users.js
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -117,6 +120,7 @@ const Users = () => {
     setIsEditing(false);
     setEditingId(null);
     setIsModalOpen(false);
+    setShowPassword(false);
   };
 
   const handleSubmit = async (e) => {
@@ -359,18 +363,16 @@ const Users = () => {
                       <div className="flex justify-center">
                         <span
                           className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-                            ${
-                              user?.status === "active"
-                                ? "bg-green-100 text-green-800 ring-1 ring-green-600/20"
-                                : "bg-red-100 text-red-800 ring-1 ring-red-600/20"
+                            ${user?.status === "active"
+                              ? "bg-green-100 text-green-800 ring-1 ring-green-600/20"
+                              : "bg-red-100 text-red-800 ring-1 ring-red-600/20"
                             }`}
                         >
                           <span
                             className={`w-1.5 h-1.5 rounded-full mr-2
-                              ${
-                                user?.status === "active"
-                                  ? "bg-green-600"
-                                  : "bg-red-600"
+                              ${user?.status === "active"
+                                ? "bg-green-600"
+                                : "bg-red-600"
                               }
                             `}
                           />
@@ -449,16 +451,30 @@ const Users = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     {isEditing ? "New Password (optional)" : "Password"}
                   </label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 
-                               focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 
-                               outline-none transition-all duration-200"
-                    {...(!isEditing && { required: true })}
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 pr-12 rounded-xl bg-gray-50 border border-gray-200 
+                                 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 
+                                 outline-none transition-all duration-200"
+                      {...(!isEditing && { required: true })}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      title={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? (
+                        <EyeSlashIcon className="w-5 h-5" />
+                      ) : (
+                        <EyeIcon className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="flex justify-end gap-3 mt-8">

@@ -42,8 +42,7 @@ export async function createContact(contactData) {
 export const deleteContact = async (id) => {
   try {
     const response = await axios.delete(`${API_URL}/${id}`);
-    const data = await response.json();
-    return data;
+    return response.data;
   } catch (error) {
     console.error("Error:", error);
     return { success: false, message: error.message };

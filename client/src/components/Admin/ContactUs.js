@@ -8,9 +8,10 @@ import {
   XCircleIcon,
   MagnifyingGlassIcon,
   EyeIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 
-import { getAllContacts, updateContactStatus } from "../../api/contactsAPI";
+import { getAllContacts, updateContactStatus, deleteContact } from "../../api/contactsAPI";
 
 // Notification Component
 const Notification = memo(({ message, type }) => {
@@ -81,9 +82,9 @@ const ContactMessages = () => {
           prev.map((msg) =>
             msg.id === messageId
               ? {
-                  ...msg,
-                  status: newStatus ? "read" : "unread",
-                }
+                ...msg,
+                status: newStatus ? "read" : "unread",
+              }
               : msg
           )
         );
@@ -101,6 +102,24 @@ const ContactMessages = () => {
       showNotification("Error updating message status", "error");
     }
   }, []);
+
+  const handleDeleteContact = useCallback(async (messageId) => {
+    if (!window.confirm("Are you sure you want to delete this message?")) return;
+    try {
+      const res = await deleteContact(messageId);
+      if (res.success) {
+        setMessages((prev) => prev.filter((msg) => msg.id !== messageId));
+        if (selectedMessage?.id === messageId) {
+          setSelectedMessage(null);
+        }
+        showNotification("Message deleted successfully");
+      } else {
+        showNotification("Failed to delete message", "error");
+      }
+    } catch (error) {
+      showNotification("Error deleting message", "error");
+    }
+  }, [selectedMessage]);
 
   const handleRowClick = (message) => {
     setSelectedMessage(message);
@@ -229,28 +248,36 @@ const ContactMessages = () => {
                     <td className="px-3 md:px-6 py-3 text-center">
                       <span
                         className={`inline-block px-2 py-1 rounded-full text-xs whitespace-nowrap
-                        ${
-                          message.status === "unread"
+                        ${message.status === "unread"
                             ? "bg-indigo-100 text-indigo-600"
                             : "bg-green-100 text-green-600"
-                        }`}
+                          }`}
                       >
                         {message.status}
                       </span>
                     </td>
                     <td className="px-3 md:px-6 py-3">
-                      <div className="flex items-center justify-center">
+                      <div className="flex items-center justify-center gap-1">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleToggleStatus(message.id, message.status);
                           }}
                           className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title={`Mark as ${
-                            message.status === "read" ? "unread" : "read"
-                          }`}
+                          title={`Mark as ${message.status === "read" ? "unread" : "read"
+                            }`}
                         >
                           <EyeIcon className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteContact(message.id);
+                          }}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete message"
+                        >
+                          <TrashIcon className="w-5 h-5" />
                         </button>
                       </div>
                     </td>
@@ -301,11 +328,10 @@ const ContactMessages = () => {
                   </label>
                   <span
                     className={`ml-2 px-3 py-1 rounded-full text-xs
-                    ${
-                      selectedMessage.status === "unread"
+                    ${selectedMessage.status === "unread"
                         ? "bg-indigo-100 text-indigo-600"
                         : "bg-green-100 text-green-600"
-                    }`}
+                      }`}
                   >
                     {selectedMessage.status}
                   </span>
@@ -318,6 +344,14 @@ const ContactMessages = () => {
                   className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
                 >
                   Close
+                </button>
+                <button
+                  onClick={() => handleDeleteContact(selectedMessage.id)}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg shadow-lg hover:bg-red-700 
+                           hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+                >
+                  <TrashIcon className="w-4 h-4" />
+                  Delete
                 </button>
                 <button
                   onClick={() =>
