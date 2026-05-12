@@ -2,6 +2,7 @@
 import React, { useState, memo, useCallback } from "react";
 import { FaWhatsapp, FaClock, FaUser, FaTimes } from "react-icons/fa";
 import { motion } from "framer-motion";
+import coursePlaceholderImg from "../../../assets/images/course-placeholder.svg";
 
 const CourseCard = memo(({ course }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -25,14 +26,14 @@ const CourseCard = memo(({ course }) => {
         {/* Image Container */}
         <div className="relative h-[280px] overflow-hidden">
           <img
-            src={course.image || englishCourseImg}
+            src={course.image || coursePlaceholderImg}
             alt={course.title}
             loading="lazy"
             decoding="async"
             className="w-full h-full object-cover transform 
                      group-hover:scale-105 transition-transform duration-700"
             onError={(e) => {
-              e.target.src = englishCourseImg;
+              e.target.src = coursePlaceholderImg;
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent" />
@@ -104,14 +105,14 @@ const CourseCard = memo(({ course }) => {
               {/* Square Image Container */}
               <div className="w-full h-[200px] md:h-[300px] flex-shrink-0">
                 <img
-                  src={course.image || englishCourseImg}
+                  src={course.image || coursePlaceholderImg}
                   alt={course.title}
                   loading="lazy"
                   decoding="async"
                   fetchPriority="high"
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    e.target.src = englishCourseImg;
+                    e.target.src = coursePlaceholderImg;
                   }}
                 />
               </div>

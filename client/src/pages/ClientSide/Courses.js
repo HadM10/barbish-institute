@@ -17,7 +17,7 @@ import {
 } from "react-icons/fa";
 import CategoryAPI from "../../api/categoryAPI";
 import { getAllCourses } from "../../api/courseAPI";
-import englishCourseImg from "../../assets/images/english-course.jpg";
+import coursePlaceholderImg from "../../assets/images/course-placeholder.svg";
 
 const Courses = () => {
   const location = useLocation();
@@ -171,13 +171,13 @@ const Courses = () => {
             {/* Fixed aspect ratio for card image */}
             <div className="relative w-full aspect-square">
               <img
-                src={course.image || englishCourseImg}
+                src={course.image || coursePlaceholderImg}
                 alt={course.title}
                 loading="lazy"
                 decoding="async"
                 className="w-full h-full object-contain bg-gray-100"
                 onError={(e) => {
-                  e.target.src = englishCourseImg;
+                  e.target.src = coursePlaceholderImg;
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent" />
@@ -238,13 +238,13 @@ const Courses = () => {
                 <div className="md:hidden flex flex-col h-full">
                   <div className="relative h-[30vh]">
                     <img
-                      src={course.image || englishCourseImg}
+                      src={course.image || coursePlaceholderImg}
                       alt={course.title}
                       loading="eager"
                       decoding="async"
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        e.target.src = englishCourseImg;
+                        e.target.src = coursePlaceholderImg;
                       }}
                     />
                     <button
@@ -321,13 +321,13 @@ const Courses = () => {
                   <div className="w-1/2 bg-gray-100">
                     <div className="relative w-full h-full">
                       <img
-                        src={course.image || englishCourseImg}
+                        src={course.image || coursePlaceholderImg}
                         alt={course.title}
                         loading="eager"
                         decoding="async"
                         className="w-full h-full object-contain"
                         onError={(e) => {
-                          e.target.src = englishCourseImg;
+                          e.target.src = coursePlaceholderImg;
                         }}
                       />
                     </div>

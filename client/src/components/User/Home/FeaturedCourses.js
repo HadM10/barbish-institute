@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FaWhatsapp, FaClock, FaGraduationCap, FaTrophy } from "react-icons/fa";
 import { getMostSubCourses } from "../../../api/mostSubCoursesAPI";
-import englishCourseImg from "../../../assets/images/english-course.jpg";
+import coursePlaceholderImg from "../../../assets/images/course-placeholder.svg";
 
 const CourseCard = memo(({ course, index }) => {
   const handleWhatsAppClick = useCallback(
@@ -35,7 +35,7 @@ const CourseCard = memo(({ course, index }) => {
         <div className="relative overflow-hidden rounded-xl bg-[#1a1d2d] h-full flex flex-col">
           <div className="relative w-full">
             <img
-              src={course.image || englishCourseImg}
+              src={course.image || coursePlaceholderImg}
               alt={course.title}
               loading="lazy"
               decoding="async"
@@ -43,7 +43,7 @@ const CourseCard = memo(({ course, index }) => {
               className="w-full object-cover"
               style={{ aspectRatio: "4/3" }}
               onError={(e) => {
-                e.target.src = englishCourseImg;
+                e.target.src = coursePlaceholderImg;
               }}
             />
             <div
