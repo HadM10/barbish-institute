@@ -124,12 +124,10 @@ exports.getForm = (req, res) => {
 // POST /api/assessments
 exports.createAssessment = async (req, res) => {
   try {
+    // Note: an older version had a hidden "website" honeypot field. Mobile autofill filled it for real
+    // visitors, who then got a fake report link. Any "website" value is now ignored; abuse is limited by
+    // the per-IP rate limit and the daily cap instead.
     const body = req.body || {};
-
-    // Honeypot: real visitors never see or fill this field.
-    if (body.website) {
-      return res.status(201).json({ success: true, publicId: crypto.randomBytes(16).toString("hex") });
-    }
 
     const fullName = cleanText(body.fullName, 120);
     const phone = cleanText(body.phone, 40);

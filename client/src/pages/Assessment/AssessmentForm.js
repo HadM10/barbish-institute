@@ -136,7 +136,6 @@ const AssessmentForm = () => {
   const [step, setStep] = useState(-1); // -1 intro, 0..n-1 questions, n details
   const [answers, setAnswers] = useState(draft.answers || {});
   const [details, setDetails] = useState({ ...EMPTY_DETAILS, ...(draft.details || {}) });
-  const [honeypot, setHoneypot] = useState("");
   const [stepError, setStepError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -260,7 +259,6 @@ const AssessmentForm = () => {
       consent: details.consent,
       language: lang,
       source,
-      website: honeypot,
       answers: visibleAnswers,
     });
     setSubmitting(false);
@@ -543,18 +541,6 @@ const AssessmentForm = () => {
                     <span className="mt-1.5 block text-sm text-highlight">{fieldErrors.email}</span>
                   )}
                 </label>
-
-                {/* Honeypot for bots: hidden from people and screen readers */}
-                <input
-                  type="text"
-                  name="website"
-                  tabIndex={-1}
-                  autoComplete="off"
-                  value={honeypot}
-                  onChange={(e) => setHoneypot(e.target.value)}
-                  className="absolute -left-[9999px] h-0 w-0 opacity-0"
-                  aria-hidden="true"
-                />
 
                 <label className="flex cursor-pointer items-start gap-3 pt-1">
                   <input
