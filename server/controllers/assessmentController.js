@@ -119,14 +119,10 @@ function normalizePhone(phone) {
 async function findByPhone(phone) {
   const key = normalizePhone(phone);
   if (key.length < 6) return null;
-  const candidates = await Assessment.findAll({
-    where: { phone: { [Op.like]: `%${key.slice(-4)}` } },
-    attributes: ["id", "phone"],
-  });
-  return candidates.find((a) => {
-    const raw = String(a.phone || "").replace(/\D/g, "");
-    return normalizePhone(raw) === key || raw.endsWith(key);
-  }) || null;
+  // Phones are stored as typed (with spaces, dashes, +961...), so compare digits in code
+  // rather than with a SQL LIKE. Only id and phone are loaded, which stays fast at this scale.
+  const all = await Assessment.findAll({ attributes: ["id", "phone"] });
+  return all.find((a) => normalizePhone(a.phone) === key) || null;
 }
 
 function publicResult(result) {
