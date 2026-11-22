@@ -94,6 +94,31 @@ body {
   animation: slideUp 0.3s ease-out;
 }
 
+/* Career assessment: the route line on the intro draws itself once */
+@keyframes path-draw {
+  from { stroke-dashoffset: 100; }
+  to { stroke-dashoffset: 0; }
+}
+.path-draw {
+  animation: path-draw 1.6s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .path-draw { animation: none; }
+}
+
+/* Career assessment report: clean A4 output for "Save as PDF" */
+@media print {
+  @page { size: A4; margin: 14mm; }
+  body { background: #fff !important; }
+  .report-page { background: #fff !important; }
+  .no-print { display: none !important; }
+  .report-page * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .report-section { break-inside: avoid; }
+}
+
 /* Custom scrollbar for non-hidden scrollbars */
 ::-webkit-scrollbar {
   width: 8px;

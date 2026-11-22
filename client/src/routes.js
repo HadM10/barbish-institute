@@ -16,6 +16,8 @@ const BonusCards = lazy(() => import("./pages/ClientSide/BonusCards"));
 const Contact = lazy(() => import("./pages/ClientSide/Contact"));
 const AboutServices = lazy(() => import("./pages/ClientSide/AboutServices"));
 const VideoPlayer = lazy(() => import("./pages/ClientSide/VideoPlayer"));
+const AssessmentForm = lazy(() => import("./pages/Assessment/AssessmentForm"));
+const AssessmentResult = lazy(() => import("./pages/Assessment/AssessmentResult"));
 
 // 404 Component
 const NotFound = () => (
@@ -74,6 +76,10 @@ const AppRoutes = () => (
       <Route path="/bonus" element={<BonusCards />} />
       <Route path="/contact" element={<Contact />} />
       <Route path="/about-services" element={<AboutServices />} />
+
+      {/* Career assessment (opened from the QR code on brochures) */}
+      <Route path="/assessment" element={<AssessmentForm />} />
+      <Route path="/assessment/report/:publicId" element={<AssessmentResult />} />
 
       {/* 404 Route */}
       <Route path="*" element={<NotFound />} />

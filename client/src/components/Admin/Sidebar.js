@@ -12,6 +12,7 @@ import {
   EnvelopeIcon,
   GiftIcon,
   ArrowRightOnRectangleIcon,
+  ClipboardDocumentCheckIcon,
   Bars3Icon,
   XMarkIcon
   
@@ -52,6 +53,11 @@ const Sidebar = () => {
       name: "Courses",
       path: "/admin/courses",
       icon: <BookOpenIcon className="w-5 h-5" />,
+    },
+    {
+      name: "Career Assessments",
+      path: "/admin/assessments",
+      icon: <ClipboardDocumentCheckIcon className="w-5 h-5" />,
     },
     {
       name: "Contact Us",

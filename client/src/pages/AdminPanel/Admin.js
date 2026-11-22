@@ -10,6 +10,7 @@ import RecordedSessions from "../../components/Admin/RecordedSessions";
 import Courses from "../../components/Admin/Courses";
 import ContactUs from "../../components/Admin/ContactUs";
 import BonusCard from "../../components/Admin/BonusCards";
+import Assessments from "../../components/Admin/Assessments";
 import { ToastContainer, toast } from 'react-toastify';
 import { 
   GiftIcon
@@ -53,6 +54,7 @@ const Admin = () => {
           <Route path="recorded-sessions" element={<RecordedSessions />} />
           <Route path="courses" element={<Courses />} />
           <Route path="contact" element={<ContactUs />} />
+          <Route path="assessments" element={<Assessments />} />
           <Route path="bonus-card" element={<BonusCard />} />
           <Route 
             path="bonus-card" 

@@ -9,8 +9,11 @@ import "./styles/translate.css";
 
 const App = () => {
   const location = useLocation();
+  // Admin and the career assessment pages render without the site navbar/footer.
   const isAdminRoute = useMemo(
-    () => location.pathname.startsWith("/admin"),
+    () =>
+      location.pathname.startsWith("/admin") ||
+      location.pathname.startsWith("/assessment"),
     [location.pathname]
   );
   const [showScrollButton, setShowScrollButton] = useState(false);

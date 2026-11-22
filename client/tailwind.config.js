@@ -12,6 +12,14 @@ module.exports = {
         background: "#f0f8ff", // Light Azure
         text: "#111827", // Dark Charcoal
         border: "#D1D5DB", // Light Silver
+        // Career assessment pages
+        paper: "#F4F6FB", // cool off-white page background
+        rule: "#DADDEA", // dividers and input borders
+        mute: "#5B5F7A", // secondary text
+      },
+      fontFamily: {
+        plex: ['"IBM Plex Sans Arabic"', "system-ui", "sans-serif"],
+        alex: ["Alexandria", '"IBM Plex Sans Arabic"', "system-ui", "sans-serif"],
       },
       animation: {
         fadeIn: 'fadeIn 0.5s ease-in',

@@ -18,6 +18,7 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const authRoutes = require("./routes/authRoutes");
 const mostSubCoursesRoutes = require("./routes/mostSubCoursesRoutes");
 const userSessionRoutes = require("./routes/userSessionRoutes");
+const assessmentRoutes = require("./routes/assessmentRoutes");
 
 // Import models
 require("./models/Relations");
@@ -65,6 +66,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/mostSubCourses", mostSubCoursesRoutes);
 app.use("/api/user-sessions", userSessionRoutes);
+app.use("/api/assessments", assessmentRoutes);
 
 // Serve static files from React app in production
 if (process.env.NODE_ENV === "production") {
