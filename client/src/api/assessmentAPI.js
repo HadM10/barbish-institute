@@ -14,6 +14,7 @@ const fail = (error, fallback) => ({
     (error.response && error.response.data && error.response.data.message) ||
     fallback,
   fields: (error.response && error.response.data && error.response.data.fields) || [],
+  code: (error.response && error.response.data && error.response.data.code) || null,
 });
 
 // ---- Public ----

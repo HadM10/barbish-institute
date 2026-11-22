@@ -48,6 +48,12 @@ const strings = {
     errSubmit: "لم تُرسَل إجاباتك. حاول مرة أخرى.",
     errLoadForm: "تعذّر تحميل الأسئلة. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.",
     retry: "حاول مرة أخرى",
+    alreadyTitle: "لقد أكملت التقييم من قبل",
+    alreadyBody: "لكل شخص تقييم واحد. يمكنك العودة إلى تقريرك في أي وقت.",
+    viewMyReport: "عرض تقريري",
+    errPhoneUsed:
+      "هذا الرقم أكمل التقييم من قبل، ولكل شخص تقييم واحد. إذا كنت بحاجة إلى تقريرك، راسلنا على واتساب.",
+    messageUs: "راسلنا على واتساب",
     // Result page
     preparingTitle: (name) => `جارٍ إعداد تقريرك، ${name}`,
     preparingSteps: ["نقرأ إجاباتك", "نطابقها مع برامج المعهد", "نكتب خطتك"],
@@ -128,6 +134,12 @@ const strings = {
     errSubmit: "Your answers weren't sent. Try again.",
     errLoadForm: "The questions didn't load. Check your connection and try again.",
     retry: "Try again",
+    alreadyTitle: "You've already completed the assessment",
+    alreadyBody: "Each person can take it once. You can go back to your report anytime.",
+    viewMyReport: "View my report",
+    errPhoneUsed:
+      "This number has already completed the assessment, and each person can take it once. If you need your report, message us on WhatsApp.",
+    messageUs: "Message us on WhatsApp",
     preparingTitle: (name) => `Preparing your report, ${name}`,
     preparingSteps: ["Reading your answers", "Matching you with our programs", "Writing your plan"],
     preparingNote: "Keep this page open. It usually takes under a minute.",

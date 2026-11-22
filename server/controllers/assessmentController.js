@@ -106,6 +106,29 @@ async function enrichCourses(result) {
     });
 }
 
+// Phone numbers in a comparable form: digits only, without 00 / +961 / a leading 0,
+// so "+961 71 123 456", "0096171123456" and "71123456" all match.
+function normalizePhone(phone) {
+  let d = String(phone || "").replace(/\D/g, "");
+  if (d.startsWith("00")) d = d.slice(2);
+  if (d.startsWith("961")) d = d.slice(3);
+  return d.replace(/^0+/, "");
+}
+
+// One assessment per person: has this phone number already submitted?
+async function findByPhone(phone) {
+  const key = normalizePhone(phone);
+  if (key.length < 6) return null;
+  const candidates = await Assessment.findAll({
+    where: { phone: { [Op.like]: `%${key.slice(-4)}` } },
+    attributes: ["id", "phone"],
+  });
+  return candidates.find((a) => {
+    const raw = String(a.phone || "").replace(/\D/g, "");
+    return normalizePhone(raw) === key || raw.endsWith(key);
+  }) || null;
+}
+
 function publicResult(result) {
   if (!result) return null;
   const { adminInsights, ...visible } = result;
@@ -149,6 +172,16 @@ exports.createAssessment = async (req, res) => {
         success: false,
         message: "Some answers are missing or invalid",
         fields: [...fieldErrors, ...errors],
+      });
+    }
+
+    // Each person can submit once. The report link is not returned here, so typing someone
+    // else's number never reveals their report; the original device keeps its own link.
+    if (await findByPhone(phone)) {
+      return res.status(409).json({
+        success: false,
+        code: "ALREADY_SUBMITTED",
+        message: "This phone number has already completed the assessment.",
       });
     }
 

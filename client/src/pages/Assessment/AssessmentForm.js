@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import logo from "../../assets/images/logo.png";
-import strings from "../../components/Assessment/strings";
-import { getAssessmentForm, submitAssessment } from "../../api/assessmentAPI";
+import strings, { INSTITUTE_WHATSAPP } from "../../components/Assessment/strings";
+import { getAssessmentForm, submitAssessment, getAssessmentResult } from "../../api/assessmentAPI";
 
 const DRAFT_KEY = "barbish-assessment-draft";
 const LAST_KEY = "barbish-assessment-last";
@@ -140,6 +140,10 @@ const AssessmentForm = () => {
   const [fieldErrors, setFieldErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [phoneUsed, setPhoneUsed] = useState(false);
+  // One assessment per person: if this device already submitted, show its report instead.
+  const [checkingPrevious, setCheckingPrevious] = useState(true);
+  const [previousId, setPreviousId] = useState(null);
   const advanceTimer = useRef(null);
 
   const load = async () => {
@@ -149,8 +153,33 @@ const AssessmentForm = () => {
     else setLoadError(true);
   };
 
+  const checkPrevious = async () => {
+    let id = null;
+    try {
+      id = localStorage.getItem(LAST_KEY);
+    } catch (e) {
+      /* storage unavailable */
+    }
+    if (id) {
+      const res = await getAssessmentResult(id);
+      if (res.success) {
+        setPreviousId(id);
+        if (res.data && res.data.language) setLang(res.data.language === "en" ? "en" : "ar");
+      } else if (res.status === 404) {
+        // The report was deleted (for example by an admin), so allow a new assessment.
+        try {
+          localStorage.removeItem(LAST_KEY);
+        } catch (e) {
+          /* ignore */
+        }
+      }
+    }
+    setCheckingPrevious(false);
+  };
+
   useEffect(() => {
     load();
+    checkPrevious();
     const timer = advanceTimer;
     return () => clearTimeout(timer.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -225,6 +254,7 @@ const AssessmentForm = () => {
   const setDetail = (key, value) => {
     setDetails((d) => ({ ...d, [key]: value }));
     setFieldErrors((e) => ({ ...e, [key]: undefined }));
+    if (key === "phone") setPhoneUsed(false);
   };
 
   const validateDetails = () => {
@@ -281,10 +311,37 @@ const AssessmentForm = () => {
       setTimeout(() => setStepError(t.errRequired), 0);
       return;
     }
+    if (res.status === 409 && res.code === "ALREADY_SUBMITTED") {
+      setPhoneUsed(true);
+      return;
+    }
     setSubmitError(res.status === 429 ? res.message : t.errSubmit);
   };
 
   // --- Render -------------------------------------------------------------
+
+  if (checkingPrevious) {
+    return <div className="min-h-screen bg-paper" />;
+  }
+
+  if (previousId) {
+    return (
+      <div dir={t.dir} lang={lang} translate="no" className="notranslate min-h-screen bg-paper font-plex text-primary antialiased">
+        <AssessmentHeader t={t} />
+        <main className="mx-auto max-w-xl px-5 pb-16 pt-16">
+          <h1 className="font-alex text-[28px] font-semibold leading-snug">{t.alreadyTitle}</h1>
+          <p className="mt-4 text-[17px] leading-relaxed text-mute">{t.alreadyBody}</p>
+          <button
+            type="button"
+            onClick={() => navigate(`/assessment/report/${previousId}`)}
+            className="mt-8 w-full rounded-xl bg-highlight px-6 py-4 font-alex text-[17px] font-semibold text-white transition-colors hover:bg-[#e2523a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
+          >
+            {t.viewMyReport}
+          </button>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -563,6 +620,20 @@ const AssessmentForm = () => {
                 <p role="alert" className="mt-5 text-[15px] font-medium text-highlight">
                   {submitError}
                 </p>
+              )}
+
+              {phoneUsed && (
+                <div role="alert" className="mt-5 rounded-xl border border-highlight/40 bg-white p-4">
+                  <p className="text-[15px] font-medium leading-relaxed text-primary">{t.errPhoneUsed}</p>
+                  <a
+                    href={`https://wa.me/${INSTITUTE_WHATSAPP}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-3 inline-block font-semibold text-sky underline-offset-4 hover:underline"
+                  >
+                    {t.messageUs}
+                  </a>
+                </div>
               )}
 
               <button
